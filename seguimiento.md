@@ -11,7 +11,7 @@ Guion: `guiones/shorts-hardware-2026-10-27.md` · Tomas: `audios/shorts-hardware
 | A2 ⭐ | Apertura variable del iPhone 18 Pro | ✅ 27 oct | ✅ 27 oct | ✅ 27 oct | ⏳ 27 oct | — | — | toma 01 · animación lista con tiempos de prueba; falta sincronizar con el audio real (ver nota) |
 | A3 ⭐ | ¿Por qué el fondo sale borroso? | ✅ 27 oct | ✅ 27 oct | — | ✅ 27 oct | — | — | toma 01 |
 | A4 | ¿Por qué no usar siempre la apertura más abierta? | ✅ 27 oct | ✅ 27 oct | — | ✅ 27 oct | — | — | toma 02 |
-| A5 | ¿Por qué las luces salen como estrellas? | ✅ 27 oct | ✅ 27 oct | — | — | — | — | toma 01 |
+| A5 | ¿Por qué las luces salen como estrellas? | ✅ 27 oct | ✅ 27 oct | — | ✅ 27 oct | — | — | toma 01 |
 | B1 ⭐ | ¿Cómo se dobla una pantalla? | ✅ 27 oct | ✅ 27 oct | — | — | — | — | toma 01 |
 | B2 ⭐ | ¿Por qué las plegables tienen una marca en medio? | ✅ 27 oct | ✅ 27 oct | — | — | — | — | toma 04 · verificar en apple.com «nano-textura» y el aviso de pantalla interior |
 | B3 | ¿Una pantalla que se cura sola? | ✅ 27 oct | ✅ 27 oct | — | — | — | — | toma 01 |

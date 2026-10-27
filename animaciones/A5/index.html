@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>A5 · ¿Por qué las luces salen como estrellas?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+  .count { position: absolute; left: 80px; width: 920px; top: 1110px; text-align: center; font-size: 64px; font-weight: 640; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-photo" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-photo" style="top:1300px">Luces que salen como estrellas</div>
+
+    <svg class="full scene" id="sc-mech" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-blades" style="top:1300px">Es por las hojas de la apertura</div>
+    <div class="m-caption scene" id="cap-diff" style="top:1300px">Cada borde recto difracta la luz<small>y forma un par de rayos, perpendiculares al borde</small></div>
+    <div class="m-caption scene" id="cap-par" style="top:1300px">Con hojas en número par<small>los rayos de bordes opuestos se enciman</small></div>
+    <div class="m-caption scene" id="cap-odd" style="top:1300px">Con 7 hojas no se enciman</div>
+    <div class="count m-num scene" id="count"></div>
+
+    <svg class="full scene" id="sc-end" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-end" style="top:1300px">6 hojas: efecto creativo<small>cierra a f/4 y apunta a una lámpara</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script src="../_base/iris.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp, fnum } = Mosaic;
+
+  const COLORS = ["#2f5e8e", "#b3386b", "#3a9a80", "#2f5e8e", "#b3386b", "#3a9a80", "#c98a1b"];
+
+  /** One diffraction spike pair through (0,0) along angle a: two tapered rays. */
+  function spikePath(a, len, w) {
+    const c = Math.cos(a), s = Math.sin(a), nx = -s * w, ny = c * w;
+    return `M${(nx).toFixed(1)} ${(ny).toFixed(1)} L${(c * len).toFixed(1)} ${(s * len).toFixed(1)} L${(-nx).toFixed(1)} ${(-ny).toFixed(1)} L${(-c * len).toFixed(1)} ${(-s * len).toFixed(1)} Z`;
+  }
+
+  /** A night lamp with a star of `points` spikes (photo-like panel). */
+  function lampPanel(svg, x, y, w, h, n) {
+    const g = el("g", {}, svg);
+    el("rect", { x, y, width: w, height: h, rx: 10, fill: "#2a2f3a" }, g);
+    el("rect", { x, y: y + h * 0.8, width: w, height: h * 0.2, fill: "#20242c" }, g);
+    el("rect", { x: x + w * 0.5 - 6, y: y + h * 0.36, width: 12, height: h * 0.44, fill: "#3b414e" }, g);
+    const star = el("g", { transform: `translate(${x + w * 0.5} ${y + h * 0.34})` }, g);
+    // even n: n spikes (pairs overlap); the spike directions are perpendicular to the blade edges
+    const pairs = n % 2 === 0 ? n / 2 : n;
+    for (let k = 0; k < pairs; k++) {
+      const a = -Math.PI / 2 + (k * Math.PI) / pairs + Math.PI / n;
+      el("path", { d: spikePath(a, w * 0.42, 5), fill: "#fff3cf", opacity: 0.85 }, star);
+    }
+    el("circle", { r: 22, fill: "#fffaf0" }, star);
+    return g;
+  }
+
+  // ---------------------------------------------------------------- mechanism: iris → spikes
+  const IRIS_C = [290, 800], STAR_C = [790, 800], SPIKE = 200;
+  let m = {};
+  function buildMech() {
+    const svg = $("#sc-mech");
+    m.g6 = el("g", { transform: `translate(${IRIS_C[0]} ${IRIS_C[1]})` }, svg);
+    m.g7 = el("g", { transform: `translate(${IRIS_C[0]} ${IRIS_C[1]})` }, svg);
+    m.i6 = Mosaic.iris.make(m.g6, { n: 6, R: 170, ring: 24, rotorW: 20, ticks: 30 });
+    m.i7 = Mosaic.iris.make(m.g7, { n: 7, R: 170, ring: 24, rotorW: 20, ticks: 30 });
+    m.p6 = m.i6.draw(m.i6.rOf(4) * 1.6);
+    m.p7 = m.i7.draw(m.i7.rOf(4) * 1.6);
+    const edges = (g, p, n) => p.V.map((v, k) => {
+      const w = p.V[(k + 1) % n];
+      return { node: el("line", { x1: v[0], y1: v[1], x2: w[0], y2: w[1], stroke: n === 7 ? "#c98a1b" : COLORS[k % 3], // 7 blades: no parallel pairs, one color "stroke-width": 9, "stroke-linecap": "round", opacity: 0 }, g),
+        ang: Math.atan2(w[1] - v[1], w[0] - v[0]) + Math.PI / 2 };
+    });
+    m.e6 = edges(m.g6, m.p6, 6);
+    m.e7 = edges(m.g7, m.p7, 7);
+    el("text", { x: IRIS_C[0], y: IRIS_C[1] + 270, "text-anchor": "middle", class: "m-label", text: "apertura" }, svg);
+    el("text", { x: STAR_C[0], y: STAR_C[1] + 270, "text-anchor": "middle", class: "m-label", text: "rayos de luz" }, svg);
+    el("circle", { cx: STAR_C[0], cy: STAR_C[1], r: 230, fill: "#2a2f3a" }, svg);
+    const star = el("g", { transform: `translate(${STAR_C[0]} ${STAR_C[1]})` }, svg);
+    // one spike pair per edge, in the edge's color, perpendicular to it
+    m.s6 = m.e6.map((e, k) => el("path", { d: spikePath(e.ang, SPIKE, 6), fill: COLORS[k % 3], opacity: 0 }, star));
+    m.s7 = m.e7.map((e, k) => el("path", { d: spikePath(e.ang, SPIKE, 5), fill: "#f4dc93", opacity: 0 }, star));
+    el("circle", { r: 18, fill: "#fffaf0" }, star);
+  }
+  function drawMech(t, s, A) {
+    const seven = ramp(t, A.siete.start - 0.4, A.siete.start + 0.1);
+    m.g6.setAttribute("opacity", String(1 - seven));
+    m.g7.setAttribute("opacity", String(seven));
+    // edges light up one by one on "cada borde recto"; spikes follow on "rayos"
+    m.e6.forEach((e, k) => {
+      const on = ramp(t, A.borde.start + k * 0.15, A.borde.start + k * 0.15 + 0.3);
+      e.node.setAttribute("opacity", String(on * (1 - seven)));
+      // for the parity part, both edges of an opposite pair share the color (k and k+3)
+      e.node.setAttribute("stroke", COLORS[k % 3]);
+      const sp = ramp(t, A.rayos.start - 0.6 + k * 0.15, A.rayos.start - 0.2 + k * 0.15);
+      // before "enciman" opposite spikes are drawn slightly apart so you can see there are two
+      const sep = 1 - ramp(t, A.enciman.start - 0.3, A.enciman.start + 0.6);
+      const off = (k >= 3 ? 1 : -1) * 0.06 * sep;
+      m.s6[k].setAttribute("d", spikePath(e.ang + off, SPIKE, 6));
+      m.s6[k].setAttribute("opacity", String(0.9 * sp * (1 - seven)));
+    });
+    m.e7.forEach((e, k) => e.node.setAttribute("opacity", String(seven * 0.9)));
+    m.s7.forEach((p, k) => p.setAttribute("opacity", String(0.95 * ramp(t, A.siete.start + 0.1 + k * 0.08, A.siete.start + 0.4 + k * 0.08) )));
+    const c = $("#count");
+    if (t >= A.siete.start - 0.2) c.textContent = "7 hojas → 14 puntas";
+    else if (t >= A.seis.start - 0.2) c.textContent = "6 hojas → 6 puntas";
+    else c.textContent = "";
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "¿Por qué en algunas fotos de noche, las luces parecen como estrellitas? Es por las hojas de apertura. Cuando cierras el diafragma, la luz se difracta en cada borde recto del hexágono y forman rayos. Un truco de física, si el número de las hojas es par, los rayos opuestos se enciman. Por eso, 6 hojas dan una estrella de 6 puntas. Si fueran 7 hojas, verías 14 puntas. El iPhone 18 Pro tiene 6 hojas y Apple lo menciona como efecto creativo. cierra a F4, apunta una lámpara y vas a ver tu estrella.";
+
+  Mosaic.short({
+    kicker: "Cámara · apertura",
+    title: "¿Por qué las luces salen como estrellas?",
+    script: SCRIPT,
+    anchors: {
+      hojas: "hojas de apertura",
+      cierras: "cierras",
+      difracta: "difracta",
+      borde: "borde recto",
+      rayos: "rayos",
+      truco: "truco",
+      par: "par",
+      enciman: "enciman",
+      seis: ["6 hojas", "seis hojas"],
+      siete: ["7 hojas", "siete hojas"],
+      iphone: "iphone",
+      creativo: "creativo",
+      cierra: "cierra",
+      lampara: "lampara",
+    },
+    build() {
+      lampPanel($("#sc-photo"), 240, 520, 600, 700, 6);
+      buildMech();
+      lampPanel($("#sc-end"), 240, 520, 600, 700, 6);
+    },
+    scenes: [
+      { el: "#sc-photo", from: 0, to: "hojas-0.2", fadeIn: 0.4, rise: 0 },
+      { el: "#cap-photo", from: 0.2, to: "hojas-0.2", fade: 0.3 },
+      { el: "#sc-mech", from: "hojas-0.2", to: "iphone-0.2", rise: 0, update: drawMech },
+      { el: "#cap-blades", from: "hojas-0.1", to: "difracta-0.2", fade: 0.3 },
+      { el: "#cap-diff", from: "difracta-0.2", to: "truco-0.1", fade: 0.3 },
+      { el: "#cap-par", from: "truco-0.1", to: "siete-0.3", fade: 0.3 },
+      { el: "#cap-odd", from: "siete-0.3", to: "iphone-0.2", fade: 0.3 },
+      { el: "#count", from: "seis-0.2", to: "iphone-0.2", fade: 0.3, rise: 0 },
+      { el: "#sc-end", from: "iphone-0.2", to: "end", rise: 0 },
+      { el: "#cap-end", from: "iphone", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
