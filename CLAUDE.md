@@ -29,6 +29,13 @@ Shorts del canal de YouTube «Mosaic» (nicho: cómo funciona la tecnología). E
 - La animación **no debe parecer hecha con IA**: nada de fondos oscuros con neón, manchas de color difuminadas, tarjetas iguales ni rebote en todo. 3D (Blender, Eevee) para objetos físicos; 2D limpio (HTML o Manim) para diagramas. Lo visual debe ser técnicamente correcto aunque el audio tenga un error.
 - En pantalla las aperturas van como `f/1.48`; la narración dice «efe uno punto cuatro ocho».
 - Títulos en forma de pregunta.
+- Nada de contenido fanboy de marcas (Apple u otras): primero el mecanismo; la marca solo como ejemplo cuando ayuda a entenderlo. Sin rumores ni patentes como gancho.
+
+## Contenido (decidido 2026-10-27)
+Detalle completo (qué buscamos, qué funcionó, descartes, IDs, nombres de archivo): `ideas.md`.
+- Audiencia: público general curioso (México y Latam) que usa celular y compu y quiere entender cómo funcionan. Lenguaje cotidiano, sin jerga; si un término técnico hace falta, se explica en la misma frase.
+- Series e IDs (letra + número; no reutilizar A, B, C): **M** memoria, chips y SO · **I** IA por dentro · **T** celular por dentro, sin marca · **R** internet y redes.
+- Ritmo: 3 Shorts al día durante 2 semanas; luego se decide con métricas.
 
 ## Reglas
 - Microsoft Edge, nunca Chrome.
