@@ -1,0 +1,88 @@
+1
+00:00:00,130 --> 00:00:01,360
+Por primera vez un iPhone tiene
+
+2
+00:00:01,360 --> 00:00:02,560
+una apertura variable.
+
+3
+00:00:02,560 --> 00:00:04,180
+¿Cómo cabe todo ese sistema
+
+4
+00:00:04,180 --> 00:00:05,540
+dentro de un teléfono?
+
+5
+00:00:05,540 --> 00:00:07,680
+Dentro de la cámara principal hay 6 hojas
+
+6
+00:00:07,680 --> 00:00:10,040
+más delgadas que un cabello cortadas con
+
+7
+00:00:10,040 --> 00:00:12,140
+un láser de un compuesto polímero.
+
+8
+00:00:12,140 --> 00:00:14,100
+Un pequeño rotor las gira al mismo
+
+9
+00:00:14,100 --> 00:00:16,340
+tiempo y al moverse forma un hexágono
+
+10
+00:00:16,340 --> 00:00:17,910
+que se abre o se cierra.
+
+11
+00:00:17,910 --> 00:00:20,150
+Abierto, f/1.48,
+
+12
+00:00:20,150 --> 00:00:21,900
+entra la máxima luz.
+
+13
+00:00:21,900 --> 00:00:23,210
+Cerrado, f/4,
+
+14
+00:00:23,210 --> 00:00:25,120
+entra mucho menos pero más
+
+15
+00:00:25,120 --> 00:00:27,250
+cosas quedan enfocadas.
+
+16
+00:00:27,250 --> 00:00:29,000
+En la app principal de la cámara
+
+17
+00:00:29,000 --> 00:00:32,570
+puedes elegir 4 pasos 1.48,
+
+18
+00:00:32,570 --> 00:00:35,600
+f/1.8, f/2.84.
+
+19
+00:00:35,600 --> 00:00:37,340
+Por defecto el iPhone usa
+
+20
+00:00:37,340 --> 00:00:41,500
+f/1.8 y decide solo.
+
+21
+00:00:41,500 --> 00:00:43,270
+Es lo mismo que hace una cámara
+
+22
+00:00:43,270 --> 00:00:45,360
+profesional pero con unos cuantos milímetros.
+

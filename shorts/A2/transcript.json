@@ -1,0 +1,1080 @@
+{
+ "schema": "mosaic-transcript/1",
+ "id": "A2",
+ "short": "a2-como-funciona-la-apertura-variable-del-iphone-18-pro",
+ "language": "es",
+ "duration": 45.364,
+ "engine": "whisper.cpp",
+ "model": "ggml-large-v3-turbo-q5_0.bin",
+ "source_take": "a2-como-funciona-la-apertura-variable-del-iphone-18-pro_toma-01.wav",
+ "created": "2026-10-27T20:49:03Z",
+ "text": "Por primera vez un iPhone tiene una apertura variable. ¿Cómo cabe todo ese sistema dentro de un teléfono? Dentro de la cámara principal hay 6 hojas más delgadas que un cabello cortadas con un láser de un compuesto polímero. Un pequeño rotor las gira al mismo tiempo y al moverse forma un hexágono que se abre o se cierra. Abierto, f/1.48, entra la máxima luz. Cerrado, f/4, entra mucho menos pero más cosas quedan enfocadas. En la app principal de la cámara puedes elegir 4 pasos 1.48, f/1.8, f/2.84. Por defecto el iPhone usa f/1.8 y decide solo. Es lo mismo que hace una cámara profesional pero con unos cuantos milímetros.",
+ "words": [
+  {
+   "i": 0,
+   "text": "Por",
+   "norm": "por",
+   "start": 0.13,
+   "end": 0.18,
+   "p": 0.882
+  },
+  {
+   "i": 1,
+   "text": "primera",
+   "norm": "primera",
+   "start": 0.16,
+   "end": 0.53,
+   "p": 0.991
+  },
+  {
+   "i": 2,
+   "text": "vez",
+   "norm": "vez",
+   "start": 0.53,
+   "end": 0.69,
+   "p": 0.996
+  },
+  {
+   "i": 3,
+   "text": "un",
+   "norm": "un",
+   "start": 0.69,
+   "end": 0.79,
+   "p": 0.878
+  },
+  {
+   "i": 4,
+   "text": "iPhone",
+   "norm": "iphone",
+   "start": 0.79,
+   "end": 1.1,
+   "p": 0.915
+  },
+  {
+   "i": 5,
+   "text": "tiene",
+   "norm": "tiene",
+   "start": 1.1,
+   "end": 1.36,
+   "p": 0.989
+  },
+  {
+   "i": 6,
+   "text": "una",
+   "norm": "una",
+   "start": 1.36,
+   "end": 1.51,
+   "p": 0.971
+  },
+  {
+   "i": 7,
+   "text": "apertura",
+   "norm": "apertura",
+   "start": 1.51,
+   "end": 1.93,
+   "p": 0.998
+  },
+  {
+   "i": 8,
+   "text": "variable.",
+   "norm": "variable",
+   "start": 1.93,
+   "end": 2.56,
+   "p": 0.716
+  },
+  {
+   "i": 9,
+   "text": "¿Cómo",
+   "norm": "como",
+   "start": 2.56,
+   "end": 2.93,
+   "p": 0.767
+  },
+  {
+   "i": 10,
+   "text": "cabe",
+   "norm": "cabe",
+   "start": 2.93,
+   "end": 3.35,
+   "p": 0.989
+  },
+  {
+   "i": 11,
+   "text": "todo",
+   "norm": "todo",
+   "start": 3.35,
+   "end": 3.54,
+   "p": 0.94
+  },
+  {
+   "i": 12,
+   "text": "ese",
+   "norm": "ese",
+   "start": 3.54,
+   "end": 3.72,
+   "p": 0.882
+  },
+  {
+   "i": 13,
+   "text": "sistema",
+   "norm": "sistema",
+   "start": 3.72,
+   "end": 4.18,
+   "p": 0.96
+  },
+  {
+   "i": 14,
+   "text": "dentro",
+   "norm": "dentro",
+   "start": 4.18,
+   "end": 4.54,
+   "p": 0.896
+  },
+  {
+   "i": 15,
+   "text": "de",
+   "norm": "de",
+   "start": 4.54,
+   "end": 4.68,
+   "p": 0.985
+  },
+  {
+   "i": 16,
+   "text": "un",
+   "norm": "un",
+   "start": 4.68,
+   "end": 4.85,
+   "p": 0.989
+  },
+  {
+   "i": 17,
+   "text": "teléfono?",
+   "norm": "telefono",
+   "start": 4.85,
+   "end": 5.54,
+   "p": 0.99
+  },
+  {
+   "i": 18,
+   "text": "Dentro",
+   "norm": "dentro",
+   "start": 5.54,
+   "end": 5.88,
+   "p": 0.853
+  },
+  {
+   "i": 19,
+   "text": "de",
+   "norm": "de",
+   "start": 5.88,
+   "end": 5.99,
+   "p": 0.986
+  },
+  {
+   "i": 20,
+   "text": "la",
+   "norm": "la",
+   "start": 5.99,
+   "end": 6.13,
+   "p": 0.986
+  },
+  {
+   "i": 21,
+   "text": "cámara",
+   "norm": "camara",
+   "start": 6.13,
+   "end": 6.45,
+   "p": 0.979
+  },
+  {
+   "i": 22,
+   "text": "principal",
+   "norm": "principal",
+   "start": 6.45,
+   "end": 6.93,
+   "p": 0.986
+  },
+  {
+   "i": 23,
+   "text": "hay",
+   "norm": "hay",
+   "start": 6.93,
+   "end": 7.31,
+   "p": 0.835
+  },
+  {
+   "i": 24,
+   "text": "6",
+   "norm": "6",
+   "start": 7.31,
+   "end": 7.36,
+   "p": 0.552
+  },
+  {
+   "i": 25,
+   "text": "hojas",
+   "norm": "hojas",
+   "start": 7.32,
+   "end": 7.68,
+   "p": 0.994
+  },
+  {
+   "i": 26,
+   "text": "más",
+   "norm": "mas",
+   "start": 7.68,
+   "end": 7.96,
+   "p": 0.872
+  },
+  {
+   "i": 27,
+   "text": "delgadas",
+   "norm": "delgadas",
+   "start": 7.96,
+   "end": 8.53,
+   "p": 0.922
+  },
+  {
+   "i": 28,
+   "text": "que",
+   "norm": "que",
+   "start": 8.53,
+   "end": 8.58,
+   "p": 0.86
+  },
+  {
+   "i": 29,
+   "text": "un",
+   "norm": "un",
+   "start": 8.58,
+   "end": 8.75,
+   "p": 0.956
+  },
+  {
+   "i": 30,
+   "text": "cabello",
+   "norm": "cabello",
+   "start": 8.75,
+   "end": 9.38,
+   "p": 0.994
+  },
+  {
+   "i": 31,
+   "text": "cortadas",
+   "norm": "cortadas",
+   "start": 9.38,
+   "end": 9.84,
+   "p": 0.752
+  },
+  {
+   "i": 32,
+   "text": "con",
+   "norm": "con",
+   "start": 9.84,
+   "end": 10.04,
+   "p": 0.998
+  },
+  {
+   "i": 33,
+   "text": "un",
+   "norm": "un",
+   "start": 10.04,
+   "end": 10.17,
+   "p": 0.983
+  },
+  {
+   "i": 34,
+   "text": "láser",
+   "norm": "laser",
+   "start": 10.17,
+   "end": 10.49,
+   "p": 0.976
+  },
+  {
+   "i": 35,
+   "text": "de",
+   "norm": "de",
+   "start": 10.49,
+   "end": 10.63,
+   "p": 0.982
+  },
+  {
+   "i": 36,
+   "text": "un",
+   "norm": "un",
+   "start": 10.63,
+   "end": 10.75,
+   "p": 0.984
+  },
+  {
+   "i": 37,
+   "text": "compuesto",
+   "norm": "compuesto",
+   "start": 10.75,
+   "end": 11.35,
+   "p": 0.992
+  },
+  {
+   "i": 38,
+   "text": "polímero.",
+   "norm": "polimero",
+   "start": 11.35,
+   "end": 12.14,
+   "p": 0.98
+  },
+  {
+   "i": 39,
+   "text": "Un",
+   "norm": "un",
+   "start": 12.14,
+   "end": 12.61,
+   "p": 0.97
+  },
+  {
+   "i": 40,
+   "text": "pequeño",
+   "norm": "pequeno",
+   "start": 12.61,
+   "end": 12.77,
+   "p": 0.993
+  },
+  {
+   "i": 41,
+   "text": "rotor",
+   "norm": "rotor",
+   "start": 12.77,
+   "end": 13.19,
+   "p": 0.991
+  },
+  {
+   "i": 42,
+   "text": "las",
+   "norm": "las",
+   "start": 13.19,
+   "end": 13.33,
+   "p": 0.966
+  },
+  {
+   "i": 43,
+   "text": "gira",
+   "norm": "gira",
+   "start": 13.33,
+   "end": 13.62,
+   "p": 0.996
+  },
+  {
+   "i": 44,
+   "text": "al",
+   "norm": "al",
+   "start": 13.62,
+   "end": 13.83,
+   "p": 0.721
+  },
+  {
+   "i": 45,
+   "text": "mismo",
+   "norm": "mismo",
+   "start": 13.83,
+   "end": 14.1,
+   "p": 0.997
+  },
+  {
+   "i": 46,
+   "text": "tiempo",
+   "norm": "tiempo",
+   "start": 14.1,
+   "end": 14.56,
+   "p": 0.995
+  },
+  {
+   "i": 47,
+   "text": "y",
+   "norm": "y",
+   "start": 14.56,
+   "end": 14.61,
+   "p": 0.658
+  },
+  {
+   "i": 48,
+   "text": "al",
+   "norm": "al",
+   "start": 14.56,
+   "end": 14.7,
+   "p": 0.981
+  },
+  {
+   "i": 49,
+   "text": "moverse",
+   "norm": "moverse",
+   "start": 14.7,
+   "end": 15.2,
+   "p": 0.995
+  },
+  {
+   "i": 50,
+   "text": "forma",
+   "norm": "forma",
+   "start": 15.2,
+   "end": 15.56,
+   "p": 0.586
+  },
+  {
+   "i": 51,
+   "text": "un",
+   "norm": "un",
+   "start": 15.56,
+   "end": 15.7,
+   "p": 0.922
+  },
+  {
+   "i": 52,
+   "text": "hexágono",
+   "norm": "hexagono",
+   "start": 15.7,
+   "end": 16.34,
+   "p": 0.994
+  },
+  {
+   "i": 53,
+   "text": "que",
+   "norm": "que",
+   "start": 16.34,
+   "end": 16.5,
+   "p": 0.986
+  },
+  {
+   "i": 54,
+   "text": "se",
+   "norm": "se",
+   "start": 16.5,
+   "end": 16.64,
+   "p": 0.978
+  },
+  {
+   "i": 55,
+   "text": "abre",
+   "norm": "abre",
+   "start": 16.64,
+   "end": 17.0,
+   "p": 0.988
+  },
+  {
+   "i": 56,
+   "text": "o",
+   "norm": "o",
+   "start": 17.0,
+   "end": 17.05,
+   "p": 0.981
+  },
+  {
+   "i": 57,
+   "text": "se",
+   "norm": "se",
+   "start": 17.0,
+   "end": 17.14,
+   "p": 0.914
+  },
+  {
+   "i": 58,
+   "text": "cierra.",
+   "norm": "cierra",
+   "start": 17.14,
+   "end": 17.91,
+   "p": 0.973
+  },
+  {
+   "i": 59,
+   "text": "Abierto,",
+   "norm": "abierto",
+   "start": 17.91,
+   "end": 18.7,
+   "p": 0.759
+  },
+  {
+   "i": 60,
+   "text": "f/1.48,",
+   "norm": "f148",
+   "start": 18.7,
+   "end": 20.15,
+   "p": 0.911
+  },
+  {
+   "i": 61,
+   "text": "entra",
+   "norm": "entra",
+   "start": 20.15,
+   "end": 20.61,
+   "p": 0.952
+  },
+  {
+   "i": 62,
+   "text": "la",
+   "norm": "la",
+   "start": 20.61,
+   "end": 20.78,
+   "p": 0.812
+  },
+  {
+   "i": 63,
+   "text": "máxima",
+   "norm": "maxima",
+   "start": 20.78,
+   "end": 21.4,
+   "p": 0.994
+  },
+  {
+   "i": 64,
+   "text": "luz.",
+   "norm": "luz",
+   "start": 21.4,
+   "end": 21.9,
+   "p": 0.919
+  },
+  {
+   "i": 65,
+   "text": "Cerrado,",
+   "norm": "cerrado",
+   "start": 21.9,
+   "end": 22.66,
+   "p": 0.98
+  },
+  {
+   "i": 66,
+   "text": "f/4,",
+   "norm": "f4",
+   "start": 22.66,
+   "end": 23.21,
+   "p": 0.886
+  },
+  {
+   "i": 67,
+   "text": "entra",
+   "norm": "entra",
+   "start": 23.21,
+   "end": 23.63,
+   "p": 0.991
+  },
+  {
+   "i": 68,
+   "text": "mucho",
+   "norm": "mucho",
+   "start": 23.63,
+   "end": 24.17,
+   "p": 0.989
+  },
+  {
+   "i": 69,
+   "text": "menos",
+   "norm": "menos",
+   "start": 24.17,
+   "end": 24.47,
+   "p": 0.996
+  },
+  {
+   "i": 70,
+   "text": "pero",
+   "norm": "pero",
+   "start": 24.47,
+   "end": 24.8,
+   "p": 0.862
+  },
+  {
+   "i": 71,
+   "text": "más",
+   "norm": "mas",
+   "start": 24.8,
+   "end": 25.12,
+   "p": 0.937
+  },
+  {
+   "i": 72,
+   "text": "cosas",
+   "norm": "cosas",
+   "start": 25.12,
+   "end": 25.46,
+   "p": 0.96
+  },
+  {
+   "i": 73,
+   "text": "quedan",
+   "norm": "quedan",
+   "start": 25.46,
+   "end": 26.03,
+   "p": 0.953
+  },
+  {
+   "i": 74,
+   "text": "enfocadas.",
+   "norm": "enfocadas",
+   "start": 26.03,
+   "end": 27.25,
+   "p": 0.993
+  },
+  {
+   "i": 75,
+   "text": "En",
+   "norm": "en",
+   "start": 27.25,
+   "end": 27.3,
+   "p": 0.595
+  },
+  {
+   "i": 76,
+   "text": "la",
+   "norm": "la",
+   "start": 27.25,
+   "end": 27.32,
+   "p": 0.99
+  },
+  {
+   "i": 77,
+   "text": "app",
+   "norm": "app",
+   "start": 27.32,
+   "end": 27.44,
+   "p": 0.919
+  },
+  {
+   "i": 78,
+   "text": "principal",
+   "norm": "principal",
+   "start": 27.44,
+   "end": 27.9,
+   "p": 0.974
+  },
+  {
+   "i": 79,
+   "text": "de",
+   "norm": "de",
+   "start": 28.04,
+   "end": 28.11,
+   "p": 0.714
+  },
+  {
+   "i": 80,
+   "text": "la",
+   "norm": "la",
+   "start": 28.11,
+   "end": 28.32,
+   "p": 0.944
+  },
+  {
+   "i": 81,
+   "text": "cámara",
+   "norm": "camara",
+   "start": 28.32,
+   "end": 29.0,
+   "p": 0.988
+  },
+  {
+   "i": 82,
+   "text": "puedes",
+   "norm": "puedes",
+   "start": 29.0,
+   "end": 29.68,
+   "p": 0.831
+  },
+  {
+   "i": 83,
+   "text": "elegir",
+   "norm": "elegir",
+   "start": 29.68,
+   "end": 30.23,
+   "p": 0.999
+  },
+  {
+   "i": 84,
+   "text": "4",
+   "norm": "4",
+   "start": 30.23,
+   "end": 30.67,
+   "p": 0.461
+  },
+  {
+   "i": 85,
+   "text": "pasos",
+   "norm": "pasos",
+   "start": 30.67,
+   "end": 31.08,
+   "p": 0.986
+  },
+  {
+   "i": 86,
+   "text": "1.48,",
+   "norm": "148",
+   "start": 31.08,
+   "end": 32.57,
+   "p": 0.756
+  },
+  {
+   "i": 87,
+   "text": "f/1.8,",
+   "norm": "f18",
+   "start": 32.57,
+   "end": 33.94,
+   "p": 0.93
+  },
+  {
+   "i": 88,
+   "text": "f/2.84.",
+   "norm": "f284",
+   "start": 33.94,
+   "end": 35.6,
+   "p": 0.914
+  },
+  {
+   "i": 89,
+   "text": "Por",
+   "norm": "por",
+   "start": 35.6,
+   "end": 35.78,
+   "p": 0.828
+  },
+  {
+   "i": 90,
+   "text": "defecto",
+   "norm": "defecto",
+   "start": 35.78,
+   "end": 36.22,
+   "p": 0.995
+  },
+  {
+   "i": 91,
+   "text": "el",
+   "norm": "el",
+   "start": 36.22,
+   "end": 36.46,
+   "p": 0.579
+  },
+  {
+   "i": 92,
+   "text": "iPhone",
+   "norm": "iphone",
+   "start": 36.46,
+   "end": 36.66,
+   "p": 0.869
+  },
+  {
+   "i": 93,
+   "text": "usa",
+   "norm": "usa",
+   "start": 36.66,
+   "end": 37.34,
+   "p": 0.876
+  },
+  {
+   "i": 94,
+   "text": "f/1.8",
+   "norm": "f18",
+   "start": 37.34,
+   "end": 40.5,
+   "p": 0.909
+  },
+  {
+   "i": 95,
+   "text": "y",
+   "norm": "y",
+   "start": 40.5,
+   "end": 40.64,
+   "p": 0.98
+  },
+  {
+   "i": 96,
+   "text": "decide",
+   "norm": "decide",
+   "start": 40.64,
+   "end": 40.99,
+   "p": 0.978
+  },
+  {
+   "i": 97,
+   "text": "solo.",
+   "norm": "solo",
+   "start": 40.99,
+   "end": 41.5,
+   "p": 0.929
+  },
+  {
+   "i": 98,
+   "text": "Es",
+   "norm": "es",
+   "start": 41.5,
+   "end": 41.61,
+   "p": 0.958
+  },
+  {
+   "i": 99,
+   "text": "lo",
+   "norm": "lo",
+   "start": 41.61,
+   "end": 41.75,
+   "p": 0.995
+  },
+  {
+   "i": 100,
+   "text": "mismo",
+   "norm": "mismo",
+   "start": 41.75,
+   "end": 42.01,
+   "p": 0.993
+  },
+  {
+   "i": 101,
+   "text": "que",
+   "norm": "que",
+   "start": 42.01,
+   "end": 42.18,
+   "p": 0.994
+  },
+  {
+   "i": 102,
+   "text": "hace",
+   "norm": "hace",
+   "start": 42.18,
+   "end": 42.41,
+   "p": 0.911
+  },
+  {
+   "i": 103,
+   "text": "una",
+   "norm": "una",
+   "start": 42.41,
+   "end": 42.58,
+   "p": 0.984
+  },
+  {
+   "i": 104,
+   "text": "cámara",
+   "norm": "camara",
+   "start": 42.58,
+   "end": 43.27,
+   "p": 0.994
+  },
+  {
+   "i": 105,
+   "text": "profesional",
+   "norm": "profesional",
+   "start": 43.27,
+   "end": 43.62,
+   "p": 0.987
+  },
+  {
+   "i": 106,
+   "text": "pero",
+   "norm": "pero",
+   "start": 43.62,
+   "end": 43.85,
+   "p": 0.799
+  },
+  {
+   "i": 107,
+   "text": "con",
+   "norm": "con",
+   "start": 43.85,
+   "end": 43.96,
+   "p": 0.935
+  },
+  {
+   "i": 108,
+   "text": "unos",
+   "norm": "unos",
+   "start": 43.96,
+   "end": 44.23,
+   "p": 0.982
+  },
+  {
+   "i": 109,
+   "text": "cuantos",
+   "norm": "cuantos",
+   "start": 44.23,
+   "end": 44.69,
+   "p": 0.975
+  },
+  {
+   "i": 110,
+   "text": "milímetros.",
+   "norm": "milimetros",
+   "start": 44.69,
+   "end": 45.36,
+   "p": 0.97
+  }
+ ],
+ "segments": [
+  {
+   "i": 0,
+   "start": 0.13,
+   "end": 1.36,
+   "text": "Por primera vez un iPhone tiene",
+   "first": 0,
+   "last": 5
+  },
+  {
+   "i": 1,
+   "start": 1.36,
+   "end": 2.56,
+   "text": "una apertura variable.",
+   "first": 6,
+   "last": 8
+  },
+  {
+   "i": 2,
+   "start": 2.56,
+   "end": 4.18,
+   "text": "¿Cómo cabe todo ese sistema",
+   "first": 9,
+   "last": 13
+  },
+  {
+   "i": 3,
+   "start": 4.18,
+   "end": 5.54,
+   "text": "dentro de un teléfono?",
+   "first": 14,
+   "last": 17
+  },
+  {
+   "i": 4,
+   "start": 5.54,
+   "end": 7.68,
+   "text": "Dentro de la cámara principal hay 6 hojas",
+   "first": 18,
+   "last": 25
+  },
+  {
+   "i": 5,
+   "start": 7.68,
+   "end": 10.04,
+   "text": "más delgadas que un cabello cortadas con",
+   "first": 26,
+   "last": 32
+  },
+  {
+   "i": 6,
+   "start": 10.04,
+   "end": 12.14,
+   "text": "un láser de un compuesto polímero.",
+   "first": 33,
+   "last": 38
+  },
+  {
+   "i": 7,
+   "start": 12.14,
+   "end": 14.1,
+   "text": "Un pequeño rotor las gira al mismo",
+   "first": 39,
+   "last": 45
+  },
+  {
+   "i": 8,
+   "start": 14.1,
+   "end": 16.34,
+   "text": "tiempo y al moverse forma un hexágono",
+   "first": 46,
+   "last": 52
+  },
+  {
+   "i": 9,
+   "start": 16.34,
+   "end": 17.91,
+   "text": "que se abre o se cierra.",
+   "first": 53,
+   "last": 58
+  },
+  {
+   "i": 10,
+   "start": 17.91,
+   "end": 20.15,
+   "text": "Abierto, f/1.48,",
+   "first": 59,
+   "last": 60
+  },
+  {
+   "i": 11,
+   "start": 20.15,
+   "end": 21.9,
+   "text": "entra la máxima luz.",
+   "first": 61,
+   "last": 64
+  },
+  {
+   "i": 12,
+   "start": 21.9,
+   "end": 23.21,
+   "text": "Cerrado, f/4,",
+   "first": 65,
+   "last": 66
+  },
+  {
+   "i": 13,
+   "start": 23.21,
+   "end": 25.12,
+   "text": "entra mucho menos pero más",
+   "first": 67,
+   "last": 71
+  },
+  {
+   "i": 14,
+   "start": 25.12,
+   "end": 27.25,
+   "text": "cosas quedan enfocadas.",
+   "first": 72,
+   "last": 74
+  },
+  {
+   "i": 15,
+   "start": 27.25,
+   "end": 29.0,
+   "text": "En la app principal de la cámara",
+   "first": 75,
+   "last": 81
+  },
+  {
+   "i": 16,
+   "start": 29.0,
+   "end": 32.57,
+   "text": "puedes elegir 4 pasos 1.48,",
+   "first": 82,
+   "last": 86
+  },
+  {
+   "i": 17,
+   "start": 32.57,
+   "end": 35.6,
+   "text": "f/1.8, f/2.84.",
+   "first": 87,
+   "last": 88
+  },
+  {
+   "i": 18,
+   "start": 35.6,
+   "end": 37.34,
+   "text": "Por defecto el iPhone usa",
+   "first": 89,
+   "last": 93
+  },
+  {
+   "i": 19,
+   "start": 37.34,
+   "end": 41.5,
+   "text": "f/1.8 y decide solo.",
+   "first": 94,
+   "last": 97
+  },
+  {
+   "i": 20,
+   "start": 41.5,
+   "end": 43.27,
+   "text": "Es lo mismo que hace una cámara",
+   "first": 98,
+   "last": 104
+  },
+  {
+   "i": 21,
+   "start": 43.27,
+   "end": 45.36,
+   "text": "profesional pero con unos cuantos milímetros.",
+   "first": 105,
+   "last": 110
+  }
+ ]
+}
