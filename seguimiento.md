@@ -17,7 +17,7 @@ Guion: `guiones/shorts-hardware-2026-10-27.md` · Tomas: `audios/shorts-hardware
 | B3 | ¿Una pantalla que se cura sola? | ✅ 27 oct | ✅ 27 oct | — | ✅ 27 oct | — | — | toma 01 |
 | B4 | ¿El metal que regresa a su forma? | ✅ 27 oct | ✅ 27 oct | — | ✅ 27 oct | — | — | toma 02 |
 | B5 | ¿Cuántas veces se puede doblar una pantalla? | ✅ 27 oct | ✗ 27 oct | — | — | — | — | descartado: débil / demasiado centrado en Apple |
-| C1 ⭐ | ¿Qué es ARM y por qué Apple dejó a Intel? | ✅ 27 oct | ✅ 27 oct | — | — | — | — | toma 02 · «8 vs 4 instrucciones por ciclo» es de análisis independientes, no de Apple |
+| C1 ⭐ | ¿Qué es ARM y por qué Apple dejó a Intel? | ✅ 27 oct | ✅ 27 oct | — | ✅ 27 oct | — | — | toma 02 · «8 vs 4 instrucciones por ciclo» es de análisis independientes, no de Apple |
 | C2 | Memoria unificada | ✅ 27 oct | ✅ 27 oct | — | — | — | — | toma 02 |
 | C3 | Núcleos de rendimiento y de eficiencia | ✅ 27 oct | ✗ 27 oct | — | — | — | — | descartado: débil / demasiado centrado en Apple |
 | C4 | ¿Qué es un SoC? | ✅ 27 oct | ✗ 27 oct | — | — | — | — | descartado: débil / demasiado centrado en Apple |

@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>C1 · ¿Qué es ARM y por qué Apple dejó a Intel?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-intro" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-intro" style="top:1300px">2020: de procesadores Intel a chips propios<small>empezando por el M1</small></div>
+    <div class="m-caption scene" id="cap-what" style="top:1300px">¿Qué cambió? El idioma del procesador</div>
+
+    <svg class="full scene" id="sc-tapes" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-x86" style="top:1300px">x86: cada instrucción mide de 1 a 15 bytes<small>primero hay que averiguar dónde termina cada una</small></div>
+    <div class="m-caption scene" id="cap-arm" style="top:1300px">ARM: todas miden lo mismo, 4 bytes<small>se pueden leer muchas al mismo tiempo</small></div>
+
+    <svg class="full scene" id="sc-decode" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-dec" style="top:1300px">Instrucciones decodificadas por ciclo<small>cifras de análisis independientes, no de Apple</small></div>
+    <div class="m-caption scene" id="cap-work" style="top:1300px">Más trabajo por ciclo<small>con menos energía</small></div>
+
+    <svg class="full scene" id="sc-end" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-end" style="top:1300px">Con núcleos propios<small>ya no depende del calendario de nadie</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp } = Mosaic;
+
+  function chip(g, x, y, label, sub, color) {
+    const gg = el("g", { transform: `translate(${x} ${y})` }, g);
+    el("rect", { x: -150, y: -150, width: 300, height: 300, rx: 24, fill: "#faf8f3", stroke: color, "stroke-width": 8 }, gg);
+    for (let i = 0; i < 6; i++) {
+      [[-170, -110 + i * 44, 20, 12], [150, -110 + i * 44, 20, 12], [-110 + i * 44, -170, 12, 20], [-110 + i * 44, 150, 12, 20]]
+        .forEach(([px, py, w, h]) => el("rect", { x: px, y: py, width: w, height: h, fill: color }, gg));
+    }
+    el("text", { y: 0, "text-anchor": "middle", "font-size": 76, "font-weight": 700, fill: "var(--ink)", text: label }, gg);
+    el("text", { y: 70, "text-anchor": "middle", class: "m-label", text: sub }, gg);
+    return gg;
+  }
+
+  // ---------------------------------------------------------------- intro
+  let it = {};
+  function buildIntro() {
+    const g = el("g", {}, $("#sc-intro"));
+    it.a = chip(g, 270, 820, "Intel", "x86", "#5c584f");
+    it.b = chip(g, 810, 820, "M1", "ARM", "#2f5e8e");
+    it.arrow = el("text", { x: 540, y: 845, "text-anchor": "middle", "font-size": 90, fill: "var(--ink-2)", text: "→" }, g);
+    el("text", { x: 540, y: 560, "text-anchor": "middle", "font-size": 64, "font-weight": 700, class: "m-num", fill: "var(--ink)", text: "2020" }, g);
+  }
+  function drawIntro(t, s, A) {
+    it.b.setAttribute("opacity", String(ramp(t, A.chips.start - 0.3, A.chips.start + 0.3)));
+    it.arrow.setAttribute("opacity", String(ramp(t, A.chips.start - 0.3, A.chips.start + 0.3)));
+  }
+
+  // ---------------------------------------------------------------- instruction tapes
+  const CELL = 24, TX = 132;
+  const X86 = [3, 1, 5, 2, 7, 4, 1, 3, 6, 2];          // instruction lengths in bytes (1..15 in x86)
+  const ARM = [4, 4, 4, 4, 4, 4, 4, 4];
+  const SHADES = ["#2f5e8e", "#3a9a80", "#c98a1b", "#b3386b"];
+  let tp = {};
+  function tape(g, y, lengths, label) {
+    el("text", { x: TX, y: y - 30, class: "m-label", text: label }, g);
+    const blocks = [];
+    let x = TX, b = 0;
+    lengths.forEach((len, k) => {
+      const cells = [];
+      for (let i = 0; i < len; i++) {
+        cells.push(el("rect", { x: x + i * CELL, y, width: CELL - 3, height: 64, rx: 3, fill: "#d6d1c5" }, g));
+      }
+      blocks.push({ cells, start: b, len, x, color: SHADES[k % 4] });
+      x += len * CELL; b += len;
+    });
+    return { blocks, total: b, y, end: x };
+  }
+  function buildTapes() {
+    const g = el("g", {}, $("#sc-tapes"));
+    tp.x = tape(g, 640, X86, "x86 · bytes");
+    tp.cursor = el("rect", { y: 620, width: CELL - 3, height: 104, rx: 4, fill: "none", stroke: "var(--fuchsia)", "stroke-width": 5 }, g);
+    tp.xMarks = tp.x.blocks.map((b) => el("line", { x1: b.x + b.len * CELL - 1.5, x2: b.x + b.len * CELL - 1.5, y1: 616, y2: 728, stroke: "var(--ink)", "stroke-width": 5, opacity: 0 }, g));
+    tp.a = tape(g, 960, ARM, "ARM · bytes");
+    tp.aMarks = tp.a.blocks.map((b) => el("line", { x1: b.x + b.len * CELL - 1.5, x2: b.x + b.len * CELL - 1.5, y1: 936, y2: 1048, stroke: "var(--ink)", "stroke-width": 5, opacity: 0 }, g));
+    tp.armGroup = [tp.a.blocks, tp.aMarks];
+    tp.aLabel = g.querySelectorAll("text")[1];
+  }
+  function drawTapes(t, s, A) {
+    // x86: the decoder walks byte by byte; a boundary is known only after reading the bytes before it
+    const scan = ramp(t, A.leerlas.start, A.arm.start - 0.2, ease.linear) * tp.x.total;
+    tp.x.blocks.forEach((b, k) => {
+      const known = scan >= b.start + b.len;
+      b.cells.forEach((c) => c.setAttribute("fill", known ? b.color : "#d6d1c5"));
+      tp.xMarks[k].setAttribute("opacity", known ? "1" : "0");
+    });
+    const ci = Math.min(tp.x.total - 1, Math.floor(scan));
+    tp.cursor.setAttribute("x", TX + ci * CELL);
+    tp.cursor.setAttribute("opacity", scan > 0 && scan < tp.x.total ? "1" : "0");
+    // ARM: every boundary is every 4 bytes, known at once
+    const armOn = ramp(t, A.arm.start - 0.3, A.arm.start + 0.1);
+    const armKnown = t >= A.cuatro.start - 0.1;
+    tp.a.blocks.forEach((b, k) => {
+      b.cells.forEach((c) => { c.setAttribute("fill", armKnown ? b.color : "#d6d1c5"); c.setAttribute("opacity", String(armOn)); });
+      tp.aMarks[k].setAttribute("opacity", armKnown ? "1" : "0");
+    });
+    tp.aLabel.setAttribute("opacity", String(armOn));
+  }
+
+  // ---------------------------------------------------------------- decoders: 8 vs 4 per cycle
+  const PERIOD = 0.9;
+  let dc = {};
+  function lane(g, y, n, label, color) {
+    el("text", { x: 120, y: y - 70, class: "m-label", text: label }, g);
+    el("rect", { x: 620, y: y - 60, width: 300, height: 120, rx: 14, fill: "#faf8f3", stroke: color, "stroke-width": 6 }, g);
+    el("text", { x: 770, y: y + 12, "text-anchor": "middle", "font-size": 34, "font-weight": 700, fill: color, text: "decodificador" }, g);
+    const blocks = [];
+    for (let i = 0; i < 16; i++) blocks.push(el("rect", { y: y - 22, width: 26, height: 44, rx: 4, fill: SHADES[i % 4] }, g));
+    const count = el("text", { x: 770, y: y + 120, "text-anchor": "middle", class: "m-label m-num", text: "" }, g);
+    return { y, n, blocks, count };
+  }
+  function buildDecode() {
+    const g = el("g", {}, $("#sc-decode"));
+    dc.m1 = lane(g, 720, 8, "M1 · 8 por ciclo", "#2f5e8e");
+    dc.intel = lane(g, 1030, 4, "Intel de 2020 · 4 por ciclo", "#5c584f");
+  }
+  function drawLane(L, t, t0) {
+    // an endless queue: every cycle the first n instructions slide into the decoder, the rest move up
+    const k = Math.max(0, (t - t0) / PERIOD), cycle = Math.floor(k);
+    const f = t < t0 ? 0 : ease.inOut(Math.min(1, (k - cycle) / 0.6));
+    L.blocks.forEach((b, j) => {
+      let x = 120 + j * 30 - L.n * 30 * f, op = 1;
+      if (j < L.n) {
+        x = lerp(120 + j * 30, 650 + j * (240 / L.n), f);
+        op = f < 0.75 ? 1 : 1 - (f - 0.75) / 0.25;
+      }
+      b.setAttribute("x", x.toFixed(1));
+      b.setAttribute("opacity", op.toFixed(3));
+      b.setAttribute("fill", SHADES[(cycle * L.n + j) % 4]);
+    });
+    L.count.textContent = t >= t0 ? `${cycle * L.n} instrucciones en ${cycle} ${cycle === 1 ? "ciclo" : "ciclos"}` : "";
+  }
+  function drawDecode(t, s, A) {
+    drawLane(dc.m1, t, A.decodifica.start);
+    drawLane(dc.intel, t, A.decodifica.start);
+  }
+
+  // ---------------------------------------------------------------- closing
+  function buildEnd() {
+    const g = el("g", {}, $("#sc-end"));
+    chip(g, 540, 800, "núcleo", "diseño propio", "#2f5e8e");
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "En 2020, Apple dejó los procesadores de Intel por sus propios chips, empezando por el M1. Pero, ¿qué cambió? El idioma del procesador que Intel usa se llama x86, donde cada instrucción puede medir de 1 a 15 bytes. Para leerlas, el chip primero tiene que averiguar dónde termina cada una. ARM es más simple, todas las instrucciones miden lo mismo, 4 bytes. Eso permite leer muchas al mismo tiempo. El M1 decodifica 8 instrucciones por ciclo. Los Intel en esa época, 4. Más trabajo por ciclo, con menos energía. Y como Apple diseña sus propios núcleos, ARM ya no depende del calendario de nadie.";
+
+  Mosaic.short({
+    kicker: "Chips",
+    title: "¿Qué es ARM y por qué Apple dejó a Intel?",
+    script: SCRIPT,
+    anchors: {
+      chips: "propios chips",
+      cambio: "cambio",
+      idioma: "idioma",
+      x86: ["x86", "equis ochenta y seis"],
+      leerlas: "leerlas",
+      arm: "arm es",
+      cuatro: ["4 bytes", "cuatro bytes"],
+      mismo: "mismo tiempo",
+      decodifica: "decodifica",
+      trabajo: "mas trabajo",
+      disena: "disena",
+      calendario: "calendario",
+    },
+    build() { buildIntro(); buildTapes(); buildDecode(); buildEnd(); },
+    scenes: [
+      { el: "#sc-intro", from: 0, to: "idioma-0.2", fadeIn: 0.4, rise: 0, update: drawIntro },
+      { el: "#cap-intro", from: 0.2, to: "cambio-0.6", fade: 0.3 },
+      { el: "#cap-what", from: "cambio-0.6", to: "idioma+0.6", fade: 0.3 },
+      { el: "#sc-tapes", from: "idioma-0.2", to: "decodifica-0.3", rise: 0, update: drawTapes },
+      { el: "#cap-x86", from: "x86-0.3", to: "arm-0.3", fade: 0.3 },
+      { el: "#cap-arm", from: "arm-0.3", to: "decodifica-0.3", fade: 0.3 },
+      { el: "#sc-decode", from: "decodifica-0.3", to: "disena-0.4", rise: 0, update: drawDecode },
+      { el: "#cap-dec", from: "decodifica-0.2", to: "trabajo-0.2", fade: 0.3 },
+      { el: "#cap-work", from: "trabajo-0.2", to: "disena-0.4", fade: 0.3 },
+      { el: "#sc-end", from: "disena-0.4", to: "end", rise: 0 },
+      { el: "#cap-end", from: "disena-0.3", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
