@@ -1,0 +1,64 @@
+1
+00:00:00,000 --> 00:00:02,860
+Un proceso es un programa
+que está en ejecución.
+
+2
+00:00:03,100 --> 00:00:05,480
+Los procesos pueden
+tener distintos estados,
+
+3
+00:00:05,520 --> 00:00:08,360
+entre los que se encuentran
+el estado nonato o nuevo,
+
+4
+00:00:08,660 --> 00:00:10,080
+que es cuando un proceso existe,
+
+5
+00:00:10,120 --> 00:00:11,720
+pero la CPU aún no lo sabe,
+
+6
+00:00:11,940 --> 00:00:15,240
+ya sea porque es muy reciente o porque
+aún no se le pide que se ejecute.
+
+7
+00:00:15,400 --> 00:00:18,780
+Los procesos en estado activo
+o en ejecución son los procesos
+
+8
+00:00:18,780 --> 00:00:21,000
+que el procesador está
+ejecutando en el momento.
+
+9
+00:00:21,080 --> 00:00:24,960
+Un proceso en estado preparado es un
+proceso que está listo para ejecutarse
+
+10
+00:00:24,960 --> 00:00:26,020
+en cualquier momento.
+
+11
+00:00:26,180 --> 00:00:28,960
+Un proceso en estado bloqueado
+es un proceso que está preparado
+
+12
+00:00:28,960 --> 00:00:31,320
+para la respuesta de algún otro proceso,
+
+13
+00:00:31,360 --> 00:00:33,280
+para poder continuar su ejecución.
+
+14
+00:00:33,920 --> 00:00:37,960
+Y el proceso concluido es cuando un
+proceso ya ha terminado su ejecución.

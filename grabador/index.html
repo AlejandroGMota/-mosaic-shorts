@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grabador</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231d1d1f'/%3E%3Ccircle cx='32' cy='32' r='14' fill='%23ff3b30'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#ffffff; --side:#f5f5f7; --line:rgba(0,0,0,.08); --tx:#1d1d1f; --mu:#86868b;
+  --accent:#0071e3; --red:#ff3b30; --sel:rgba(0,113,227,.12); --dim:rgba(29,29,31,.28); --done:rgba(29,29,31,.16);
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#1c1c1e; --side:#232325; --line:rgba(255,255,255,.08); --tx:#f5f5f7; --mu:#98989d;
+    --accent:#0a84ff; --red:#ff453a; --sel:rgba(10,132,255,.22); --dim:rgba(245,245,247,.30); --done:rgba(245,245,247,.16); }
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);
+  font:15px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif;-webkit-font-smoothing:antialiased}
+.app{display:grid;grid-template-columns:280px 1fr;height:100vh}
+
+/* barra lateral */
+aside{background:var(--side);border-right:1px solid var(--line);overflow:auto;padding:28px 10px 20px}
+.file{font-size:11px;font-weight:600;color:var(--mu);margin:22px 10px 6px;letter-spacing:.02em}
+.file:first-child{margin-top:0}
+.item{display:flex;align-items:baseline;gap:8px;padding:7px 10px;border-radius:7px;cursor:default;font-size:13px}
+.item:hover{background:var(--line)}
+.item.sel{background:var(--sel)}
+.item .t{flex:1;min-width:0}
+.item .m{font-size:12px;color:var(--mu);font-variant-numeric:tabular-nums;white-space:nowrap}
+.item .m.ok{color:var(--accent)}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex:none;transform:translateY(-1px)}
+.dot.off{background:transparent}
+
+/* principal */
+main{display:grid;grid-template-rows:auto 1fr auto;min-height:0;position:relative}
+header{display:flex;align-items:center;gap:14px;padding:14px 28px;font-size:12px;color:var(--mu)}
+header select{font:inherit;color:var(--tx);background:transparent;border:0;padding:2px 0;max-width:260px;cursor:pointer}
+header select:focus{outline:none}
+.meter{flex:1;max-width:160px;height:3px;border-radius:2px;background:var(--line);overflow:hidden}
+.meter i{display:block;height:100%;width:0;background:var(--tx);opacity:.55;transition:width .05s linear}
+.meter.clip i{background:var(--red);opacity:1}
+.cfg{margin-left:auto;font-variant-numeric:tabular-nums}
+.cfg b{font-weight:500}
+.cfg b.bad{color:var(--red)}
+
+#prompter{overflow:auto;padding:12vh 0 45vh;scroll-behavior:smooth;-webkit-mask-image:linear-gradient(transparent,#000 14%,#000 80%,transparent);mask-image:linear-gradient(transparent,#000 14%,#000 80%,transparent)}
+.col{max-width:760px;margin:0 auto;padding:0 40px}
+#prompter h2{font-size:13px;font-weight:500;color:var(--mu);margin:0 0 40px}
+.empty{color:var(--mu);font-size:17px;text-align:center;margin-top:20vh}
+.part{font-size:clamp(26px,2.8vw,36px);line-height:1.32;font-weight:500;letter-spacing:-.01em;margin:0 0 .85em;color:var(--dim);transition:color .25s ease}
+.part.done{color:var(--done)}
+.part.cur{color:var(--tx)}
+
+/* controles */
+footer{display:flex;align-items:center;justify-content:center;gap:22px;padding:18px 28px 26px;position:relative}
+.rec{width:58px;height:58px;border-radius:50%;border:3px solid var(--line);background:transparent;padding:0;cursor:pointer;display:grid;place-items:center;transition:transform .1s}
+.rec:active{transform:scale(.96)}
+.rec span{width:44px;height:44px;border-radius:50%;background:var(--red);transition:all .2s ease}
+.rec.on span{width:22px;height:22px;border-radius:5px}
+.rec:disabled{opacity:.35;cursor:default}
+#tiempo{font-size:15px;font-variant-numeric:tabular-nums;color:var(--mu);min-width:44px}
+#estado{display:none}
+.hint{position:absolute;left:28px;font-size:12px;color:var(--mu)}
+.takes{position:absolute;right:28px;display:flex;gap:8px;align-items:center}
+.take{border:0;background:var(--side);color:var(--tx);font:12px -apple-system,sans-serif;padding:5px 11px;border-radius:999px;cursor:pointer}
+.take.playing{background:var(--accent);color:#fff}
+#msg{position:absolute;bottom:4px;left:0;right:0;text-align:center;font-size:12px;color:var(--mu)}
+#msg.err{color:var(--red)}
+#btnStop{display:none}
+.review{position:absolute;right:28px;display:flex;gap:8px;align-items:center}
+.review[hidden],.takes[hidden]{display:none}
+.pill{border:0;background:var(--side);color:var(--tx);font:13px -apple-system,sans-serif;padding:7px 14px;border-radius:999px;cursor:pointer}
+.pill:hover{filter:brightness(.97)}
+.pill.primary{background:var(--accent);color:#fff;font-weight:500}
+.pill:disabled{opacity:.5}
+.lbl{font-size:12px;color:var(--mu);margin-right:2px}
+.lbl.warn{color:var(--red)}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside><div id="lista"></div></aside>
+  <main>
+    <header>
+      <select id="mic" title="Micrófono"></select>
+      <div class="meter" id="meter"><i></i></div>
+      <span class="cfg" id="cfg"></span>
+    </header>
+    <section id="prompter"><div class="col"><p class="empty">Elige un guion</p></div></section>
+    <footer>
+      <span class="hint">R grabar · Espacio siguiente · S detener · Enter guardar · ⌫ descartar</span>
+      <button id="btnRec" class="rec" disabled title="Grabar (R)"><span></span></button>
+      <button id="btnStop"></button>
+      <span id="tiempo">0:00</span><span id="estado"></span>
+      <div class="takes" id="takes"></div>
+      <div class="review" id="review" hidden>
+        <span class="lbl warn">Sin guardar</span>
+        <button class="pill" id="btnEsc">Escuchar</button>
+        <button class="pill" id="btnDel" title="Descartar (⌫)">Descartar</button>
+        <button class="pill primary" id="btnSave" title="Guardar (Enter)">Guardar toma</button>
+      </div>
+      <div id="msg"></div>
+    </footer>
+  </main>
+</div>
+
+<script>
+// ---------- estado ----------
+const $ = s => document.querySelector(s);
+let data = [], sel = null, cur = 0;
+let stream = null, ctx = null, node = null, analyser = null;
+let recording = false, chunks = [], samples = 0, marks = [], t0 = 0, peak = 0, clipped = 0;
+
+// ---------- guiones ----------
+async function cargar(keepSel) {
+  const r = await fetch('/api/guiones'); const j = await r.json();
+  data = j.guiones;
+  const lista = $('#lista'); lista.innerHTML = '';
+  for (const g of data) {
+    lista.insertAdjacentHTML('beforeend', `<div class="file">${g.file.replace(/-/g,' ')}</div>`);
+    for (const it of g.items) {
+      const el = document.createElement('div');
+      el.className = 'item' + (keepSel && sel && sel.it.id === it.id && sel.file === g.file ? ' sel' : '');
+      const secs = Math.round(it.words / 2.6); // ~155 palabras/min
+      el.innerHTML = `<span class="dot ${it.star ? '' : 'off'}"></span><span class="t">${it.title}</span><span class="m ${it.takes.length ? 'ok' : ''}">${it.takes.length ? it.takes.length + (it.takes.length > 1 ? ' tomas' : ' toma') : secs + ' s'}</span>`;
+      el.onclick = () => elegir(g.file, it, el);
+      lista.appendChild(el);
+      if (keepSel && sel && sel.it.id === it.id && sel.file === g.file) sel.it = it;
+    }
+  }
+  if (keepSel && sel) pintarTomas();
+}
+
+function elegir(file, it, el) {
+  if (recording) return;
+  if (pending && !confirm('Tienes una toma sin guardar. ¿Descartarla?')) return;
+  if (pending) descartar();
+  document.querySelectorAll('.item.sel').forEach(e => e.classList.remove('sel'));
+  el.classList.add('sel');
+  sel = { file, it }; cur = 0;
+  const p = $('#prompter');
+  p.innerHTML = `<div class="col"><h2>${it.title} · ${Math.round(it.words / 2.6)} s</h2>` +
+    it.parts.map((t, i) => `<p class="part" data-i="${i}">${t}</p>`).join('') + '</div>';
+  resaltar(); pintarTomas();
+  $('#btnRec').disabled = !stream;
+}
+
+function resaltar() {
+  document.querySelectorAll('.part').forEach((e, i) => {
+    e.classList.toggle('cur', i === cur); e.classList.toggle('done', i < cur);
+  });
+  const c = document.querySelector('.part.cur');
+  if (c) c.scrollIntoView({ block: 'center' });
+}
+
+function pintarTomas() {
+  const box = $('#takes'); box.innerHTML = '';
+  if (!sel) return;
+  const player = new Audio();
+  if (sel.it.takes.length) box.insertAdjacentHTML('beforeend', `<span class="lbl">Guardadas</span>`);
+  sel.it.takes.slice(-3).forEach(t => {
+    const n = (t.match(/toma-(\d+)/) || [, '?'])[1];
+    const btn = document.createElement('button'); btn.className = 'take'; btn.textContent = '▶ Toma ' + Number(n);
+    btn.title = t;
+    btn.onclick = () => {
+      const src = `/api/audio?file=${encodeURIComponent(sel.file)}&id=${encodeURIComponent(sel.it.id)}&take=${encodeURIComponent(t)}`;
+      document.querySelectorAll('.take').forEach(x => x.classList.remove('playing'));
+      if (!player.paused && player.dataset.t === t) { player.pause(); return; }
+      player.src = src; player.dataset.t = t; player.play(); btn.classList.add('playing');
+      player.onended = () => btn.classList.remove('playing');
+    };
+    box.appendChild(btn);
+  });
+}
+
+// ---------- micrófono ----------
+async function abrirMic(deviceId) {
+  if (stream) stream.getTracks().forEach(t => t.stop());
+  if (ctx) await ctx.close();
+  // Sin procesamiento de voz: nada de cancelación de eco, supresión de ruido ni volumen automático.
+  stream = await navigator.mediaDevices.getUserMedia({ audio: {
+    deviceId: deviceId ? { exact: deviceId } : undefined,
+    echoCancellation: false, noiseSuppression: false, autoGainControl: false,
+    channelCount: 1
+  }});
+  const track = stream.getAudioTracks()[0];
+  const s = track.getSettings();
+  // El contexto usa la frecuencia nativa del micrófono para no re-muestrear.
+  ctx = new AudioContext(s.sampleRate ? { sampleRate: s.sampleRate } : undefined);
+  const src = ctx.createMediaStreamSource(stream);
+  analyser = ctx.createAnalyser(); analyser.fftSize = 2048;
+  const code = `class Cap extends AudioWorkletProcessor{process(i){const c=i[0];if(c&&c[0])this.port.postMessage(c[0].slice(0));return true}}registerProcessor('cap',Cap)`;
+  await ctx.audioWorklet.addModule(URL.createObjectURL(new Blob([code], { type: 'application/javascript' })));
+  node = new AudioWorkletNode(ctx, 'cap', { numberOfInputs: 1, numberOfOutputs: 0, channelCount: 1, channelCountMode: 'explicit' });
+  node.port.onmessage = e => { if (recording) { chunks.push(e.data); samples += e.data.length; } };
+  src.connect(analyser); src.connect(node);
+  const bad = v => v ? `<b class="bad">ON</b>` : `<b>off</b>`;
+  const any = s.echoCancellation || s.noiseSuppression || s.autoGainControl;
+  $('#cfg').innerHTML = `${(ctx.sampleRate / 1000).toFixed(1)} kHz · 24 bits · mono` + (any ? ` · <b class="bad">procesamiento activo</b>` : '');
+  if (s.echoCancellation || s.noiseSuppression || s.autoGainControl) msg('El navegador no apagó todo el procesamiento de voz. Prueba otro micrófono o navegador.', 'err');
+  $('#btnRec').disabled = !sel;
+  medir();
+}
+
+async function listarMics() {
+  const devs = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'audioinput');
+  const m = $('#mic'); const prev = m.value; m.innerHTML = '';
+  for (const d of devs) m.insertAdjacentHTML('beforeend', `<option value="${d.deviceId}">${d.label || 'Micrófono'}</option>`);
+  if (prev) m.value = prev;
+}
+
+function medir() {
+  const buf = new Float32Array(analyser.fftSize);
+  const loop = () => {
+    if (!analyser) return;
+    analyser.getFloatTimeDomainData(buf);
+    let p = 0; for (const v of buf) p = Math.max(p, Math.abs(v));
+    const db = 20 * Math.log10(p || 1e-9);
+    const el = $('#meter'); el.querySelector('i').style.width = Math.max(0, Math.min(100, (db + 60) / 60 * 100)) + '%';
+    const clip = db > -1; el.classList.toggle('clip', clip);
+    if (recording) { peak = Math.max(peak, p); if (clip) clipped++; $('#tiempo').textContent = fmt(samples / ctx.sampleRate); }
+    requestAnimationFrame(loop);
+  };
+  loop();
+}
+
+// ---------- grabación ----------
+function grabar() {
+  if (!sel || !stream || recording) return;
+  if (pending) { URL.revokeObjectURL(pending.url); pending = null; mostrarRevision(false); }
+  chunks = []; samples = 0; marks = [{ parte: 1, t: 0 }]; peak = 0; clipped = 0; cur = 0; resaltar();
+  recording = true; t0 = performance.now();
+  $('#btnRec').classList.add('on'); $('#btnRec').title = 'Detener (S)'; msg('');
+}
+
+function siguiente() {
+  if (!sel) return;
+  if (cur < sel.it.parts.length - 1) {
+    cur++; resaltar();
+    if (recording) marks.push({ parte: cur + 1, t: +(samples / ctx.sampleRate).toFixed(3) });
+  }
+}
+
+let pending = null; // toma grabada que aún no se guarda
+const reviewPlayer = new Audio();
+
+function detener() {
+  if (!recording) return;
+  recording = false;
+  $('#btnRec').classList.remove('on'); $('#btnRec').title = 'Grabar otra vez (R)';
+  const pcm = new Float32Array(samples); let o = 0; for (const c of chunks) { pcm.set(c, o); o += c.length; }
+  chunks = [];
+  const wav = wav24(pcm, ctx.sampleRate);
+  const meta = {
+    guion: sel.file, short: sel.it.title, sampleRate: ctx.sampleRate, bits: 24, canales: 1,
+    duracion_s: +(samples / ctx.sampleRate).toFixed(3),
+    pico_dbfs: +(20 * Math.log10(peak || 1e-9)).toFixed(1), saturaciones: clipped,
+    marcas: marks.map(m => ({ ...m, texto: sel.it.parts[m.parte - 1] }))
+  };
+  pending = { wav, meta, file: sel.file, id: sel.it.id, url: URL.createObjectURL(new Blob([wav], { type: 'audio/wav' })) };
+  mostrarRevision(true);
+  msg(clipped ? 'Saturó: baja el volumen de entrada y repite' : '', clipped ? 'err' : '');
+  $('#btnRec').disabled = false;
+}
+
+function mostrarRevision(on) {
+  $('#review').hidden = !on; $('#takes').hidden = on;
+  if (!on) { reviewPlayer.pause(); $('#btnEsc').textContent = 'Escuchar'; }
+}
+
+function descartar() {
+  if (!pending) return;
+  URL.revokeObjectURL(pending.url); pending = null;
+  mostrarRevision(false); msg('Toma descartada');
+}
+
+function escuchar() {
+  if (!pending) return;
+  if (!reviewPlayer.paused) { reviewPlayer.pause(); $('#btnEsc').textContent = 'Escuchar'; return; }
+  reviewPlayer.src = pending.url; reviewPlayer.play(); $('#btnEsc').textContent = 'Pausa';
+  reviewPlayer.onended = () => { $('#btnEsc').textContent = 'Escuchar'; };
+}
+
+async function guardar() {
+  if (!pending) return;
+  const p = pending; $('#btnSave').disabled = true; msg('Guardando…');
+  try {
+    const r = await fetch(`/api/grabar?file=${encodeURIComponent(p.file)}&id=${encodeURIComponent(p.id)}`, {
+      method: 'POST', body: p.wav, headers: { 'Content-Type': 'audio/wav', 'X-Marcas': encodeURIComponent(JSON.stringify(p.meta)) }
+    });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || r.status);
+    URL.revokeObjectURL(p.url); pending = null; mostrarRevision(false);
+    msg(`Guardada: ${j.take}`);
+    await cargar(true);
+  } catch (e) {
+    // Si el servidor falla, que la toma no se pierda: descarga local.
+    const a = document.createElement('a'); a.href = p.url; a.download = `${p.id}-${Date.now()}.wav`; a.click();
+    msg('No se pudo guardar en la carpeta (' + e.message + '). Se descargó el WAV como respaldo.', 'err');
+  }
+  $('#btnSave').disabled = false;
+}
+
+// WAV PCM 24 bits little-endian, mono.
+function wav24(pcm, rate) {
+  const bytes = pcm.length * 3, buf = new ArrayBuffer(44 + bytes), v = new DataView(buf);
+  const w = (o, s) => [...s].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+  w(0, 'RIFF'); v.setUint32(4, 36 + bytes, true); w(8, 'WAVE'); w(12, 'fmt ');
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, rate, true); v.setUint32(28, rate * 3, true); v.setUint16(32, 3, true); v.setUint16(34, 24, true);
+  w(36, 'data'); v.setUint32(40, bytes, true);
+  let o = 44;
+  for (let i = 0; i < pcm.length; i++) {
+    const s = Math.max(-1, Math.min(1, pcm[i])); const x = Math.round(s < 0 ? s * 0x800000 : s * 0x7FFFFF);
+    v.setUint8(o, x & 255); v.setUint8(o + 1, (x >> 8) & 255); v.setUint8(o + 2, (x >> 16) & 255); o += 3;
+  }
+  return buf;
+}
+
+const fmt = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+function msg(t, cls) { const m = $('#msg'); m.textContent = t || ''; m.className = cls || ''; }
+
+// ---------- teclado ----------
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'SELECT') return;
+  if (e.code === 'Space') { e.preventDefault(); siguiente(); }
+  else if (e.key === 'r' || e.key === 'R') grabar();
+  else if (e.key === 's' || e.key === 'S') detener();
+  else if (e.key === 'Enter' && pending) { e.preventDefault(); guardar(); }
+  else if ((e.key === 'Backspace' || e.key === 'Delete') && pending) { e.preventDefault(); descartar(); }
+  else if (e.key === 'ArrowDown' && !recording) { e.preventDefault(); siguiente(); }
+  else if (e.key === 'ArrowUp' && !recording) { e.preventDefault(); if (cur > 0) { cur--; resaltar(); } }
+});
+$('#btnRec').onclick = () => recording ? detener() : grabar();
+$('#btnSave').onclick = guardar; $('#btnDel').onclick = descartar; $('#btnEsc').onclick = escuchar;
+window.addEventListener('beforeunload', e => { if (pending || recording) { e.preventDefault(); e.returnValue = ''; } });
+$('#mic').onchange = e => abrirMic(e.target.value).catch(err => msg(err.message, 'err'));
+
+(async () => {
+  await cargar(false);
+  try { await abrirMic(); await listarMics(); }
+  catch (e) { msg('Sin acceso al micrófono: ' + e.message + '. Revisa Ajustes del Sistema → Privacidad → Micrófono → Edge.', 'err'); }
+})();
+</script>
+</body>
+</html>

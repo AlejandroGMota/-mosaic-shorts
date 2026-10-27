@@ -1,0 +1,57 @@
+1
+00:00:00,240 --> 00:00:02,380
+Gestión de la memoria por segmentación
+
+2
+00:00:02,600 --> 00:00:07,260
+En esta forma de gestión, la memoria es
+dividida según los segmentos que existan.
+
+3
+00:00:07,440 --> 00:00:09,980
+Los procesos se dividen
+en distintos segmentos.
+
+4
+00:00:10,280 --> 00:00:14,040
+Existen segmentos de código,
+segmentos de pila y segmentos de datos.
+
+5
+00:00:14,140 --> 00:00:16,920
+Cada segmento tiene menor
+tamaño que las particiones,
+
+6
+00:00:17,080 --> 00:00:18,840
+pues si hubiera
+una partición con un proceso,
+
+7
+00:00:19,000 --> 00:00:21,700
+esta partición se podría
+dividir en distintos segmentos,
+
+8
+00:00:21,740 --> 00:00:25,400
+más pequeños, y pueden desocuparse
+sin necesidad de afectar todo el proceso.
+
+9
+00:00:25,440 --> 00:00:27,540
+Lo que facilita
+la liberación de la memoria,
+
+10
+00:00:27,580 --> 00:00:29,580
+pues cuando un proceso
+no utiliza un segmento,
+
+11
+00:00:29,580 --> 00:00:30,800
+este se puede quitar de la memoria
+
+12
+00:00:31,060 --> 00:00:33,000
+para dar paso a otro segmento en espera.
+

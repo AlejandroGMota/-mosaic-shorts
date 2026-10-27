@@ -1,0 +1,46 @@
+1
+00:00:00,000 --> 00:00:01,450
+Están los de mediano
+plazo o intercambiadores.
+
+2
+00:00:02,480 --> 00:00:06,620
+Son los que intercambian los procesos no
+indispensables para ser ejecutados después
+
+3
+00:00:06,620 --> 00:00:08,660
+y priorizar los procesos fundamentales.
+
+4
+00:00:09,080 --> 00:00:11,680
+Esto se puede ver como un momento
+en el arranque del equipo.
+
+5
+00:00:11,720 --> 00:00:14,820
+Se pone en el disco los procesos
+no indispensables para el arranque
+
+6
+00:00:14,820 --> 00:00:17,220
+y en la memoria principal
+los indispensables,
+
+7
+00:00:17,260 --> 00:00:21,480
+pero después de que el arranque se termine
+se vuelve a cambiar los procesos
+
+8
+00:00:21,480 --> 00:00:24,860
+que estaban esperando en el disco
+a la memoria principal.
+
+9
+00:00:24,900 --> 00:00:25,900
+Este proceso de intercambio
+
+10
+00:00:26,320 --> 00:00:27,660
+es llamado swapping.

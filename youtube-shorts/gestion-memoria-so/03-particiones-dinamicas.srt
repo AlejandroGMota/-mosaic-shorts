@@ -1,0 +1,46 @@
+1
+00:00:00,240 --> 00:00:01,580
+Particiones dinámicas.
+
+2
+00:00:01,900 --> 00:00:05,460
+El sistema operativo pone los procesos
+de forma consecutiva en la memoria,
+
+3
+00:00:05,500 --> 00:00:08,200
+organizando de forma más
+eficiente el uso de la memoria.
+
+4
+00:00:08,200 --> 00:00:12,400
+El sistema operativo crea una tabla
+de procesos con el identificador,
+
+5
+00:00:12,480 --> 00:00:14,320
+la dirección base, la capacidad,
+
+6
+00:00:14,520 --> 00:00:17,500
+el estado de proceso,
+la dirección de bloque de control,
+
+7
+00:00:17,640 --> 00:00:21,840
+del mismo modo, crea una tabla con los
+fragmentos libres de la memoria indicando
+
+8
+00:00:21,840 --> 00:00:23,880
+la dirección base y la capacidad.
+
+9
+00:00:24,180 --> 00:00:26,680
+Cuando se incluyen o se aumenta
+la cantidad de datos,
+
+10
+00:00:26,720 --> 00:00:28,080
+se actualizan las tablas.
+

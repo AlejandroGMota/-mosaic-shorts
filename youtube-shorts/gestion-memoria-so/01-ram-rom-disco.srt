@@ -1,0 +1,67 @@
+1
+00:00:00,020 --> 00:00:04,100
+La memoria principal está conformada
+por la memoria RAM y la memoria ROM.
+
+2
+00:00:04,220 --> 00:00:07,540
+La memoria RAM es la que almacena
+la información que un programa necesita
+
+3
+00:00:07,540 --> 00:00:08,600
+mientras ejecuta.
+
+4
+00:00:08,600 --> 00:00:11,620
+Esta accede a los datos sin importar
+el orden en que se encuentre.
+
+5
+00:00:11,660 --> 00:00:14,740
+Esta memoria pierde los datos
+cuando deja de recibir energía.
+
+6
+00:00:15,270 --> 00:00:17,520
+La memoria ROM es de solo lectura,
+
+7
+00:00:17,560 --> 00:00:20,540
+es donde se almacena el software
+fundamental para que la computadora
+
+8
+00:00:20,540 --> 00:00:24,300
+arranque. Examinan que los componentes
+estén funcionando correctamente,
+
+9
+00:00:24,340 --> 00:00:27,540
+esta mantiene la información
+independientemente de si recibe energía
+
+10
+00:00:27,540 --> 00:00:31,510
+o no. Por otra parte, la memoria
+secundaria es donde se almacenan
+
+11
+00:00:31,510 --> 00:00:34,110
+los programas y archivos
+de forma permanente.
+
+12
+00:00:34,150 --> 00:00:37,590
+Por ejemplo, un disco de estado
+sólido o un disco duro.
+
+13
+00:00:37,970 --> 00:00:39,510
+Cuando se ejecuta un programa,
+
+14
+00:00:39,690 --> 00:00:41,800
+los archivos son enviados
+a la memoria principal.
+

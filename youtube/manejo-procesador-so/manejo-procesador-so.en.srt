@@ -1,0 +1,409 @@
+1
+00:00:03,780 --> 00:00:05,000
+Welcome to Mosaic.
+
+2
+00:00:05,040 --> 00:00:07,360
+In this video, we'll talk about
+how the operating system influences
+
+3
+00:00:07,360 --> 00:00:08,960
+the performance of the processor.
+
+4
+00:00:09,000 --> 00:00:11,780
+Before we begin,
+let's clarify some basic concepts.
+
+5
+00:00:12,080 --> 00:00:15,460
+Operating systems are a set of
+programs in charge of managing
+
+6
+00:00:15,460 --> 00:00:17,700
+a computer's resources,
+
+7
+00:00:17,740 --> 00:00:19,460
+such as memory, the hard drive,
+
+8
+00:00:19,500 --> 00:00:20,880
+the processor, among others.
+
+9
+00:00:21,240 --> 00:00:23,520
+The processor is the brain of the system.
+
+10
+00:00:23,640 --> 00:00:27,080
+It processes everything that happens in
+the computer and carries out every action.
+
+11
+00:00:27,500 --> 00:00:30,360
+A process is a program that is running.
+
+12
+00:00:30,600 --> 00:00:32,980
+Processes can be in different states,
+
+13
+00:00:33,020 --> 00:00:35,860
+among them the unborn, or new, state,
+
+14
+00:00:36,160 --> 00:00:37,580
+which is when a process exists,
+
+15
+00:00:37,620 --> 00:00:39,220
+but the CPU doesn't know about it yet,
+
+16
+00:00:39,440 --> 00:00:42,740
+either because it is very recent or
+because it hasn't been asked to run yet.
+
+17
+00:00:42,900 --> 00:00:46,280
+Processes in the active,
+or running, state are the processes
+
+18
+00:00:46,280 --> 00:00:48,500
+the processor is executing at that moment.
+
+19
+00:00:48,580 --> 00:00:52,460
+A process in the ready state is
+a process that is ready to run
+
+20
+00:00:52,460 --> 00:00:53,520
+at any moment.
+
+21
+00:00:53,680 --> 00:00:56,460
+A process in the blocked state
+is a process that is waiting
+
+22
+00:00:56,460 --> 00:00:58,820
+for a response from some other process,
+
+23
+00:00:58,860 --> 00:01:00,780
+so it can continue running.
+
+24
+00:01:01,420 --> 00:01:05,460
+And a finished process is one that
+has already completed its execution.
+
+25
+00:01:05,900 --> 00:01:07,920
+Maybe you don't fully get it yet,
+
+26
+00:01:07,960 --> 00:01:10,720
+but don't worry, we'll go
+through a small example.
+
+27
+00:01:11,060 --> 00:01:13,900
+In an ATM that is
+validating the account data,
+
+28
+00:01:13,980 --> 00:01:17,800
+the processes that carry out this task
+are the processes in the active state.
+
+29
+00:01:17,800 --> 00:01:19,600
+Once the data has been validated,
+
+30
+00:01:19,700 --> 00:01:22,420
+these processes move
+to the finished state.
+
+31
+00:01:22,540 --> 00:01:24,800
+Then the customer can
+choose what they need to do,
+
+32
+00:01:24,840 --> 00:01:26,940
+so the processes to make a deposit,
+
+33
+00:01:26,980 --> 00:01:28,900
+withdraw money, or check
+the account statement,
+
+34
+00:01:28,940 --> 00:01:29,940
+are in the ready state.
+
+35
+00:01:30,980 --> 00:01:31,980
+However,
+
+36
+00:01:32,020 --> 00:01:35,700
+the process that accesses the person's
+information is in the blocked state,
+
+37
+00:01:35,740 --> 00:01:39,620
+waiting to know what data the chosen
+process will need, so it can request it
+
+38
+00:01:39,620 --> 00:01:40,780
+from the database.
+
+39
+00:01:40,970 --> 00:01:43,810
+Once the person has
+completed their transaction,
+
+40
+00:01:43,910 --> 00:01:47,190
+the processes will move to the
+finished state until they are
+
+41
+00:01:47,190 --> 00:01:48,190
+requested again.
+
+42
+00:01:48,670 --> 00:01:51,770
+Now we know all the different
+states of a process,
+
+43
+00:01:51,870 --> 00:01:52,990
+but how does the processor know
+
+44
+00:01:53,670 --> 00:01:55,590
+when to run those processes?
+
+45
+00:01:56,050 --> 00:01:58,770
+This is where processor
+scheduling comes in,
+
+46
+00:01:58,870 --> 00:02:02,230
+which is when it's decided how much
+execution time is assigned to each process
+
+47
+00:02:02,230 --> 00:02:04,890
+in the system, and when it will run.
+
+48
+00:02:05,110 --> 00:02:07,950
+Let's say it's like the
+processor's schedule.
+
+49
+00:02:08,410 --> 00:02:12,490
+Its job is to divide the
+processor's available time among all
+
+50
+00:02:12,490 --> 00:02:13,710
+the processes.
+
+51
+00:02:13,830 --> 00:02:16,650
+Schedulers can be of three types,
+
+52
+00:02:16,870 --> 00:02:19,610
+each type with a specific goal.
+
+53
+00:02:19,650 --> 00:02:22,670
+There are long-term, or job, schedulers.
+
+54
+00:02:22,710 --> 00:02:25,570
+They are in charge of scheduling
+processes that will last a long time,
+
+55
+00:02:25,610 --> 00:02:28,330
+and therefore,
+they spread them out over time.
+
+56
+00:02:28,430 --> 00:02:32,650
+These can be some system processes that
+will be in constant use all the time,
+
+57
+00:02:32,650 --> 00:02:34,830
+but are not always running,
+
+58
+00:02:34,960 --> 00:02:37,460
+only at specific moments.
+
+59
+00:02:37,500 --> 00:02:41,460
+The goal is not to overload the processor
+with the system's constant processes
+
+60
+00:02:41,460 --> 00:02:44,020
+but to pace them over time.
+
+61
+00:02:44,080 --> 00:02:45,140
+Then there are medium-term
+schedulers, or swappers.
+
+62
+00:02:46,580 --> 00:02:50,720
+They swap out the non-essential
+processes to be run later
+
+63
+00:02:50,720 --> 00:02:52,760
+and prioritize the essential processes.
+
+64
+00:02:53,180 --> 00:02:55,780
+You can see this, for example,
+when the computer boots up.
+
+65
+00:02:55,820 --> 00:02:58,920
+The processes not essential for
+booting are placed on the disk
+
+66
+00:02:58,920 --> 00:03:01,320
+and the essential ones in main memory,
+
+67
+00:03:01,360 --> 00:03:05,580
+but once booting finishes, the processes
+
+68
+00:03:05,580 --> 00:03:08,960
+that were waiting on the disk
+are moved back to main memory.
+
+69
+00:03:09,000 --> 00:03:10,000
+This exchange process
+
+70
+00:03:10,420 --> 00:03:15,180
+is called swapping. And finally,
+the short-term schedulers, or dispatchers;
+
+71
+00:03:15,180 --> 00:03:19,780
+their main function is to set up the
+processes that are needed in real
+
+72
+00:03:19,780 --> 00:03:20,560
+time.
+
+73
+00:03:20,600 --> 00:03:23,760
+This is used in ATM
+systems to achieve faster
+
+74
+00:03:23,760 --> 00:03:28,680
+execution, or in the applications
+in use, such as the browser.
+
+75
+00:03:28,860 --> 00:03:31,440
+When processes are
+assigned to the processor,
+
+76
+00:03:31,480 --> 00:03:35,360
+two strategies are used that
+define how the process will run.
+
+77
+00:03:35,720 --> 00:03:39,340
+The non-preemptive strategy is
+when the operating system cannot
+
+78
+00:03:39,340 --> 00:03:42,520
+take the CPU away from
+a process that is running.
+
+79
+00:03:42,580 --> 00:03:44,580
+That is, once the process is running,
+
+80
+00:03:44,620 --> 00:03:47,560
+the operating system can't
+stop it to run something else.
+
+81
+00:03:47,600 --> 00:03:50,160
+On the other hand,
+there is the preemptive strategy,
+
+82
+00:03:50,200 --> 00:03:53,260
+which is when the operating system
+can take the CPU away from a process
+
+83
+00:03:53,260 --> 00:03:56,620
+that is running and use
+it to run another process.
+
+84
+00:03:57,380 --> 00:04:01,140
+That's the main thing you need
+to know about how processes take
+
+85
+00:04:01,140 --> 00:04:05,480
+place in the processor, organized
+and defined by the operating system.
+
+86
+00:04:05,740 --> 00:04:06,880
+So now that you know it,
+
+87
+00:04:06,920 --> 00:04:11,560
+it's your turn to think where process
+management is useful in your daily life,
+
+88
+00:04:11,660 --> 00:04:13,760
+maybe when watching
+a video or taking a class.
+
+89
+00:04:14,100 --> 00:04:17,480
+A person's attention is like the
+use of the processor in a computer:
+
+90
+00:04:17,540 --> 00:04:20,240
+limited, but very powerful if used well.

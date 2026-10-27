@@ -1,0 +1,43 @@
+1
+00:00:00,000 --> 00:00:02,540
+Cuando se les asigna
+los procesos al procesador,
+
+2
+00:00:02,580 --> 00:00:06,460
+se utilizan dos estrategias que definen la
+forma en la que se ejecutará el proceso.
+
+3
+00:00:06,820 --> 00:00:10,440
+La estrategia no apropiativa, que es
+cuando el sistema operativo no puede
+
+4
+00:00:10,440 --> 00:00:13,620
+arrebatar el uso de la CPU
+a un proceso que está ejecutándose.
+
+5
+00:00:13,680 --> 00:00:15,680
+Es decir, cuando el proceso se ejecuta,
+
+6
+00:00:15,720 --> 00:00:18,660
+el sistema operativo no puede
+detenerlo para ejecutar algo más.
+
+7
+00:00:18,700 --> 00:00:21,260
+De forma contraria, existe
+la estrategia apropiativa,
+
+8
+00:00:21,300 --> 00:00:24,360
+que es cuando el sistema operativo puede
+arrebatar el uso de la CPU a un proceso
+
+9
+00:00:24,360 --> 00:00:27,720
+que está ejecutándose y con esto
+ejecutar otro proceso.

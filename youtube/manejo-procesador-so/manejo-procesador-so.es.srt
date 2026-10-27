@@ -1,0 +1,419 @@
+1
+00:00:03,780 --> 00:00:05,000
+Bienvenidos a Mosaic.
+
+2
+00:00:05,040 --> 00:00:07,360
+En este vídeo hablaremos sobre
+cómo influye el sistema operativo
+
+3
+00:00:07,360 --> 00:00:08,960
+en el desempeño del procesador.
+
+4
+00:00:09,000 --> 00:00:11,780
+Antes de comenzar, aclaremos
+algunos conceptos básicos.
+
+5
+00:00:12,080 --> 00:00:15,460
+Los sistemas operativos son un conjunto de
+programas que se encargan de administrar
+
+6
+00:00:15,460 --> 00:00:17,700
+los recursos de una computadora,
+
+7
+00:00:17,740 --> 00:00:19,460
+tales como la memoria, el disco duro,
+
+8
+00:00:19,500 --> 00:00:20,880
+el procesador, entre otros.
+
+9
+00:00:21,240 --> 00:00:23,520
+El procesador es el cerebro del sistema.
+
+10
+00:00:23,640 --> 00:00:27,080
+Procesa todo lo que ocurre en la
+computadora y ejecuta todas las acciones.
+
+11
+00:00:27,500 --> 00:00:30,360
+Un proceso es un programa
+que está en ejecución.
+
+12
+00:00:30,600 --> 00:00:32,980
+Los procesos pueden
+tener distintos estados,
+
+13
+00:00:33,020 --> 00:00:35,860
+entre los que se encuentran
+el estado nonato o nuevo,
+
+14
+00:00:36,160 --> 00:00:37,580
+que es cuando un proceso existe,
+
+15
+00:00:37,620 --> 00:00:39,220
+pero la CPU aún no lo sabe,
+
+16
+00:00:39,440 --> 00:00:42,740
+ya sea porque es muy reciente o porque
+aún no se le pide que se ejecute.
+
+17
+00:00:42,900 --> 00:00:46,280
+Los procesos en estado activo
+o en ejecución son los procesos
+
+18
+00:00:46,280 --> 00:00:48,500
+que el procesador está
+ejecutando en el momento.
+
+19
+00:00:48,580 --> 00:00:52,460
+Un proceso en estado preparado es un
+proceso que está listo para ejecutarse
+
+20
+00:00:52,460 --> 00:00:53,520
+en cualquier momento.
+
+21
+00:00:53,680 --> 00:00:56,460
+Un proceso en estado bloqueado
+es un proceso que está preparado
+
+22
+00:00:56,460 --> 00:00:58,820
+para la respuesta de algún otro proceso,
+
+23
+00:00:58,860 --> 00:01:00,780
+para poder continuar su ejecución.
+
+24
+00:01:01,420 --> 00:01:05,460
+Y el proceso concluido es cuando un
+proceso ya ha terminado su ejecución.
+
+25
+00:01:05,900 --> 00:01:07,920
+Quizás aún no le entiendas del todo,
+
+26
+00:01:07,960 --> 00:01:10,720
+pero no te preocupes porque
+vamos a poner un pequeño ejemplo.
+
+27
+00:01:11,060 --> 00:01:13,900
+En un cajero automático que está
+validando los datos de la cuenta,
+
+28
+00:01:13,980 --> 00:01:17,800
+los procesos que permiten realizar esta
+tarea son los procesos en estado activo.
+
+29
+00:01:17,800 --> 00:01:19,600
+Una vez ya han validado los datos,
+
+30
+00:01:19,700 --> 00:01:22,420
+estos procesos se ponen
+en estado concluido.
+
+31
+00:01:22,540 --> 00:01:24,800
+Y el cliente puede elegir
+lo que necesita hacer,
+
+32
+00:01:24,840 --> 00:01:26,940
+por lo que los procesos
+para hacer un depósito,
+
+33
+00:01:26,980 --> 00:01:28,900
+retirar dinero o ver su estado de cuenta,
+
+34
+00:01:28,940 --> 00:01:29,940
+se encuentran en estado preparado.
+
+35
+00:01:30,980 --> 00:01:31,980
+Sin embargo,
+
+36
+00:01:32,020 --> 00:01:35,700
+el proceso que accede a la información
+de la persona está en estado bloqueado.
+
+37
+00:01:35,740 --> 00:01:39,620
+Esperando saber qué datos necesitará
+el proceso que elija para solicitarlos
+
+38
+00:01:39,620 --> 00:01:40,780
+a la base de datos.
+
+39
+00:01:40,970 --> 00:01:43,810
+Una vez la persona haya
+realizado su transacción,
+
+40
+00:01:43,910 --> 00:01:47,190
+los procesos se pondrán en estado
+concluido hasta que se le vuelva
+
+41
+00:01:47,190 --> 00:01:48,190
+a solicitar.
+
+42
+00:01:48,670 --> 00:01:51,770
+Ahora sabemos todos los distintos
+estados de un proceso,
+
+43
+00:01:51,870 --> 00:01:52,990
+pero ¿cómo sabe el procesador
+
+44
+00:01:53,670 --> 00:01:55,590
+en qué momento ejecutar dichos procesos?
+
+45
+00:01:56,050 --> 00:01:58,770
+En este punto entra
+la planificación del procesador,
+
+46
+00:01:58,870 --> 00:02:02,230
+que es cuando se decide cuánto tiempo
+de ejecución se le asigna a cada proceso
+
+47
+00:02:02,230 --> 00:02:04,890
+del sistema, y en qué
+momento se ejecutará.
+
+48
+00:02:05,110 --> 00:02:07,950
+Digamos que es como la agenda
+del procesador.
+
+49
+00:02:08,410 --> 00:02:12,490
+Su función consiste en repartir el tiempo
+disponible del procesador entre todos
+
+50
+00:02:12,490 --> 00:02:13,710
+los procesos.
+
+51
+00:02:13,830 --> 00:02:16,650
+Los planificadores
+pueden ser de tres tipos,
+
+52
+00:02:16,870 --> 00:02:19,610
+donde cada tipo tiene
+un objetivo específico.
+
+53
+00:02:19,650 --> 00:02:22,670
+Están los de largo plazo
+o planificador de trabajo.
+
+54
+00:02:22,710 --> 00:02:25,570
+Se encargan de planificar
+los procesos que durarán mucho tiempo,
+
+55
+00:02:25,610 --> 00:02:28,330
+y por lo tanto, los distribuyen
+a lo largo del tiempo.
+
+56
+00:02:28,430 --> 00:02:32,650
+Puede ser algunos procesos del sistema que
+se mantendrán todo el tiempo en constante
+
+57
+00:02:32,650 --> 00:02:34,830
+uso, pero no están ejecutándose siempre,
+
+58
+00:02:34,960 --> 00:02:37,460
+sino solo en momentos específicos.
+
+59
+00:02:37,500 --> 00:02:41,460
+El objetivo es no saturar el procesador
+con los procesos constantes del sistema
+
+60
+00:02:41,460 --> 00:02:44,020
+sino dosificarlo a lo largo del tiempo.
+
+61
+00:02:44,080 --> 00:02:45,140
+Están los de mediano
+plazo o intercambiadores.
+
+62
+00:02:46,580 --> 00:02:50,720
+Son los que intercambian los procesos no
+indispensables para ser ejecutados después
+
+63
+00:02:50,720 --> 00:02:52,760
+y priorizar los procesos fundamentales.
+
+64
+00:02:53,180 --> 00:02:55,780
+Esto se puede ver como un momento
+en el arranque del equipo.
+
+65
+00:02:55,820 --> 00:02:58,920
+Se pone en el disco los procesos
+no indispensables para el arranque
+
+66
+00:02:58,920 --> 00:03:01,320
+y en la memoria principal
+los indispensables,
+
+67
+00:03:01,360 --> 00:03:05,580
+pero después de que el arranque se termine
+se vuelve a cambiar los procesos
+
+68
+00:03:05,580 --> 00:03:08,960
+que estaban esperando en el disco
+a la memoria principal.
+
+69
+00:03:09,000 --> 00:03:10,000
+Este proceso de intercambio
+
+70
+00:03:10,420 --> 00:03:15,180
+es llamado swapping. Y por último,
+los de corto plazo o distribuidor;
+
+71
+00:03:15,180 --> 00:03:19,780
+su función principal es establecer
+los procesos que son necesitados en tiempo
+
+72
+00:03:19,780 --> 00:03:20,560
+real.
+
+73
+00:03:20,600 --> 00:03:23,760
+Como es utilizado en los sistemas
+de cajero para lograr una ejecución más
+
+74
+00:03:23,760 --> 00:03:28,680
+rápida o en las aplicaciones que están en
+uso como puede ser el caso del navegador.
+
+75
+00:03:28,860 --> 00:03:31,440
+Cuando se les asigna
+los procesos al procesador,
+
+76
+00:03:31,480 --> 00:03:35,360
+se utilizan dos estrategias que definen la
+forma en la que se ejecutará el proceso.
+
+77
+00:03:35,720 --> 00:03:39,340
+La estrategia no apropiativa, que es
+cuando el sistema operativo no puede
+
+78
+00:03:39,340 --> 00:03:42,520
+arrebatar el uso de la CPU
+a un proceso que está ejecutándose.
+
+79
+00:03:42,580 --> 00:03:44,580
+Es decir, cuando el proceso se ejecuta,
+
+80
+00:03:44,620 --> 00:03:47,560
+el sistema operativo no puede
+detenerlo para ejecutar algo más.
+
+81
+00:03:47,600 --> 00:03:50,160
+De forma contraria, existe
+la estrategia apropiativa,
+
+82
+00:03:50,200 --> 00:03:53,260
+que es cuando el sistema operativo puede
+arrebatar el uso de la CPU a un proceso
+
+83
+00:03:53,260 --> 00:03:56,620
+que está ejecutándose y con esto
+ejecutar otro proceso.
+
+84
+00:03:57,380 --> 00:04:01,140
+Esto es lo principal que debes saber sobre
+la forma en la que los procesos toman
+
+85
+00:04:01,140 --> 00:04:05,480
+lugar en el procesador, organizados
+y definidos por el sistema operativo.
+
+86
+00:04:05,740 --> 00:04:06,880
+Por lo que ahora que lo sabes,
+
+87
+00:04:06,920 --> 00:04:11,560
+te toca pensar en qué objeto de tu vida
+cotidiana es útil la gestión de procesos,
+
+88
+00:04:11,660 --> 00:04:13,760
+quizá al ver un video o tomar una clase.
+
+89
+00:04:14,100 --> 00:04:17,480
+La atención a una persona es como el uso
+del procesador en una computadora,
+
+90
+00:04:17,540 --> 00:04:20,240
+limitada pero muy poderosa
+si es bien empleada.

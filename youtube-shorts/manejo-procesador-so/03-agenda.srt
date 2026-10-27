@@ -1,0 +1,51 @@
+1
+00:00:00,000 --> 00:00:03,070
+Ahora sabemos todos los distintos
+estados de un proceso,
+
+2
+00:00:03,170 --> 00:00:04,290
+pero ¿cómo sabe el procesador
+
+3
+00:00:04,970 --> 00:00:06,890
+en qué momento ejecutar dichos procesos?
+
+4
+00:00:07,350 --> 00:00:10,070
+En este punto entra
+la planificación del procesador,
+
+5
+00:00:10,170 --> 00:00:13,530
+que es cuando se decide cuánto tiempo
+de ejecución se le asigna a cada proceso
+
+6
+00:00:13,530 --> 00:00:16,190
+del sistema, y en qué
+momento se ejecutará.
+
+7
+00:00:16,410 --> 00:00:19,250
+Digamos que es como la agenda
+del procesador.
+
+8
+00:00:19,710 --> 00:00:23,790
+Su función consiste en repartir el tiempo
+disponible del procesador entre todos
+
+9
+00:00:23,790 --> 00:00:25,010
+los procesos.
+
+10
+00:00:25,130 --> 00:00:27,950
+Los planificadores
+pueden ser de tres tipos,
+
+11
+00:00:28,170 --> 00:00:31,000
+donde cada tipo tiene
+un objetivo específico.

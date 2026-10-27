@@ -1,0 +1,207 @@
+WEBVTT
+Language: en
+
+00:00:04.200 --> 00:00:06.440
+Memory management by the operating system.
+
+00:00:06.440 --> 00:00:10.900
+The goal of this video is to understand
+how an operating system frees and allocates
+
+00:00:10.900 --> 00:00:13.900
+memory space to the different programs.
+
+00:00:13.900 --> 00:00:17.060
+To do this, we need to understand
+that there are two types of memory:
+
+00:00:17.100 --> 00:00:19.480
+main memory and secondary memory.
+
+00:00:19.520 --> 00:00:23.600
+Main memory is made up of RAM and ROM.
+
+00:00:23.720 --> 00:00:27.040
+RAM stores the information a program needs
+
+00:00:27.040 --> 00:00:28.100
+while it runs.
+
+00:00:28.100 --> 00:00:31.120
+It accesses data regardless of
+the order in which it is stored.
+
+00:00:31.160 --> 00:00:34.240
+This memory loses its data
+when it stops receiving power.
+
+00:00:34.770 --> 00:00:37.020
+ROM is read-only;
+
+00:00:37.060 --> 00:00:40.040
+it stores the essential
+software the computer needs
+
+00:00:40.040 --> 00:00:43.800
+to boot. It checks that the
+components are working correctly,
+
+00:00:43.840 --> 00:00:47.040
+and it keeps its information
+whether it receives power
+
+00:00:47.040 --> 00:00:51.010
+or not. Secondary memory,
+on the other hand, is where
+
+00:00:51.010 --> 00:00:53.610
+programs and files are stored permanently.
+
+00:00:53.650 --> 00:00:57.090
+For example, a solid-state
+drive or a hard disk drive.
+
+00:00:57.470 --> 00:00:59.010
+When a program runs,
+
+00:00:59.190 --> 00:01:01.430
+its files are sent to main memory.
+
+00:01:01.530 --> 00:01:06.590
+The Memory Management Unit tells
+main memory the position on disk
+
+00:01:06.590 --> 00:01:07.910
+of the program's data.
+
+00:01:07.950 --> 00:01:10.770
+Main memory retrieves the data
+from the physical addresses,
+
+00:01:10.770 --> 00:01:13.650
+which is where the data is
+located on the hard drive,
+
+00:01:13.650 --> 00:01:17.730
+creating a base address, which is
+where the data will be located in main
+
+00:01:17.730 --> 00:01:21.670
+memory. Each byte on the hard
+drive has its own physical address.
+
+00:01:21.710 --> 00:01:23.230
+Once in main memory,
+
+00:01:23.290 --> 00:01:27.430
+data belonging to the same process is
+stored according to its base register,
+
+00:01:27.510 --> 00:01:31.310
+which serves as a reference to locate
+a particular address, and the limit
+
+00:01:31.310 --> 00:01:34.650
+register, which helps determine
+the offset within an address.
+
+00:01:34.690 --> 00:01:38.270
+There are different ways to
+allocate process space in main
+
+00:01:38.270 --> 00:01:41.850
+memory. The main ones
+are static partitions.
+
+00:01:41.900 --> 00:01:45.960
+Memory is divided so that each
+partition holds one process.
+
+00:01:46.160 --> 00:01:48.920
+Partitions can each be a different size.
+
+00:01:49.100 --> 00:01:52.940
+The operating system creates a table of
+partitions and processes, indicating whether
+
+00:01:52.940 --> 00:01:54.660
+the partition is occupied or free.
+
+00:01:54.700 --> 00:01:56.500
+And which process occupies the partition?
+
+00:01:57.240 --> 00:01:58.580
+Dynamic partitions.
+
+00:01:58.900 --> 00:02:02.460
+The operating system places
+processes consecutively in memory,
+
+00:02:02.500 --> 00:02:05.200
+making more efficient use of memory.
+
+00:02:05.200 --> 00:02:09.400
+The operating system creates a
+process table with the identifier,
+
+00:02:09.480 --> 00:02:11.320
+the base address, the size,
+
+00:02:11.520 --> 00:02:14.500
+the process state,
+the control block address;
+
+00:02:14.640 --> 00:02:18.840
+likewise, it creates a table of the
+free memory fragments, indicating
+
+00:02:18.840 --> 00:02:20.880
+their base address and size.
+
+00:02:21.180 --> 00:02:23.680
+When data is added or grows,
+
+00:02:23.720 --> 00:02:25.080
+the tables are updated.
+
+00:02:25.640 --> 00:02:27.780
+Memory management by segmentation
+
+00:02:28.000 --> 00:02:32.660
+In this approach, memory is divided
+according to the existing segments.
+
+00:02:32.840 --> 00:02:35.380
+Processes are divided
+into different segments.
+
+00:02:35.680 --> 00:02:39.440
+There are code segments,
+stack segments, and data segments.
+
+00:02:39.540 --> 00:02:42.320
+Each segment is smaller than a partition,
+
+00:02:42.480 --> 00:02:44.240
+because if a partition held a process,
+
+00:02:44.400 --> 00:02:47.100
+that partition could be
+divided into different,
+
+00:02:47.140 --> 00:02:50.800
+smaller segments, which can be freed
+without affecting the whole process.
+
+00:02:50.840 --> 00:02:52.940
+This makes freeing memory easier,
+
+00:02:52.980 --> 00:02:54.980
+because when a process
+isn't using a segment,
+
+00:02:54.980 --> 00:02:56.200
+it can be removed from memory
+
+00:02:56.460 --> 00:02:58.400
+to make room for another waiting segment.

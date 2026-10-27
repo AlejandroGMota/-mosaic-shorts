@@ -1,0 +1,33 @@
+1
+00:00:00,190 --> 00:00:03,770
+Existen distintas formas de asignar
+el espacio de los procesos en la memoria
+
+2
+00:00:03,770 --> 00:00:07,350
+principal. Los principales
+son particiones estáticas.
+
+3
+00:00:07,400 --> 00:00:11,460
+La memoria se divide para contener
+un proceso en cada partición.
+
+4
+00:00:11,660 --> 00:00:14,420
+Las particiones pueden ser
+de distintos tamaños cada una.
+
+5
+00:00:14,600 --> 00:00:18,440
+El sistema operativo crea una tabla con
+las particiones y procesos indicando si
+
+6
+00:00:18,440 --> 00:00:20,160
+la partición está ocupada o libre.
+
+7
+00:00:20,200 --> 00:00:22,000
+¿Y qué proceso ocupa la partición?
+

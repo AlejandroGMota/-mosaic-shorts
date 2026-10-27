@@ -1,0 +1,418 @@
+1
+00:00:03,780 --> 00:00:05,000
+Bienvenue sur Mosaic.
+
+2
+00:00:05,040 --> 00:00:07,360
+Dans cette vidéo, nous allons voir comment
+le système d'exploitation influence
+
+3
+00:00:07,360 --> 00:00:08,960
+les performances du processeur.
+
+4
+00:00:09,000 --> 00:00:11,780
+Avant de commencer,
+clarifions quelques notions de base.
+
+5
+00:00:12,080 --> 00:00:15,460
+Les systèmes d'exploitation sont
+un ensemble de programmes chargés de gérer
+
+6
+00:00:15,460 --> 00:00:17,700
+les ressources d'un ordinateur,
+
+7
+00:00:17,740 --> 00:00:19,460
+comme la mémoire, le disque dur,
+
+8
+00:00:19,500 --> 00:00:20,880
+le processeur, entre autres.
+
+9
+00:00:21,240 --> 00:00:23,520
+Le processeur est le cerveau du système.
+
+10
+00:00:23,640 --> 00:00:27,080
+Il traite tout ce qui se passe dans
+l'ordinateur et exécute toutes les actions.
+
+11
+00:00:27,500 --> 00:00:30,360
+Un processus est un programme
+en cours d'exécution.
+
+12
+00:00:30,600 --> 00:00:32,980
+Les processus peuvent
+avoir différents états,
+
+13
+00:00:33,020 --> 00:00:35,860
+parmi lesquels l'état « pas
+encore né », ou nouveau,
+
+14
+00:00:36,160 --> 00:00:37,580
+c'est-à-dire quand un processus existe,
+
+15
+00:00:37,620 --> 00:00:39,220
+mais que le CPU ne le sait pas encore,
+
+16
+00:00:39,440 --> 00:00:42,740
+soit parce qu'il est très récent, soit parce
+qu'on ne lui a pas encore demandé de s'exécuter.
+
+17
+00:00:42,900 --> 00:00:46,280
+Les processus à l'état actif,
+ou en exécution, sont les processus
+
+18
+00:00:46,280 --> 00:00:48,500
+que le processeur exécute à ce moment-là.
+
+19
+00:00:48,580 --> 00:00:52,460
+Un processus à l'état prêt est
+un processus prêt à s'exécuter
+
+20
+00:00:52,460 --> 00:00:53,520
+à tout moment.
+
+21
+00:00:53,680 --> 00:00:56,460
+Un processus à l'état bloqué
+est un processus qui attend
+
+22
+00:00:56,460 --> 00:00:58,820
+la réponse d'un autre processus,
+
+23
+00:00:58,860 --> 00:01:00,780
+pour pouvoir poursuivre son exécution.
+
+24
+00:01:01,420 --> 00:01:05,460
+Et le processus terminé, c'est quand
+un processus a déjà fini son exécution.
+
+25
+00:01:05,900 --> 00:01:07,920
+Ce n'est peut-être pas
+encore tout à fait clair,
+
+26
+00:01:07,960 --> 00:01:10,720
+mais ne t'inquiète pas,
+nous allons prendre un petit exemple.
+
+27
+00:01:11,060 --> 00:01:13,900
+Dans un distributeur automatique
+qui valide les données du compte,
+
+28
+00:01:13,980 --> 00:01:17,800
+les processus qui réalisent cette tâche
+sont les processus à l'état actif.
+
+29
+00:01:17,800 --> 00:01:19,600
+Une fois les données validées,
+
+30
+00:01:19,700 --> 00:01:22,420
+ces processus passent à l'état terminé.
+
+31
+00:01:22,540 --> 00:01:24,800
+Le client peut alors
+choisir ce qu'il veut faire,
+
+32
+00:01:24,840 --> 00:01:26,940
+donc les processus pour faire un dépôt,
+
+33
+00:01:26,980 --> 00:01:28,900
+retirer de l'argent ou
+consulter le relevé de compte,
+
+34
+00:01:28,940 --> 00:01:29,940
+sont à l'état prêt.
+
+35
+00:01:30,980 --> 00:01:31,980
+Cependant,
+
+36
+00:01:32,020 --> 00:01:35,700
+le processus qui accède aux informations
+de la personne est à l'état bloqué,
+
+37
+00:01:35,740 --> 00:01:39,620
+en attendant de savoir de quelles données le
+processus choisi aura besoin pour les demander
+
+38
+00:01:39,620 --> 00:01:40,780
+à la base de données.
+
+39
+00:01:40,970 --> 00:01:43,810
+Une fois que la personne
+a effectué sa transaction,
+
+40
+00:01:43,910 --> 00:01:47,190
+les processus passent à l'état
+terminé jusqu'à ce qu'on les
+
+41
+00:01:47,190 --> 00:01:48,190
+sollicite à nouveau.
+
+42
+00:01:48,670 --> 00:01:51,770
+Nous connaissons maintenant
+tous les états d'un processus,
+
+43
+00:01:51,870 --> 00:01:52,990
+mais comment le processeur sait-il
+
+44
+00:01:53,670 --> 00:01:55,590
+à quel moment exécuter ces processus ?
+
+45
+00:01:56,050 --> 00:01:58,770
+C'est là qu'intervient
+l'ordonnancement du processeur,
+
+46
+00:01:58,870 --> 00:02:02,230
+c'est-à-dire décider combien de temps
+d'exécution est attribué à chaque processus
+
+47
+00:02:02,230 --> 00:02:04,890
+du système, et à quel
+moment il s'exécutera.
+
+48
+00:02:05,110 --> 00:02:07,950
+Disons que c'est comme
+l'agenda du processeur.
+
+49
+00:02:08,410 --> 00:02:12,490
+Son rôle est de répartir le temps
+disponible du processeur entre tous
+
+50
+00:02:12,490 --> 00:02:13,710
+les processus.
+
+51
+00:02:13,830 --> 00:02:16,650
+Les ordonnanceurs peuvent
+être de trois types,
+
+52
+00:02:16,870 --> 00:02:19,610
+chacun ayant un objectif précis.
+
+53
+00:02:19,650 --> 00:02:22,670
+Il y a ceux à long terme,
+ou ordonnanceurs de travaux.
+
+54
+00:02:22,710 --> 00:02:25,570
+Ils se chargent de planifier les
+processus qui dureront longtemps,
+
+55
+00:02:25,610 --> 00:02:28,330
+et les répartissent donc dans le temps.
+
+56
+00:02:28,430 --> 00:02:32,650
+Il peut s'agir de processus système qui
+restent tout le temps en usage constant,
+
+57
+00:02:32,650 --> 00:02:34,830
+mais qui ne s'exécutent pas en permanence,
+
+58
+00:02:34,960 --> 00:02:37,460
+seulement à des moments précis.
+
+59
+00:02:37,500 --> 00:02:41,460
+L'objectif est de ne pas saturer le processeur
+avec les processus permanents du système,
+
+60
+00:02:41,460 --> 00:02:44,020
+mais de les doser dans le temps.
+
+61
+00:02:44,080 --> 00:02:45,140
+Il y a ceux à moyen terme, ou échangeurs.
+
+62
+00:02:46,580 --> 00:02:50,720
+Ce sont eux qui écartent les processus non
+indispensables pour les exécuter plus tard
+
+63
+00:02:50,720 --> 00:02:52,760
+et donnent la priorité
+aux processus essentiels.
+
+64
+00:02:53,180 --> 00:02:55,780
+On peut le voir, par exemple,
+au démarrage de l'ordinateur.
+
+65
+00:02:55,820 --> 00:02:58,920
+Les processus non indispensables au
+démarrage sont placés sur le disque
+
+66
+00:02:58,920 --> 00:03:01,320
+et les indispensables
+en mémoire principale,
+
+67
+00:03:01,360 --> 00:03:05,580
+mais une fois le démarrage
+terminé, les processus
+
+68
+00:03:05,580 --> 00:03:08,960
+qui attendaient sur le disque
+reviennent en mémoire principale.
+
+69
+00:03:09,000 --> 00:03:10,000
+Ce processus d'échange
+
+70
+00:03:10,420 --> 00:03:15,180
+s'appelle le swapping. Et enfin,
+ceux à court terme, ou répartiteurs ;
+
+71
+00:03:15,180 --> 00:03:19,780
+leur fonction principale est de mettre en
+place les processus nécessaires en temps
+
+72
+00:03:19,780 --> 00:03:20,560
+réel.
+
+73
+00:03:20,600 --> 00:03:23,760
+C'est utilisé dans les distributeurs
+automatiques pour obtenir une exécution plus
+
+74
+00:03:23,760 --> 00:03:28,680
+rapide, ou dans les applications en cours
+d'utilisation, comme le navigateur.
+
+75
+00:03:28,860 --> 00:03:31,440
+Lorsque les processus sont
+attribués au processeur,
+
+76
+00:03:31,480 --> 00:03:35,360
+deux stratégies définissent la façon
+dont le processus s'exécutera.
+
+77
+00:03:35,720 --> 00:03:39,340
+La stratégie non préemptive, c'est quand
+le système d'exploitation ne peut pas
+
+78
+00:03:39,340 --> 00:03:42,520
+retirer l'usage du CPU à
+un processus en cours d'exécution.
+
+79
+00:03:42,580 --> 00:03:44,580
+Autrement dit,
+quand le processus s'exécute,
+
+80
+00:03:44,620 --> 00:03:47,560
+le système d'exploitation ne peut pas
+l'arrêter pour exécuter autre chose.
+
+81
+00:03:47,600 --> 00:03:50,160
+À l'inverse, il existe
+la stratégie préemptive,
+
+82
+00:03:50,200 --> 00:03:53,260
+c'est quand le système d'exploitation
+peut retirer l'usage du CPU à un processus
+
+83
+00:03:53,260 --> 00:03:56,620
+en cours d'exécution pour
+exécuter un autre processus.
+
+84
+00:03:57,380 --> 00:04:01,140
+Voilà l'essentiel à savoir sur
+la façon dont les processus prennent
+
+85
+00:04:01,140 --> 00:04:05,480
+place dans le processeur, organisés et
+définis par le système d'exploitation.
+
+86
+00:04:05,740 --> 00:04:06,880
+Alors, maintenant que tu le sais,
+
+87
+00:04:06,920 --> 00:04:11,560
+à toi de penser à quoi sert la gestion
+des processus dans ta vie quotidienne,
+
+88
+00:04:11,660 --> 00:04:13,760
+peut-être en regardant une
+vidéo ou en suivant un cours.
+
+89
+00:04:14,100 --> 00:04:17,480
+L'attention d'une personne est comme
+l'utilisation du processeur dans un ordinateur :
+
+90
+00:04:17,540 --> 00:04:20,240
+limitée, mais très puissante
+si elle est bien employée.

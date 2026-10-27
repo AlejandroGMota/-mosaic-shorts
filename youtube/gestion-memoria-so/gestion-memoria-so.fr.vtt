@@ -1,0 +1,219 @@
+WEBVTT
+Language: fr
+
+00:00:04.200 --> 00:00:06.440
+Gestion de la mémoire par
+le système d'exploitation.
+
+00:00:06.440 --> 00:00:10.900
+Le but de cette vidéo est de comprendre comment
+un système d'exploitation libère et alloue
+
+00:00:10.900 --> 00:00:13.900
+l'espace mémoire aux
+différents programmes.
+
+00:00:13.900 --> 00:00:17.060
+Pour cela, il faut comprendre qu'il
+existe deux types de mémoire :
+
+00:00:17.100 --> 00:00:19.480
+la mémoire principale et
+la mémoire secondaire.
+
+00:00:19.520 --> 00:00:23.600
+La mémoire principale est
+composée de la RAM et de la ROM.
+
+00:00:23.720 --> 00:00:27.040
+La RAM stocke les informations
+dont un programme a besoin
+
+00:00:27.040 --> 00:00:28.100
+pendant son exécution.
+
+00:00:28.100 --> 00:00:31.120
+Elle accède aux données
+quel que soit leur ordre.
+
+00:00:31.160 --> 00:00:34.240
+Cette mémoire perd ses données
+lorsqu'elle n'est plus alimentée.
+
+00:00:34.770 --> 00:00:37.020
+La ROM est en lecture seule ;
+
+00:00:37.060 --> 00:00:40.040
+elle contient le logiciel
+essentiel pour que l'ordinateur
+
+00:00:40.040 --> 00:00:43.800
+démarre. Elle vérifie que les
+composants fonctionnent correctement,
+
+00:00:43.840 --> 00:00:47.040
+et conserve les informations,
+qu'elle soit alimentée
+
+00:00:47.040 --> 00:00:51.010
+ou non. La mémoire secondaire,
+elle, est l'endroit où sont stockés
+
+00:00:51.010 --> 00:00:53.610
+les programmes et les
+fichiers de façon permanente.
+
+00:00:53.650 --> 00:00:57.090
+Par exemple, un SSD ou un disque dur.
+
+00:00:57.470 --> 00:00:59.010
+Lorsqu'un programme s'exécute,
+
+00:00:59.190 --> 00:01:01.430
+ses fichiers sont envoyés
+vers la mémoire principale.
+
+00:01:01.530 --> 00:01:06.590
+La Memory Management Unit indique à la
+mémoire principale la position sur le disque
+
+00:01:06.590 --> 00:01:07.910
+des données du programme.
+
+00:01:07.950 --> 00:01:10.770
+La mémoire principale récupère les
+données aux adresses physiques,
+
+00:01:10.770 --> 00:01:13.650
+c'est-à-dire là où se trouvent
+les données sur le disque dur,
+
+00:01:13.650 --> 00:01:17.730
+en créant une adresse de base, là où
+les données seront placées en mémoire
+
+00:01:17.730 --> 00:01:21.670
+principale. Chaque octet du disque dur
+possède sa propre adresse physique.
+
+00:01:21.710 --> 00:01:23.230
+Une fois en mémoire principale,
+
+00:01:23.290 --> 00:01:27.430
+les données d'un même processus sont
+stockées selon leur registre de base,
+
+00:01:27.510 --> 00:01:31.310
+qui sert de référence pour localiser
+une adresse précise, et le registre
+
+00:01:31.310 --> 00:01:34.650
+limite, qui aide à déterminer
+le décalage dans une adresse.
+
+00:01:34.690 --> 00:01:38.270
+Il existe plusieurs façons d'attribuer
+l'espace des processus en mémoire
+
+00:01:38.270 --> 00:01:41.850
+principale. Les principales
+sont les partitions statiques.
+
+00:01:41.900 --> 00:01:45.960
+La mémoire est divisée pour
+contenir un processus par partition.
+
+00:01:46.160 --> 00:01:48.920
+Les partitions peuvent avoir
+des tailles différentes.
+
+00:01:49.100 --> 00:01:52.940
+Le système d'exploitation crée une table des
+partitions et des processus, indiquant si
+
+00:01:52.940 --> 00:01:54.660
+la partition est occupée ou libre.
+
+00:01:54.700 --> 00:01:56.500
+Et quel processus occupe la partition ?
+
+00:01:57.240 --> 00:01:58.580
+Partitions dynamiques.
+
+00:01:58.900 --> 00:02:02.460
+Le système d'exploitation place les
+processus de façon consécutive en mémoire,
+
+00:02:02.500 --> 00:02:05.200
+ce qui optimise
+l'utilisation de la mémoire.
+
+00:02:05.200 --> 00:02:09.400
+Le système d'exploitation crée une
+table des processus avec l'identifiant,
+
+00:02:09.480 --> 00:02:11.320
+l'adresse de base, la capacité,
+
+00:02:11.520 --> 00:02:14.500
+l'état du processus,
+l'adresse du bloc de contrôle ;
+
+00:02:14.640 --> 00:02:18.840
+de même, il crée une table des fragments
+libres de la mémoire, indiquant
+
+00:02:18.840 --> 00:02:20.880
+l'adresse de base et la capacité.
+
+00:02:21.180 --> 00:02:23.680
+Lorsque des données sont
+ajoutées ou augmentent,
+
+00:02:23.720 --> 00:02:25.080
+les tables sont mises à jour.
+
+00:02:25.640 --> 00:02:27.780
+Gestion de la mémoire par segmentation
+
+00:02:28.000 --> 00:02:32.660
+Dans cette approche, la mémoire est
+divisée selon les segments existants.
+
+00:02:32.840 --> 00:02:35.380
+Les processus sont divisés
+en différents segments.
+
+00:02:35.680 --> 00:02:39.440
+Il existe des segments de code,
+de pile et de données.
+
+00:02:39.540 --> 00:02:42.320
+Chaque segment est plus
+petit qu'une partition,
+
+00:02:42.480 --> 00:02:44.240
+car si une partition
+contenait un processus,
+
+00:02:44.400 --> 00:02:47.100
+cette partition pourrait être
+divisée en différents segments,
+
+00:02:47.140 --> 00:02:50.800
+plus petits, qui peuvent être libérés
+sans affecter tout le processus.
+
+00:02:50.840 --> 00:02:52.940
+Cela facilite la libération de la mémoire,
+
+00:02:52.980 --> 00:02:54.980
+car lorsqu'un processus
+n'utilise pas un segment,
+
+00:02:54.980 --> 00:02:56.200
+celui-ci peut être retiré de la mémoire
+
+00:02:56.460 --> 00:02:58.400
+pour laisser la place à un
+autre segment en attente.
