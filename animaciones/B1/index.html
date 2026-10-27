@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>B1 · ¿Cómo se dobla una pantalla?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-glass" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-glass" style="top:1300px">El vidrio se rompe si lo doblas</div>
+    <div class="m-caption scene" id="cap-q" style="top:1300px">¿Cómo se dobla una pantalla?</div>
+
+    <svg class="full scene" id="sc-stack" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-plastic" style="top:1300px">No va sobre vidrio rígido<small>sino sobre una base de plástico muy delgada</small></div>
+    <div class="m-caption scene" id="cap-oled" style="top:1300px">Los píxeles OLED se fabrican encima<small>de esa capa flexible</small></div>
+
+    <svg class="full scene" id="sc-bend" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-out" style="top:1300px">Afuera se estira…</div>
+    <div class="m-caption scene" id="cap-in" style="top:1300px">…adentro se comprime</div>
+    <div class="m-caption scene" id="cap-neutral" style="top:1300px">En medio: el plano neutro<small>ni se estira ni se comprime</small></div>
+    <div class="m-caption scene" id="cap-move" style="top:1300px">Lo más frágil va justo ahí<small>circuitos y píxeles en el plano neutro</small></div>
+    <div class="m-caption scene" id="cap-end" style="top:1300px">Así se dobla miles de veces<small>sin romperse</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp } = Mosaic;
+
+  // ---------------------------------------------------------------- bent strip geometry
+  // The neutral line has length L and is bent into an arc of angle theta (radius R = L / theta).
+  // A layer at offset y from the neutral line (y > 0 = outside of the bend) follows radius R + y,
+  // so its strain is y / R: positive (stretched) outside, negative (compressed) inside.
+  const CX = 540, CY = 760, L = 720, T = 96;
+  function point(s, y, theta) {
+    if (theta < 1e-4) return [CX + s, CY - y];
+    const R = L / theta, phi = s / R;
+    const nx = Math.sin(phi), ny = -Math.cos(phi);       // outward normal (towards the outside of the bend)
+    return [CX + R * Math.sin(phi) + y * nx, CY + R * (1 - Math.cos(phi)) + y * ny];
+  }
+  function band(y0, y1, theta) {
+    const a = [], b = [];
+    for (let i = 0; i <= 60; i++) {
+      const s = -L / 2 + (L * i) / 60;
+      a.push(point(s, y1, theta)); b.unshift(point(s, y0, theta));
+    }
+    return a.concat(b).map((p) => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ");
+  }
+  function line(y, theta) {
+    const pts = [];
+    for (let i = 0; i <= 60; i++) pts.push(point(-L / 2 + (L * i) / 60, y, theta));
+    return pts.map((p) => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ");
+  }
+
+  // ---------------------------------------------------------------- scene 1: glass breaks
+  let gl = {};
+  function buildGlass() {
+    const g = el("g", {}, $("#sc-glass"));
+    gl.left = el("polygon", { fill: "#cfe0ea", stroke: "#8fb0c4", "stroke-width": 3 }, g);
+    gl.right = el("polygon", { fill: "#cfe0ea", stroke: "#8fb0c4", "stroke-width": 3 }, g);
+    gl.crack = el("polyline", { fill: "none", stroke: "var(--fuchsia)", "stroke-width": 5, "stroke-linejoin": "round", opacity: 0 }, g);
+    el("text", { x: 540, y: 1020, "text-anchor": "middle", class: "m-label", text: "vidrio" }, g);
+  }
+  function drawGlass(t, s, A) {
+    // bends a tiny bit, then breaks in the middle on "rompe"
+    const bend = ramp(t, 0.1, A.rompe.start, ease.in) * 0.12;
+    const brk = ramp(t, A.rompe.start, A.rompe.start + 0.5, ease.out);
+    const half = (sign) => {
+      const pts = [];
+      for (let i = 0; i <= 20; i++) {
+        const sx = sign * (6 + (354 * i) / 20);
+        const ang = sign * (bend + brk * 0.35);
+        const x = 540 + sx * Math.cos(ang) + sign * brk * 30, y = 800 + Math.abs(sx) * Math.sin(Math.abs(ang)) + brk * 40;
+        pts.push([x, y]);
+      }
+      const top = pts.map((p) => [p[0], p[1] - 20]), bot = pts.map((p) => [p[0], p[1] + 20]).reverse();
+      return top.concat(bot).map((p) => p.join(",")).join(" ");
+    };
+    gl.left.setAttribute("points", half(-1));
+    gl.right.setAttribute("points", half(1));
+    gl.crack.setAttribute("points", `540,770 548,795 532,812 545,832`);
+    gl.crack.setAttribute("opacity", String(ramp(t, A.rompe.start - 0.15, A.rompe.start + 0.05) * (1 - brk)));
+  }
+
+  // ---------------------------------------------------------------- scene 2: layer stack
+  let st = {};
+  function buildStack() {
+    const g = el("g", {}, $("#sc-stack"));
+    st.glass = el("g", {}, g);
+    el("rect", { x: 200, y: 880, width: 680, height: 90, rx: 6, fill: "#cfe0ea", stroke: "#8fb0c4", "stroke-width": 3 }, st.glass);
+    el("text", { x: 540, y: 1030, "text-anchor": "middle", class: "m-label", text: "vidrio rígido" }, st.glass);
+    st.cross = el("line", { x1: 190, y1: 990, x2: 890, y2: 860, stroke: "var(--fuchsia)", "stroke-width": 8, "stroke-linecap": "round" }, st.glass);
+    st.plastic = el("g", {}, g);
+    st.plasticBar = el("polyline", { fill: "none", stroke: "#c98a1b", "stroke-width": 22, "stroke-linecap": "round" }, st.plastic);
+    el("text", { x: 540, y: 1040, "text-anchor": "middle", class: "m-label", fill: "#c98a1b", text: "base de plástico muy delgada" }, st.plastic);
+    st.pixels = el("g", {}, g);
+    st.pixelRects = [];
+    for (let i = 0; i < 20; i++) {
+      st.pixelRects.push(el("rect", { width: 22, height: 22, rx: 3, fill: ["#c0504d", "#4f9d69", "#4a78c2"][i % 3] }, st.pixels));
+    }
+    el("text", { x: 540, y: 820, "text-anchor": "middle", class: "m-label", text: "píxeles OLED" }, st.pixels);
+  }
+  function drawStack(t, s, A) {
+    const gOn = 1 - ramp(t, A.plastico.start - 0.3, A.plastico.start + 0.2);
+    st.glass.setAttribute("opacity", String(gOn));
+    st.cross.setAttribute("opacity", String(ramp(t, A.rigido.start, A.rigido.start + 0.3)));
+    st.plastic.setAttribute("opacity", String(ramp(t, A.plastico.start - 0.2, A.plastico.start + 0.3)));
+    st.pixels.setAttribute("opacity", String(ramp(t, A.oled.start - 0.4, A.oled.start + 0.2)));
+    // the thin base flexes gently on "flexible"
+    const flex = Math.sin(Math.PI * ramp(t, A.flexible.start - 0.3, A.flexible.start + 1.6, ease.inOut)) * 70;
+    const yAt = (x) => 930 + flex * Math.pow((x - 540) / 340, 2);
+    const pts = [];
+    for (let x = 200; x <= 880; x += 20) pts.push(`${x},${yAt(x).toFixed(1)}`);
+    st.plasticBar.setAttribute("points", pts.join(" "));
+    st.pixelRects.forEach((r, i) => {
+      const x = 215 + i * 33;
+      r.setAttribute("x", x); r.setAttribute("y", (yAt(x + 11) - 40).toFixed(1));
+    });
+  }
+
+  // ---------------------------------------------------------------- scene 3-5: the bend
+  let bd = {};
+  function buildBend() {
+    const g = el("g", {}, $("#sc-bend"));
+    bd.outer = el("polygon", { fill: "#2f5e8e", opacity: 0.22 }, g);
+    bd.mid = el("polygon", { fill: "#e9e5dc" }, g);
+    bd.inner = el("polygon", { fill: "#b3386b", opacity: 0.22 }, g);
+    bd.edgeO = el("polyline", { fill: "none", stroke: "#2f5e8e", "stroke-width": 4 }, g);
+    bd.edgeI = el("polyline", { fill: "none", stroke: "#b3386b", "stroke-width": 4 }, g);
+    bd.neutral = el("polyline", { fill: "none", stroke: "#3a9a80", "stroke-width": 6, "stroke-dasharray": "16 10" }, g);
+    bd.oled = el("polyline", { fill: "none", stroke: "#c98a1b", "stroke-width": 12, "stroke-linecap": "round" }, g);
+    bd.ticksO = []; bd.ticksI = [];
+    for (let i = 0; i <= 12; i++) {
+      bd.ticksO.push(el("line", { stroke: "#2f5e8e", "stroke-width": 4 }, g));
+      bd.ticksI.push(el("line", { stroke: "#b3386b", "stroke-width": 4 }, g));
+    }
+    bd.lblO = el("text", { "text-anchor": "middle", class: "m-label", fill: "#2f5e8e", text: "se estira" }, g);
+    bd.lblI = el("text", { "text-anchor": "middle", class: "m-label", fill: "#b3386b", text: "se comprime" }, g);
+    bd.lblN = el("text", { "text-anchor": "middle", class: "m-label", fill: "#3a9a80", text: "plano neutro" }, g);
+    bd.lblP = el("text", { "text-anchor": "middle", class: "m-label", fill: "#c98a1b", text: "píxeles y circuitos" }, g);
+    bd.note = el("text", { x: 540, y: 1200, "text-anchor": "middle", class: "m-note", text: "grosor exagerado para que se vea" }, g);
+  }
+  function drawBend(t, s, A) {
+    // bend in on "doblas algo"; the final scene folds open and closed (pure function of t)
+    let theta = 2.4 * ramp(t, A.doblas.start - 0.2, A.doblas.start + 1.0, ease.inOut);
+    if (t > A.asi.start) theta = 2.4 * (0.5 + 0.5 * Math.cos((t - A.asi.start) * 2.6));
+    const h = T / 2;
+    bd.outer.setAttribute("points", band(h / 3, h, theta));
+    bd.mid.setAttribute("points", band(-h / 3, h / 3, theta));
+    bd.inner.setAttribute("points", band(-h, -h / 3, theta));
+    bd.edgeO.setAttribute("points", line(h, theta));
+    bd.edgeI.setAttribute("points", line(-h, theta));
+    bd.neutral.setAttribute("points", line(0, theta));
+    // OLED layer starts near the outside and moves onto the neutral plane on "justo"
+    const yo = lerp(h * 0.7, 0, ramp(t, A.capas.start, A.justo.end, ease.inOut));
+    bd.oled.setAttribute("points", line(yo, theta));
+    bd.oled.setAttribute("opacity", String(ramp(t, A.ingenieros.start - 0.2, A.ingenieros.start + 0.3)));
+    bd.lblP.setAttribute("opacity", String(ramp(t, A.fragil.start - 0.2, A.fragil.start + 0.3)));
+    // equally spaced marks on the neutral line: further apart outside, closer inside
+    const tickOn = ramp(t, A.afuera.start - 0.2, A.afuera.start + 0.3);
+    for (let i = 0; i <= 12; i++) {
+      const sx = -L / 2 + (L * i) / 12;
+      const [a, b] = [point(sx, h, theta), point(sx, h + 26, theta)];
+      const [c, d] = [point(sx, -h, theta), point(sx, -h - 26, theta)];
+      const to = bd.ticksO[i], ti = bd.ticksI[i];
+      to.setAttribute("x1", a[0]); to.setAttribute("y1", a[1]); to.setAttribute("x2", b[0]); to.setAttribute("y2", b[1]);
+      ti.setAttribute("x1", c[0]); ti.setAttribute("y1", c[1]); ti.setAttribute("x2", d[0]); ti.setAttribute("y2", d[1]);
+      to.setAttribute("opacity", String(tickOn));
+      ti.setAttribute("opacity", String(ramp(t, A.adentro.start - 0.2, A.adentro.start + 0.3)));
+    }
+    const lo = point(0, h + 70, theta), li = point(0, -h - 120, theta), ln = point(L / 2, 0, theta);
+    bd.lblO.setAttribute("x", lo[0]); bd.lblO.setAttribute("y", lo[1]); bd.lblO.setAttribute("opacity", String(tickOn));
+    bd.lblI.setAttribute("x", li[0]); bd.lblI.setAttribute("y", li[1] + 10); bd.lblI.setAttribute("opacity", String(ramp(t, A.comprime.start - 0.2, A.comprime.start + 0.3)));
+    bd.lblN.setAttribute("x", 540); bd.lblN.setAttribute("y", Math.max(ln[1], li[1]) + 110);
+    bd.lblN.setAttribute("opacity", String(ramp(t, A.neutro.start - 0.3, A.neutro.start + 0.2)));
+    const lp = point(0, yo, theta);
+    bd.lblP.setAttribute("x", 540); bd.lblP.setAttribute("y", Math.min(lp[1], lo[1]) - 60);
+    const outerOn = ramp(t, A.estira.start - 0.3, A.estira.start + 0.3);
+    bd.outer.setAttribute("opacity", String(0.08 + 0.22 * outerOn));
+    bd.inner.setAttribute("opacity", String(0.08 + 0.22 * ramp(t, A.comprime.start - 0.3, A.comprime.start + 0.3)));
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "Si el vidrio se rompe cuando lo doblas, entonces, ¿cómo se dobla una pantalla de un teléfono plegable? Primero, la pantalla no está sobre vidrio rígido, sino sobre una base de plástico muy delgada. Los píxeles OLED se fabrican encima de esa capa flexible. Segundo, la física de un doblez. Cuando doblas algo, la cara de afuera se estira y la adentro se comprime. Pero en medio hay una línea que ni se estira ni se comprime, el plano neutro. Los ingenieros acomodan las capas para que lo más frágil, los circuitos y los píxeles, queden justo en esa parte plana. Así la pantalla se dobla miles de veces sin que se rompa.";
+
+  Mosaic.short({
+    kicker: "Pantallas plegables",
+    title: "¿Cómo se dobla una pantalla?",
+    script: SCRIPT,
+    anchors: {
+      rompe: "rompe",
+      como: "como se dobla",
+      primero: "primero",
+      rigido: "rigido",
+      plastico: "plastico",
+      oled: "oled",
+      flexible: "flexible",
+      segundo: "segundo",
+      doblas: "doblas algo",
+      afuera: "afuera",
+      estira: "estira",
+      adentro: "adentro",
+      comprime: "comprime",
+      medio: "en medio",
+      neutro: "plano neutro",
+      ingenieros: "ingenieros",
+      capas: "capas",
+      fragil: "fragil",
+      justo: "justo",
+      asi: "asi la pantalla",
+    },
+    build() { buildGlass(); buildStack(); buildBend(); },
+    scenes: [
+      { el: "#sc-glass", from: 0, to: "primero-0.2", fadeIn: 0.3, rise: 0, update: drawGlass },
+      { el: "#cap-glass", from: 0.1, to: "como-0.2", fade: 0.3 },
+      { el: "#cap-q", from: "como-0.2", to: "primero-0.2", fade: 0.3 },
+      { el: "#sc-stack", from: "primero-0.2", to: "segundo-0.2", rise: 0, update: drawStack },
+      { el: "#cap-plastic", from: "primero", to: "oled-0.4", fade: 0.3 },
+      { el: "#cap-oled", from: "oled-0.4", to: "segundo-0.2", fade: 0.3 },
+      { el: "#sc-bend", from: "segundo-0.2", to: "end", rise: 0, update: drawBend },
+      { el: "#cap-out", from: "afuera-0.2", to: "adentro-0.2", fade: 0.25 },
+      { el: "#cap-in", from: "adentro-0.2", to: "medio-0.1", fade: 0.25 },
+      { el: "#cap-neutral", from: "medio-0.1", to: "ingenieros-0.2", fade: 0.3 },
+      { el: "#cap-move", from: "ingenieros-0.2", to: "asi-0.2", fade: 0.3 },
+      { el: "#cap-end", from: "asi-0.2", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>

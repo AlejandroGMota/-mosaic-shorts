@@ -119,8 +119,11 @@ html, body {
 .m-label {
   font-size: 32px;
   font-weight: 560;
-  fill: var(--ink-2);
   color: var(--ink-2);
+}
+/* SVG labels keep an explicit fill="..." (CSS would otherwise override the attribute). */
+.m-label:not([fill]) {
+  fill: var(--ink-2);
 }
 .m-note {
   font-size: 26px;
