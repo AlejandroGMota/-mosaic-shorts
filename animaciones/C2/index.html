@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>C2 · ¿Qué es la memoria unificada?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+  .stamp { position: absolute; inset: auto; left: 240px; width: 600px; top: 1060px; padding: 22px 0; text-align: center; font-size: 60px; font-weight: 750; letter-spacing: 0.05em; color: var(--fuchsia); border: 8px solid var(--fuchsia); border-radius: 16px; transform: rotate(-3deg); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-trad" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-trad" style="top:1300px">Computadora tradicional<small>el procesador tiene su RAM y la tarjeta de video la suya</small></div>
+    <div class="m-caption scene" id="cap-copy" style="top:1300px">Primero hay que copiar la imagen<small>de una memoria a la otra</small></div>
+    <div class="m-caption scene" id="cap-cost" style="top:1300px">Copiar cuesta tiempo y energía</div>
+
+    <svg class="full scene" id="sc-uni" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-uni" style="top:1300px">En el M1 todos comparten la misma memoria<small>dentro del mismo paquete del chip</small></div>
+    <div class="m-caption scene" id="cap-read" style="top:1300px">Nadie copia nada<small>todos leen del mismo lugar</small></div>
+
+    <svg class="full scene" id="sc-cost" viewBox="0 0 1080 1920"></svg>
+    <div class="stamp scene" id="stamp">NO AMPLIABLE</div>
+    <div class="m-caption scene" id="cap-fixed" style="top:1300px">No puedes agregar más RAM después<small>lo que compras es lo que tendrás</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp } = Mosaic;
+
+  function box(g, x, y, w, h, label, color, sub) {
+    const gg = el("g", {}, g);
+    el("rect", { x, y, width: w, height: h, rx: 14, fill: "#faf8f3", stroke: color, "stroke-width": 6 }, gg);
+    el("text", { x: x + w / 2, y: y + h / 2 + (sub ? -4 : 12), "text-anchor": "middle", "font-size": 40, "font-weight": 700, fill: color, text: label }, gg);
+    if (sub) el("text", { x: x + w / 2, y: y + h / 2 + 38, "text-anchor": "middle", class: "m-note", text: sub }, gg);
+    return gg;
+  }
+  function picture(g, x, y, s = 1) {
+    const gg = el("g", { transform: `translate(${x} ${y}) scale(${s})` }, g);
+    el("rect", { x: -40, y: -30, width: 80, height: 60, rx: 6, fill: "#cfe0ea", stroke: "#2f5e8e", "stroke-width": 4 }, gg);
+    el("polygon", { points: "-30,22 -6,-6 10,12 20,2 32,22", fill: "#3a9a80" }, gg);
+    el("circle", { cx: 18, cy: -12, r: 7, fill: "#c98a1b" }, gg);
+    return gg;
+  }
+
+  // ---------------------------------------------------------------- traditional: two memories and a copy
+  let tr = {};
+  function buildTrad() {
+    const g = el("g", {}, $("#sc-trad"));
+    box(g, 110, 560, 360, 150, "CPU", "#2f5e8e", "procesador");
+    tr.ram = box(g, 110, 860, 360, 150, "RAM", "#2f5e8e");
+    tr.gpu = box(g, 610, 560, 360, 150, "GPU", "#b3386b", "tarjeta de video");
+    tr.vram = box(g, 610, 860, 360, 150, "su RAM", "#b3386b");
+    el("line", { x1: 290, y1: 710, x2: 290, y2: 860, stroke: "#2f5e8e", "stroke-width": 6 }, tr.ram);
+    el("line", { x1: 790, y1: 710, x2: 790, y2: 860, stroke: "#b3386b", "stroke-width": 6 }, tr.vram);
+    tr.bus = el("line", { x1: 470, y1: 935, x2: 610, y2: 935, stroke: "#c98a1b", "stroke-width": 14, "stroke-dasharray": "4 10", opacity: 0 }, g);
+    tr.img = picture(g, 0, 0);
+    tr.costs = el("g", {}, g);
+    // clock and bolt: what the copy costs
+    el("circle", { cx: 440, cy: 1140, r: 40, fill: "none", stroke: "var(--ink-2)", "stroke-width": 6 }, tr.costs);
+    tr.hand = el("line", { x1: 440, y1: 1140, x2: 440, y2: 1112, stroke: "var(--ink-2)", "stroke-width": 6, "stroke-linecap": "round" }, tr.costs);
+    el("text", { x: 440, y: 1222, "text-anchor": "middle", class: "m-label", text: "tiempo" }, tr.costs);
+    tr.bolt = el("g", {}, tr.costs);
+    el("polygon", { points: "650,1098 616,1146 640,1146 628,1184 664,1132 640,1132", fill: "#c98a1b" }, tr.bolt);
+    el("text", { x: 640, y: 1222, "text-anchor": "middle", class: "m-label", text: "energía" }, tr.bolt);
+  }
+  function drawTrad(t, s, A) {
+    tr.ram.setAttribute("opacity", String(ramp(t, A.ram.start - 0.3, A.ram.start + 0.2)));
+    tr.gpu.setAttribute("opacity", String(ramp(t, A.video.start - 0.3, A.video.start + 0.2)));
+    tr.vram.setAttribute("opacity", String(ramp(t, A.suya.start - 0.3, A.suya.start + 0.2)));
+    // the picture appears in the CPU's RAM and travels across the bus to the GPU's memory
+    const show = ramp(t, A.imagen.start - 0.3, A.imagen.start + 0.2);
+    const move = ramp(t, A.copiarla.start, A.otra.end + 0.2, ease.inOut);
+    tr.bus.setAttribute("opacity", String(ramp(t, A.copiarla.start - 0.3, A.copiarla.start)));
+    tr.img.setAttribute("transform", `translate(${lerp(400, 905, move).toFixed(1)} ${935 + (move > 0 && move < 1 ? -Math.sin(Math.PI * move) * 30 : 0)})`);
+    tr.img.setAttribute("opacity", String(show));
+    tr.costs.setAttribute("opacity", String(ramp(t, A.tiempo.start - 0.3, A.tiempo.start + 0.2)));
+    tr.bolt.setAttribute("opacity", String(ramp(t, A.energia.start - 0.3, A.energia.start + 0.2)));
+    const a = Math.max(0, t - A.tiempo.start) * 4;
+    tr.hand.setAttribute("x2", (440 + 28 * Math.sin(a)).toFixed(1));
+    tr.hand.setAttribute("y2", (1140 - 28 * Math.cos(a)).toFixed(1));
+  }
+
+  // ---------------------------------------------------------------- unified memory in one package
+  let un = {};
+  function buildUni() {
+    const g = el("g", {}, $("#sc-uni"));
+    el("rect", { x: 120, y: 500, width: 840, height: 720, rx: 30, fill: "none", stroke: "var(--ink-2)", "stroke-width": 6, "stroke-dasharray": "18 12" }, g);
+    el("text", { x: 140, y: 480, class: "m-label", text: "un solo paquete (chip)" }, g);
+    un.mem = box(g, 200, 960, 680, 180, "", "#3a9a80");
+    el("text", { x: 540, y: 1118, "text-anchor": "middle", "font-size": 40, "font-weight": 700, fill: "#3a9a80", text: "memoria unificada" }, g);
+    un.units = [
+      box(g, 160, 560, 230, 150, "CPU", "#2f5e8e"),
+      box(g, 425, 560, 230, 150, "GPU", "#b3386b"),
+      box(g, 690, 560, 230, 150, "IA", "#c98a1b", "Neural Engine"),
+    ];
+    un.links = [275, 540, 805].map((x) => el("line", { x1: x, y1: 710, x2: x, y2: 960, stroke: "#3a9a80", "stroke-width": 8 }, g));
+    un.img = picture(g, 540, 1030, 0.8);
+    un.reads = [275, 540, 805].map((x, i) => el("path", { d: `M${x} 720 Q${(x + 540) / 2} 900 540 1004`, fill: "none", stroke: ["#2f5e8e", "#b3386b", "#c98a1b"][i], "stroke-width": 5, "stroke-dasharray": "12 10", opacity: 0 }, g));
+  }
+  function drawUni(t, s, A) {
+    const on = [A.cpu, A.gpu, A.motor];
+    un.units.forEach((u, i) => u.setAttribute("opacity", String(ramp(t, on[i].start - 0.3, on[i].start + 0.2))));
+    un.links.forEach((l, i) => l.setAttribute("opacity", String(ramp(t, A.comparten.start - 0.3, A.comparten.start + 0.3))));
+    un.img.setAttribute("opacity", String(ramp(t, A.nadie.start - 0.4, A.nadie.start)));
+    un.reads.forEach((r) => r.setAttribute("opacity", String(ramp(t, A.leen.start - 0.3, A.leen.start + 0.3))));
+  }
+
+  // ---------------------------------------------------------------- cost: memory is not upgradeable
+  function buildCost() {
+    const g = el("g", {}, $("#sc-cost"));
+    // a memory module and the empty slot that a unified-memory machine does not have
+    el("rect", { x: 220, y: 640, width: 640, height: 140, rx: 10, fill: "#3a9a80" }, g);
+    for (let i = 0; i < 8; i++) el("rect", { x: 250 + i * 74, y: 670, width: 56, height: 80, rx: 4, fill: "#2b2f36" }, g);
+    for (let i = 0; i < 30; i++) el("rect", { x: 236 + i * 20.5, y: 780, width: 12, height: 24, fill: "#c98a1b" }, g);
+    el("line", { x1: 200, y1: 620, x2: 880, y2: 830, stroke: "var(--fuchsia)", "stroke-width": 14, "stroke-linecap": "round" }, g);
+    el("line", { x1: 880, y1: 620, x2: 200, y2: 830, stroke: "var(--fuchsia)", "stroke-width": 14, "stroke-linecap": "round" }, g);
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "¿Por qué los Macs con chip M utilizan memoria unificada? En una computadora tradicional el procesador tiene una RAM y la tarjeta de video tiene la suya. Si la GPU necesita una imagen, primero hay que copiarla de una memoria a la otra. Copiar cuesta tiempo y cuesta energía. En el M1, por ejemplo, la CPU, la GPU y el motor de inteligencia artificial comparten la misma memoria dentro del mismo paquete del chip. Es decir, que nadie copia nada, todos leen del mismo lugar. El costo, no puedes agregar más RAM después. Lo que compras es lo que tendrás para siempre.";
+
+  Mosaic.short({
+    kicker: "Chips",
+    title: "¿Qué es la memoria unificada?",
+    script: SCRIPT,
+    anchors: {
+      tradicional: "tradicional",
+      ram: "ram",
+      video: "tarjeta de video",
+      suya: "suya",
+      imagen: "imagen",
+      copiarla: "copiarla",
+      otra: "la otra",
+      tiempo: "tiempo",
+      energia: "energia",
+      m1: "m1",
+      cpu: "cpu",
+      gpu: "gpu",
+      motor: "motor",
+      comparten: "comparten",
+      nadie: "nadie",
+      leen: "leen",
+      costo: "costo",
+      agregar: "agregar",
+    },
+    build() { buildTrad(); buildUni(); buildCost(); },
+    scenes: [
+      { el: "#sc-trad", from: 0, to: "m1-0.3", fadeIn: 0.4, rise: 0, update: drawTrad },
+      { el: "#cap-trad", from: "tradicional-0.3", to: "imagen-0.6", fade: 0.3 },
+      { el: "#cap-copy", from: "imagen-0.6", to: "tiempo-0.6", fade: 0.3 },
+      { el: "#cap-cost", from: "tiempo-0.6", to: "m1-0.3", fade: 0.3 },
+      { el: "#sc-uni", from: "m1-0.3", to: "costo-0.3", rise: 0, update: drawUni },
+      { el: "#cap-uni", from: "m1-0.2", to: "nadie-0.4", fade: 0.3 },
+      { el: "#cap-read", from: "nadie-0.4", to: "costo-0.3", fade: 0.3 },
+      { el: "#sc-cost", from: "costo-0.3", to: "end", rise: 0 },
+      { el: "#stamp", from: "agregar-0.2", to: "end", fade: 0.3, rise: 0 },
+      { el: "#cap-fixed", from: "costo-0.2", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
