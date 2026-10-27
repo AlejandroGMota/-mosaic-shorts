@@ -1,0 +1,1000 @@
+{
+ "schema": "mosaic-transcript/1",
+ "id": "A4",
+ "short": "a4-por-que-no-usar-siempre-la-apertura-mas-abierta",
+ "language": "es",
+ "duration": 38.054,
+ "engine": "whisper.cpp",
+ "model": "ggml-large-v3-turbo-q5_0.bin",
+ "source_take": "a4-por-que-no-usar-siempre-la-apertura-mas-abierta_toma-02.wav",
+ "created": "2026-10-27T20:58:24Z",
+ "text": "Si f/1.48 deja entrar más luz, ¿por qué los teléfonos no la usan siempre? Porque toda apertura tiene un costo. Muy abierta, la luz pasa por las orillas del lente, no corveje perfecto, se llama aberración, y la foto pierde un poco de nitidez. Muy cerrada, en f/4 el agujero es tan pequeño que la luz se dobla en los bordes, se llama difracción y también resta nitidez. Entre los dos extremos hay un punto que muchos teléfonos utilizan. Apple dice que el suyo es f/1.8 y por eso es la apertura por defecto. La física siempre cobra o luz o nitidez o profundidad.",
+ "words": [
+  {
+   "i": 0,
+   "text": "Si",
+   "norm": "si",
+   "start": 0.18,
+   "end": 0.24,
+   "p": 0.58
+  },
+  {
+   "i": 1,
+   "text": "f/1.48",
+   "norm": "f148",
+   "start": 0.24,
+   "end": 1.47,
+   "p": 0.956
+  },
+  {
+   "i": 2,
+   "text": "deja",
+   "norm": "deja",
+   "start": 1.47,
+   "end": 2.02,
+   "p": 0.972
+  },
+  {
+   "i": 3,
+   "text": "entrar",
+   "norm": "entrar",
+   "start": 2.02,
+   "end": 2.41,
+   "p": 0.974
+  },
+  {
+   "i": 4,
+   "text": "más",
+   "norm": "mas",
+   "start": 2.41,
+   "end": 2.69,
+   "p": 0.887
+  },
+  {
+   "i": 5,
+   "text": "luz,",
+   "norm": "luz",
+   "start": 2.69,
+   "end": 3.21,
+   "p": 0.884
+  },
+  {
+   "i": 6,
+   "text": "¿por",
+   "norm": "por",
+   "start": 3.21,
+   "end": 3.42,
+   "p": 0.875
+  },
+  {
+   "i": 7,
+   "text": "qué",
+   "norm": "que",
+   "start": 3.42,
+   "end": 3.59,
+   "p": 0.823
+  },
+  {
+   "i": 8,
+   "text": "los",
+   "norm": "los",
+   "start": 3.59,
+   "end": 3.76,
+   "p": 0.974
+  },
+  {
+   "i": 9,
+   "text": "teléfonos",
+   "norm": "telefonos",
+   "start": 3.76,
+   "end": 4.26,
+   "p": 0.996
+  },
+  {
+   "i": 10,
+   "text": "no",
+   "norm": "no",
+   "start": 4.26,
+   "end": 4.37,
+   "p": 0.986
+  },
+  {
+   "i": 11,
+   "text": "la",
+   "norm": "la",
+   "start": 4.37,
+   "end": 4.48,
+   "p": 0.975
+  },
+  {
+   "i": 12,
+   "text": "usan",
+   "norm": "usan",
+   "start": 4.48,
+   "end": 4.7,
+   "p": 0.995
+  },
+  {
+   "i": 13,
+   "text": "siempre?",
+   "norm": "siempre",
+   "start": 4.7,
+   "end": 5.54,
+   "p": 0.946
+  },
+  {
+   "i": 14,
+   "text": "Porque",
+   "norm": "porque",
+   "start": 5.54,
+   "end": 5.76,
+   "p": 0.576
+  },
+  {
+   "i": 15,
+   "text": "toda",
+   "norm": "toda",
+   "start": 5.76,
+   "end": 6.0,
+   "p": 0.535
+  },
+  {
+   "i": 16,
+   "text": "apertura",
+   "norm": "apertura",
+   "start": 6.0,
+   "end": 6.8,
+   "p": 0.868
+  },
+  {
+   "i": 17,
+   "text": "tiene",
+   "norm": "tiene",
+   "start": 6.8,
+   "end": 7.0,
+   "p": 0.806
+  },
+  {
+   "i": 18,
+   "text": "un",
+   "norm": "un",
+   "start": 7.0,
+   "end": 7.13,
+   "p": 0.898
+  },
+  {
+   "i": 19,
+   "text": "costo.",
+   "norm": "costo",
+   "start": 7.13,
+   "end": 7.62,
+   "p": 0.879
+  },
+  {
+   "i": 20,
+   "text": "Muy",
+   "norm": "muy",
+   "start": 7.62,
+   "end": 7.86,
+   "p": 0.977
+  },
+  {
+   "i": 21,
+   "text": "abierta,",
+   "norm": "abierta",
+   "start": 7.86,
+   "end": 8.41,
+   "p": 0.946
+  },
+  {
+   "i": 22,
+   "text": "la",
+   "norm": "la",
+   "start": 8.41,
+   "end": 8.57,
+   "p": 0.991
+  },
+  {
+   "i": 23,
+   "text": "luz",
+   "norm": "luz",
+   "start": 8.57,
+   "end": 8.74,
+   "p": 0.999
+  },
+  {
+   "i": 24,
+   "text": "pasa",
+   "norm": "pasa",
+   "start": 8.74,
+   "end": 9.06,
+   "p": 0.986
+  },
+  {
+   "i": 25,
+   "text": "por",
+   "norm": "por",
+   "start": 9.06,
+   "end": 9.21,
+   "p": 0.997
+  },
+  {
+   "i": 26,
+   "text": "las",
+   "norm": "las",
+   "start": 9.21,
+   "end": 9.41,
+   "p": 0.995
+  },
+  {
+   "i": 27,
+   "text": "orillas",
+   "norm": "orillas",
+   "start": 9.41,
+   "end": 9.88,
+   "p": 0.999
+  },
+  {
+   "i": 28,
+   "text": "del",
+   "norm": "del",
+   "start": 9.88,
+   "end": 10.08,
+   "p": 0.988
+  },
+  {
+   "i": 29,
+   "text": "lente,",
+   "norm": "lente",
+   "start": 10.08,
+   "end": 10.62,
+   "p": 0.931
+  },
+  {
+   "i": 30,
+   "text": "no",
+   "norm": "no",
+   "start": 10.62,
+   "end": 10.83,
+   "p": 0.929
+  },
+  {
+   "i": 31,
+   "text": "corveje",
+   "norm": "corveje",
+   "start": 10.83,
+   "end": 11.38,
+   "p": 0.833
+  },
+  {
+   "i": 32,
+   "text": "perfecto,",
+   "norm": "perfecto",
+   "start": 11.38,
+   "end": 12.12,
+   "p": 0.934
+  },
+  {
+   "i": 33,
+   "text": "se",
+   "norm": "se",
+   "start": 12.12,
+   "end": 12.28,
+   "p": 0.938
+  },
+  {
+   "i": 34,
+   "text": "llama",
+   "norm": "llama",
+   "start": 12.28,
+   "end": 12.68,
+   "p": 0.996
+  },
+  {
+   "i": 35,
+   "text": "aberración,",
+   "norm": "aberracion",
+   "start": 12.68,
+   "end": 13.62,
+   "p": 0.855
+  },
+  {
+   "i": 36,
+   "text": "y",
+   "norm": "y",
+   "start": 13.62,
+   "end": 13.76,
+   "p": 0.8
+  },
+  {
+   "i": 37,
+   "text": "la",
+   "norm": "la",
+   "start": 13.76,
+   "end": 13.96,
+   "p": 0.987
+  },
+  {
+   "i": 38,
+   "text": "foto",
+   "norm": "foto",
+   "start": 13.96,
+   "end": 14.42,
+   "p": 0.99
+  },
+  {
+   "i": 39,
+   "text": "pierde",
+   "norm": "pierde",
+   "start": 14.42,
+   "end": 14.64,
+   "p": 0.986
+  },
+  {
+   "i": 40,
+   "text": "un",
+   "norm": "un",
+   "start": 14.64,
+   "end": 14.78,
+   "p": 0.959
+  },
+  {
+   "i": 41,
+   "text": "poco",
+   "norm": "poco",
+   "start": 14.78,
+   "end": 15.2,
+   "p": 0.995
+  },
+  {
+   "i": 42,
+   "text": "de",
+   "norm": "de",
+   "start": 15.2,
+   "end": 15.27,
+   "p": 0.991
+  },
+  {
+   "i": 43,
+   "text": "nitidez.",
+   "norm": "nitidez",
+   "start": 15.27,
+   "end": 15.9,
+   "p": 0.991
+  },
+  {
+   "i": 44,
+   "text": "Muy",
+   "norm": "muy",
+   "start": 15.9,
+   "end": 16.14,
+   "p": 0.982
+  },
+  {
+   "i": 45,
+   "text": "cerrada,",
+   "norm": "cerrada",
+   "start": 16.14,
+   "end": 16.85,
+   "p": 0.974
+  },
+  {
+   "i": 46,
+   "text": "en",
+   "norm": "en",
+   "start": 16.85,
+   "end": 16.97,
+   "p": 0.995
+  },
+  {
+   "i": 47,
+   "text": "f/4",
+   "norm": "f4",
+   "start": 16.97,
+   "end": 17.35,
+   "p": 0.971
+  },
+  {
+   "i": 48,
+   "text": "el",
+   "norm": "el",
+   "start": 17.35,
+   "end": 17.5,
+   "p": 0.631
+  },
+  {
+   "i": 49,
+   "text": "agujero",
+   "norm": "agujero",
+   "start": 17.5,
+   "end": 18.03,
+   "p": 0.999
+  },
+  {
+   "i": 50,
+   "text": "es",
+   "norm": "es",
+   "start": 18.03,
+   "end": 18.18,
+   "p": 0.991
+  },
+  {
+   "i": 51,
+   "text": "tan",
+   "norm": "tan",
+   "start": 18.18,
+   "end": 18.41,
+   "p": 0.998
+  },
+  {
+   "i": 52,
+   "text": "pequeño",
+   "norm": "pequeno",
+   "start": 18.41,
+   "end": 19.11,
+   "p": 0.995
+  },
+  {
+   "i": 53,
+   "text": "que",
+   "norm": "que",
+   "start": 19.11,
+   "end": 19.25,
+   "p": 0.967
+  },
+  {
+   "i": 54,
+   "text": "la",
+   "norm": "la",
+   "start": 19.25,
+   "end": 19.37,
+   "p": 0.972
+  },
+  {
+   "i": 55,
+   "text": "luz",
+   "norm": "luz",
+   "start": 19.37,
+   "end": 19.66,
+   "p": 0.998
+  },
+  {
+   "i": 56,
+   "text": "se",
+   "norm": "se",
+   "start": 19.66,
+   "end": 19.72,
+   "p": 0.983
+  },
+  {
+   "i": 57,
+   "text": "dobla",
+   "norm": "dobla",
+   "start": 19.72,
+   "end": 20.1,
+   "p": 0.988
+  },
+  {
+   "i": 58,
+   "text": "en",
+   "norm": "en",
+   "start": 20.1,
+   "end": 20.25,
+   "p": 0.995
+  },
+  {
+   "i": 59,
+   "text": "los",
+   "norm": "los",
+   "start": 20.25,
+   "end": 20.47,
+   "p": 0.997
+  },
+  {
+   "i": 60,
+   "text": "bordes,",
+   "norm": "bordes",
+   "start": 20.47,
+   "end": 21.44,
+   "p": 0.978
+  },
+  {
+   "i": 61,
+   "text": "se",
+   "norm": "se",
+   "start": 21.44,
+   "end": 21.49,
+   "p": 0.964
+  },
+  {
+   "i": 62,
+   "text": "llama",
+   "norm": "llama",
+   "start": 21.46,
+   "end": 21.86,
+   "p": 0.997
+  },
+  {
+   "i": 63,
+   "text": "difracción",
+   "norm": "difraccion",
+   "start": 21.86,
+   "end": 22.7,
+   "p": 0.983
+  },
+  {
+   "i": 64,
+   "text": "y",
+   "norm": "y",
+   "start": 22.7,
+   "end": 22.75,
+   "p": 0.711
+  },
+  {
+   "i": 65,
+   "text": "también",
+   "norm": "tambien",
+   "start": 22.74,
+   "end": 23.55,
+   "p": 0.976
+  },
+  {
+   "i": 66,
+   "text": "resta",
+   "norm": "resta",
+   "start": 23.55,
+   "end": 23.71,
+   "p": 0.989
+  },
+  {
+   "i": 67,
+   "text": "nitidez.",
+   "norm": "nitidez",
+   "start": 23.71,
+   "end": 24.46,
+   "p": 0.991
+  },
+  {
+   "i": 68,
+   "text": "Entre",
+   "norm": "entre",
+   "start": 24.7,
+   "end": 24.81,
+   "p": 0.949
+  },
+  {
+   "i": 69,
+   "text": "los",
+   "norm": "los",
+   "start": 24.81,
+   "end": 25.02,
+   "p": 0.988
+  },
+  {
+   "i": 70,
+   "text": "dos",
+   "norm": "dos",
+   "start": 25.02,
+   "end": 25.23,
+   "p": 0.963
+  },
+  {
+   "i": 71,
+   "text": "extremos",
+   "norm": "extremos",
+   "start": 25.23,
+   "end": 25.79,
+   "p": 0.997
+  },
+  {
+   "i": 72,
+   "text": "hay",
+   "norm": "hay",
+   "start": 25.79,
+   "end": 26.0,
+   "p": 0.778
+  },
+  {
+   "i": 73,
+   "text": "un",
+   "norm": "un",
+   "start": 26.0,
+   "end": 26.13,
+   "p": 0.976
+  },
+  {
+   "i": 74,
+   "text": "punto",
+   "norm": "punto",
+   "start": 26.13,
+   "end": 26.49,
+   "p": 0.992
+  },
+  {
+   "i": 75,
+   "text": "que",
+   "norm": "que",
+   "start": 26.49,
+   "end": 26.72,
+   "p": 0.937
+  },
+  {
+   "i": 76,
+   "text": "muchos",
+   "norm": "muchos",
+   "start": 26.72,
+   "end": 27.12,
+   "p": 0.979
+  },
+  {
+   "i": 77,
+   "text": "teléfonos",
+   "norm": "telefonos",
+   "start": 27.12,
+   "end": 27.81,
+   "p": 0.991
+  },
+  {
+   "i": 78,
+   "text": "utilizan.",
+   "norm": "utilizan",
+   "start": 27.81,
+   "end": 28.54,
+   "p": 0.851
+  },
+  {
+   "i": 79,
+   "text": "Apple",
+   "norm": "apple",
+   "start": 28.54,
+   "end": 28.83,
+   "p": 0.873
+  },
+  {
+   "i": 80,
+   "text": "dice",
+   "norm": "dice",
+   "start": 28.83,
+   "end": 29.06,
+   "p": 0.983
+  },
+  {
+   "i": 81,
+   "text": "que",
+   "norm": "que",
+   "start": 29.06,
+   "end": 29.26,
+   "p": 0.985
+  },
+  {
+   "i": 82,
+   "text": "el",
+   "norm": "el",
+   "start": 29.26,
+   "end": 29.31,
+   "p": 0.934
+  },
+  {
+   "i": 83,
+   "text": "suyo",
+   "norm": "suyo",
+   "start": 29.31,
+   "end": 30.0,
+   "p": 0.979
+  },
+  {
+   "i": 84,
+   "text": "es",
+   "norm": "es",
+   "start": 30.0,
+   "end": 30.1,
+   "p": 0.922
+  },
+  {
+   "i": 85,
+   "text": "f/1.8",
+   "norm": "f18",
+   "start": 30.1,
+   "end": 31.54,
+   "p": 0.975
+  },
+  {
+   "i": 86,
+   "text": "y",
+   "norm": "y",
+   "start": 31.54,
+   "end": 31.6,
+   "p": 0.407
+  },
+  {
+   "i": 87,
+   "text": "por",
+   "norm": "por",
+   "start": 31.6,
+   "end": 32.11,
+   "p": 0.896
+  },
+  {
+   "i": 88,
+   "text": "eso",
+   "norm": "eso",
+   "start": 32.11,
+   "end": 32.26,
+   "p": 0.967
+  },
+  {
+   "i": 89,
+   "text": "es",
+   "norm": "es",
+   "start": 32.26,
+   "end": 32.44,
+   "p": 0.833
+  },
+  {
+   "i": 90,
+   "text": "la",
+   "norm": "la",
+   "start": 32.44,
+   "end": 32.61,
+   "p": 0.519
+  },
+  {
+   "i": 91,
+   "text": "apertura",
+   "norm": "apertura",
+   "start": 32.61,
+   "end": 33.1,
+   "p": 0.988
+  },
+  {
+   "i": 92,
+   "text": "por",
+   "norm": "por",
+   "start": 33.1,
+   "end": 33.23,
+   "p": 0.955
+  },
+  {
+   "i": 93,
+   "text": "defecto.",
+   "norm": "defecto",
+   "start": 33.23,
+   "end": 33.82,
+   "p": 0.974
+  },
+  {
+   "i": 94,
+   "text": "La",
+   "norm": "la",
+   "start": 33.82,
+   "end": 34.06,
+   "p": 0.979
+  },
+  {
+   "i": 95,
+   "text": "física",
+   "norm": "fisica",
+   "start": 34.06,
+   "end": 34.58,
+   "p": 0.931
+  },
+  {
+   "i": 96,
+   "text": "siempre",
+   "norm": "siempre",
+   "start": 34.58,
+   "end": 35.26,
+   "p": 0.963
+  },
+  {
+   "i": 97,
+   "text": "cobra",
+   "norm": "cobra",
+   "start": 35.26,
+   "end": 35.82,
+   "p": 0.986
+  },
+  {
+   "i": 98,
+   "text": "o",
+   "norm": "o",
+   "start": 35.82,
+   "end": 35.87,
+   "p": 0.438
+  },
+  {
+   "i": 99,
+   "text": "luz",
+   "norm": "luz",
+   "start": 35.84,
+   "end": 36.1,
+   "p": 0.993
+  },
+  {
+   "i": 100,
+   "text": "o",
+   "norm": "o",
+   "start": 36.1,
+   "end": 36.23,
+   "p": 0.727
+  },
+  {
+   "i": 101,
+   "text": "nitidez",
+   "norm": "nitidez",
+   "start": 36.23,
+   "end": 36.85,
+   "p": 0.995
+  },
+  {
+   "i": 102,
+   "text": "o",
+   "norm": "o",
+   "start": 36.85,
+   "end": 37.17,
+   "p": 0.969
+  },
+  {
+   "i": 103,
+   "text": "profundidad.",
+   "norm": "profundidad",
+   "start": 37.17,
+   "end": 38.054,
+   "p": 0.979
+  }
+ ],
+ "segments": [
+  {
+   "i": 0,
+   "start": 0.18,
+   "end": 3.21,
+   "text": "Si f/1.48 deja entrar más luz,",
+   "first": 0,
+   "last": 5
+  },
+  {
+   "i": 1,
+   "start": 3.21,
+   "end": 5.54,
+   "text": "¿por qué los teléfonos no la usan siempre?",
+   "first": 6,
+   "last": 13
+  },
+  {
+   "i": 2,
+   "start": 5.54,
+   "end": 7.62,
+   "text": "Porque toda apertura tiene un costo.",
+   "first": 14,
+   "last": 19
+  },
+  {
+   "i": 3,
+   "start": 7.62,
+   "end": 8.41,
+   "text": "Muy abierta,",
+   "first": 20,
+   "last": 21
+  },
+  {
+   "i": 4,
+   "start": 8.41,
+   "end": 10.62,
+   "text": "la luz pasa por las orillas del lente,",
+   "first": 22,
+   "last": 29
+  },
+  {
+   "i": 5,
+   "start": 10.62,
+   "end": 12.12,
+   "text": "no corveje perfecto,",
+   "first": 30,
+   "last": 32
+  },
+  {
+   "i": 6,
+   "start": 12.12,
+   "end": 13.62,
+   "text": "se llama aberración,",
+   "first": 33,
+   "last": 35
+  },
+  {
+   "i": 7,
+   "start": 13.62,
+   "end": 15.9,
+   "text": "y la foto pierde un poco de nitidez.",
+   "first": 36,
+   "last": 43
+  },
+  {
+   "i": 8,
+   "start": 15.9,
+   "end": 16.85,
+   "text": "Muy cerrada,",
+   "first": 44,
+   "last": 45
+  },
+  {
+   "i": 9,
+   "start": 16.85,
+   "end": 19.25,
+   "text": "en f/4 el agujero es tan pequeño que",
+   "first": 46,
+   "last": 53
+  },
+  {
+   "i": 10,
+   "start": 19.25,
+   "end": 21.44,
+   "text": "la luz se dobla en los bordes,",
+   "first": 54,
+   "last": 60
+  },
+  {
+   "i": 11,
+   "start": 21.44,
+   "end": 23.55,
+   "text": "se llama difracción y también",
+   "first": 61,
+   "last": 65
+  },
+  {
+   "i": 12,
+   "start": 23.55,
+   "end": 24.46,
+   "text": "resta nitidez.",
+   "first": 66,
+   "last": 67
+  },
+  {
+   "i": 13,
+   "start": 24.7,
+   "end": 26.49,
+   "text": "Entre los dos extremos hay un punto",
+   "first": 68,
+   "last": 74
+  },
+  {
+   "i": 14,
+   "start": 26.49,
+   "end": 28.54,
+   "text": "que muchos teléfonos utilizan.",
+   "first": 75,
+   "last": 78
+  },
+  {
+   "i": 15,
+   "start": 28.54,
+   "end": 32.11,
+   "text": "Apple dice que el suyo es f/1.8 y por",
+   "first": 79,
+   "last": 87
+  },
+  {
+   "i": 16,
+   "start": 32.11,
+   "end": 33.82,
+   "text": "eso es la apertura por defecto.",
+   "first": 88,
+   "last": 93
+  },
+  {
+   "i": 17,
+   "start": 33.82,
+   "end": 36.1,
+   "text": "La física siempre cobra o luz",
+   "first": 94,
+   "last": 99
+  },
+  {
+   "i": 18,
+   "start": 36.1,
+   "end": 38.054,
+   "text": "o nitidez o profundidad.",
+   "first": 100,
+   "last": 103
+  }
+ ]
+}

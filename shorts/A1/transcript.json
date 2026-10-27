@@ -1,0 +1,1088 @@
+{
+ "schema": "mosaic-transcript/1",
+ "id": "A1",
+ "short": "a1-que-es-la-apertura-de-una-camara",
+ "language": "es",
+ "duration": 39.127,
+ "engine": "whisper.cpp",
+ "model": "ggml-large-v3-turbo-q5_0.bin",
+ "source_take": "a1-que-es-la-apertura-de-una-camara_toma-01.wav",
+ "created": "2026-10-27T20:58:06Z",
+ "text": "¿Qué significa ese número que ves en las fichas de las cámaras? Es la apertura, el tamaño del agujero por donde entra la luz al sensor, y aquí viene lo confuso, el número es una división, distancia focal entre el diámetro del agujero, por eso entre más chico el número, más grande el agujero, por ejemplo, en el iPhone 18 Pro ahora puede cambiar de f/1.48 a f/4, ¿y cuánta diferencia hay? La luz depende del área, no del diámetro, así que f/4 a f/1.48 entran unas 7 veces más de luz. Más luz significa más fotos limpias de noche, pero también cambia algo que vas a notar en cada retrato.",
+ "words": [
+  {
+   "i": 0,
+   "text": "¿Qué",
+   "norm": "que",
+   "start": 0.05,
+   "end": 0.2,
+   "p": 0.796
+  },
+  {
+   "i": 1,
+   "text": "significa",
+   "norm": "significa",
+   "start": 0.2,
+   "end": 0.69,
+   "p": 0.982
+  },
+  {
+   "i": 2,
+   "text": "ese",
+   "norm": "ese",
+   "start": 0.69,
+   "end": 0.83,
+   "p": 0.921
+  },
+  {
+   "i": 3,
+   "text": "número",
+   "norm": "numero",
+   "start": 0.83,
+   "end": 1.14,
+   "p": 0.961
+  },
+  {
+   "i": 4,
+   "text": "que",
+   "norm": "que",
+   "start": 1.14,
+   "end": 1.3,
+   "p": 0.977
+  },
+  {
+   "i": 5,
+   "text": "ves",
+   "norm": "ves",
+   "start": 1.3,
+   "end": 1.46,
+   "p": 0.989
+  },
+  {
+   "i": 6,
+   "text": "en",
+   "norm": "en",
+   "start": 1.46,
+   "end": 1.56,
+   "p": 0.987
+  },
+  {
+   "i": 7,
+   "text": "las",
+   "norm": "las",
+   "start": 1.56,
+   "end": 1.72,
+   "p": 0.801
+  },
+  {
+   "i": 8,
+   "text": "fichas",
+   "norm": "fichas",
+   "start": 1.72,
+   "end": 2.02,
+   "p": 0.996
+  },
+  {
+   "i": 9,
+   "text": "de",
+   "norm": "de",
+   "start": 2.02,
+   "end": 2.11,
+   "p": 0.982
+  },
+  {
+   "i": 10,
+   "text": "las",
+   "norm": "las",
+   "start": 2.11,
+   "end": 2.28,
+   "p": 0.984
+  },
+  {
+   "i": 11,
+   "text": "cámaras?",
+   "norm": "camaras",
+   "start": 2.28,
+   "end": 2.99,
+   "p": 0.988
+  },
+  {
+   "i": 12,
+   "text": "Es",
+   "norm": "es",
+   "start": 2.99,
+   "end": 3.06,
+   "p": 0.59
+  },
+  {
+   "i": 13,
+   "text": "la",
+   "norm": "la",
+   "start": 3.06,
+   "end": 3.3,
+   "p": 0.98
+  },
+  {
+   "i": 14,
+   "text": "apertura,",
+   "norm": "apertura",
+   "start": 3.3,
+   "end": 3.96,
+   "p": 0.89
+  },
+  {
+   "i": 15,
+   "text": "el",
+   "norm": "el",
+   "start": 3.96,
+   "end": 4.1,
+   "p": 0.508
+  },
+  {
+   "i": 16,
+   "text": "tamaño",
+   "norm": "tamano",
+   "start": 4.1,
+   "end": 4.36,
+   "p": 0.892
+  },
+  {
+   "i": 17,
+   "text": "del",
+   "norm": "del",
+   "start": 4.36,
+   "end": 4.48,
+   "p": 0.709
+  },
+  {
+   "i": 18,
+   "text": "agujero",
+   "norm": "agujero",
+   "start": 4.48,
+   "end": 4.98,
+   "p": 0.926
+  },
+  {
+   "i": 19,
+   "text": "por",
+   "norm": "por",
+   "start": 4.98,
+   "end": 5.04,
+   "p": 0.792
+  },
+  {
+   "i": 20,
+   "text": "donde",
+   "norm": "donde",
+   "start": 5.04,
+   "end": 5.4,
+   "p": 0.805
+  },
+  {
+   "i": 21,
+   "text": "entra",
+   "norm": "entra",
+   "start": 5.4,
+   "end": 5.64,
+   "p": 0.874
+  },
+  {
+   "i": 22,
+   "text": "la",
+   "norm": "la",
+   "start": 5.64,
+   "end": 5.7,
+   "p": 0.922
+  },
+  {
+   "i": 23,
+   "text": "luz",
+   "norm": "luz",
+   "start": 5.7,
+   "end": 5.88,
+   "p": 0.981
+  },
+  {
+   "i": 24,
+   "text": "al",
+   "norm": "al",
+   "start": 5.88,
+   "end": 5.99,
+   "p": 0.964
+  },
+  {
+   "i": 25,
+   "text": "sensor,",
+   "norm": "sensor",
+   "start": 5.99,
+   "end": 6.75,
+   "p": 0.607
+  },
+  {
+   "i": 26,
+   "text": "y",
+   "norm": "y",
+   "start": 6.75,
+   "end": 6.9,
+   "p": 0.775
+  },
+  {
+   "i": 27,
+   "text": "aquí",
+   "norm": "aqui",
+   "start": 6.9,
+   "end": 7.07,
+   "p": 0.969
+  },
+  {
+   "i": 28,
+   "text": "viene",
+   "norm": "viene",
+   "start": 7.07,
+   "end": 7.36,
+   "p": 0.983
+  },
+  {
+   "i": 29,
+   "text": "lo",
+   "norm": "lo",
+   "start": 7.36,
+   "end": 7.5,
+   "p": 0.993
+  },
+  {
+   "i": 30,
+   "text": "confuso,",
+   "norm": "confuso",
+   "start": 7.5,
+   "end": 8.13,
+   "p": 0.807
+  },
+  {
+   "i": 31,
+   "text": "el",
+   "norm": "el",
+   "start": 8.13,
+   "end": 8.19,
+   "p": 0.862
+  },
+  {
+   "i": 32,
+   "text": "número",
+   "norm": "numero",
+   "start": 8.19,
+   "end": 8.54,
+   "p": 0.972
+  },
+  {
+   "i": 33,
+   "text": "es",
+   "norm": "es",
+   "start": 8.54,
+   "end": 8.74,
+   "p": 0.988
+  },
+  {
+   "i": 34,
+   "text": "una",
+   "norm": "una",
+   "start": 8.74,
+   "end": 8.87,
+   "p": 0.992
+  },
+  {
+   "i": 35,
+   "text": "división,",
+   "norm": "division",
+   "start": 8.87,
+   "end": 9.72,
+   "p": 0.86
+  },
+  {
+   "i": 36,
+   "text": "distancia",
+   "norm": "distancia",
+   "start": 9.72,
+   "end": 10.26,
+   "p": 0.964
+  },
+  {
+   "i": 37,
+   "text": "focal",
+   "norm": "focal",
+   "start": 10.26,
+   "end": 11.0,
+   "p": 0.98
+  },
+  {
+   "i": 38,
+   "text": "entre",
+   "norm": "entre",
+   "start": 11.0,
+   "end": 11.05,
+   "p": 0.955
+  },
+  {
+   "i": 39,
+   "text": "el",
+   "norm": "el",
+   "start": 11.02,
+   "end": 11.14,
+   "p": 0.993
+  },
+  {
+   "i": 40,
+   "text": "diámetro",
+   "norm": "diametro",
+   "start": 11.14,
+   "end": 11.76,
+   "p": 0.995
+  },
+  {
+   "i": 41,
+   "text": "del",
+   "norm": "del",
+   "start": 11.76,
+   "end": 11.94,
+   "p": 0.967
+  },
+  {
+   "i": 42,
+   "text": "agujero,",
+   "norm": "agujero",
+   "start": 11.94,
+   "end": 12.68,
+   "p": 0.951
+  },
+  {
+   "i": 43,
+   "text": "por",
+   "norm": "por",
+   "start": 12.68,
+   "end": 12.87,
+   "p": 0.955
+  },
+  {
+   "i": 44,
+   "text": "eso",
+   "norm": "eso",
+   "start": 12.87,
+   "end": 13.26,
+   "p": 0.995
+  },
+  {
+   "i": 45,
+   "text": "entre",
+   "norm": "entre",
+   "start": 13.26,
+   "end": 13.44,
+   "p": 0.715
+  },
+  {
+   "i": 46,
+   "text": "más",
+   "norm": "mas",
+   "start": 13.44,
+   "end": 13.65,
+   "p": 0.969
+  },
+  {
+   "i": 47,
+   "text": "chico",
+   "norm": "chico",
+   "start": 13.65,
+   "end": 14.0,
+   "p": 0.992
+  },
+  {
+   "i": 48,
+   "text": "el",
+   "norm": "el",
+   "start": 14.0,
+   "end": 14.14,
+   "p": 0.968
+  },
+  {
+   "i": 49,
+   "text": "número,",
+   "norm": "numero",
+   "start": 14.14,
+   "end": 14.85,
+   "p": 0.799
+  },
+  {
+   "i": 50,
+   "text": "más",
+   "norm": "mas",
+   "start": 14.85,
+   "end": 14.92,
+   "p": 0.981
+  },
+  {
+   "i": 51,
+   "text": "grande",
+   "norm": "grande",
+   "start": 14.92,
+   "end": 15.35,
+   "p": 0.992
+  },
+  {
+   "i": 52,
+   "text": "el",
+   "norm": "el",
+   "start": 15.35,
+   "end": 15.49,
+   "p": 0.984
+  },
+  {
+   "i": 53,
+   "text": "agujero,",
+   "norm": "agujero",
+   "start": 15.49,
+   "end": 16.21,
+   "p": 0.813
+  },
+  {
+   "i": 54,
+   "text": "por",
+   "norm": "por",
+   "start": 16.21,
+   "end": 16.38,
+   "p": 0.894
+  },
+  {
+   "i": 55,
+   "text": "ejemplo,",
+   "norm": "ejemplo",
+   "start": 16.38,
+   "end": 16.94,
+   "p": 0.682
+  },
+  {
+   "i": 56,
+   "text": "en",
+   "norm": "en",
+   "start": 16.94,
+   "end": 17.01,
+   "p": 0.961
+  },
+  {
+   "i": 57,
+   "text": "el",
+   "norm": "el",
+   "start": 17.01,
+   "end": 17.1,
+   "p": 0.994
+  },
+  {
+   "i": 58,
+   "text": "iPhone",
+   "norm": "iphone",
+   "start": 17.1,
+   "end": 17.4,
+   "p": 0.946
+  },
+  {
+   "i": 59,
+   "text": "18",
+   "norm": "18",
+   "start": 17.4,
+   "end": 18.3,
+   "p": 0.936
+  },
+  {
+   "i": 60,
+   "text": "Pro",
+   "norm": "pro",
+   "start": 18.3,
+   "end": 18.43,
+   "p": 0.962
+  },
+  {
+   "i": 61,
+   "text": "ahora",
+   "norm": "ahora",
+   "start": 18.43,
+   "end": 19.01,
+   "p": 0.761
+  },
+  {
+   "i": 62,
+   "text": "puede",
+   "norm": "puede",
+   "start": 19.01,
+   "end": 19.73,
+   "p": 0.949
+  },
+  {
+   "i": 63,
+   "text": "cambiar",
+   "norm": "cambiar",
+   "start": 19.73,
+   "end": 20.4,
+   "p": 0.995
+  },
+  {
+   "i": 64,
+   "text": "de",
+   "norm": "de",
+   "start": 20.4,
+   "end": 20.63,
+   "p": 0.986
+  },
+  {
+   "i": 65,
+   "text": "f/1.48",
+   "norm": "f148",
+   "start": 20.63,
+   "end": 22.27,
+   "p": 0.979
+  },
+  {
+   "i": 66,
+   "text": "a",
+   "norm": "a",
+   "start": 22.27,
+   "end": 22.33,
+   "p": 0.883
+  },
+  {
+   "i": 67,
+   "text": "f/4,",
+   "norm": "f4",
+   "start": 22.33,
+   "end": 23.23,
+   "p": 0.878
+  },
+  {
+   "i": 68,
+   "text": "¿y",
+   "norm": "y",
+   "start": 23.23,
+   "end": 23.3,
+   "p": 0.625
+  },
+  {
+   "i": 69,
+   "text": "cuánta",
+   "norm": "cuanta",
+   "start": 23.3,
+   "end": 23.62,
+   "p": 0.94
+  },
+  {
+   "i": 70,
+   "text": "diferencia",
+   "norm": "diferencia",
+   "start": 23.62,
+   "end": 24.16,
+   "p": 0.992
+  },
+  {
+   "i": 71,
+   "text": "hay?",
+   "norm": "hay",
+   "start": 24.16,
+   "end": 24.5,
+   "p": 0.952
+  },
+  {
+   "i": 72,
+   "text": "La",
+   "norm": "la",
+   "start": 24.64,
+   "end": 24.69,
+   "p": 0.918
+  },
+  {
+   "i": 73,
+   "text": "luz",
+   "norm": "luz",
+   "start": 24.69,
+   "end": 24.98,
+   "p": 0.995
+  },
+  {
+   "i": 74,
+   "text": "depende",
+   "norm": "depende",
+   "start": 24.98,
+   "end": 25.65,
+   "p": 0.99
+  },
+  {
+   "i": 75,
+   "text": "del",
+   "norm": "del",
+   "start": 25.65,
+   "end": 25.94,
+   "p": 0.987
+  },
+  {
+   "i": 76,
+   "text": "área,",
+   "norm": "area",
+   "start": 25.94,
+   "end": 26.52,
+   "p": 0.915
+  },
+  {
+   "i": 77,
+   "text": "no",
+   "norm": "no",
+   "start": 26.52,
+   "end": 26.7,
+   "p": 0.988
+  },
+  {
+   "i": 78,
+   "text": "del",
+   "norm": "del",
+   "start": 26.7,
+   "end": 26.99,
+   "p": 0.989
+  },
+  {
+   "i": 79,
+   "text": "diámetro,",
+   "norm": "diametro",
+   "start": 26.99,
+   "end": 27.99,
+   "p": 0.968
+  },
+  {
+   "i": 80,
+   "text": "así",
+   "norm": "asi",
+   "start": 27.99,
+   "end": 28.46,
+   "p": 0.981
+  },
+  {
+   "i": 81,
+   "text": "que",
+   "norm": "que",
+   "start": 28.46,
+   "end": 28.52,
+   "p": 0.995
+  },
+  {
+   "i": 82,
+   "text": "f/4",
+   "norm": "f4",
+   "start": 28.52,
+   "end": 28.98,
+   "p": 0.912
+  },
+  {
+   "i": 83,
+   "text": "a",
+   "norm": "a",
+   "start": 28.98,
+   "end": 29.07,
+   "p": 0.923
+  },
+  {
+   "i": 84,
+   "text": "f/1.48",
+   "norm": "f148",
+   "start": 29.07,
+   "end": 30.38,
+   "p": 0.991
+  },
+  {
+   "i": 85,
+   "text": "entran",
+   "norm": "entran",
+   "start": 30.38,
+   "end": 31.23,
+   "p": 0.927
+  },
+  {
+   "i": 86,
+   "text": "unas",
+   "norm": "unas",
+   "start": 31.23,
+   "end": 31.33,
+   "p": 0.945
+  },
+  {
+   "i": 87,
+   "text": "7",
+   "norm": "7",
+   "start": 31.33,
+   "end": 31.62,
+   "p": 0.644
+  },
+  {
+   "i": 88,
+   "text": "veces",
+   "norm": "veces",
+   "start": 31.62,
+   "end": 32.09,
+   "p": 0.994
+  },
+  {
+   "i": 89,
+   "text": "más",
+   "norm": "mas",
+   "start": 32.09,
+   "end": 32.41,
+   "p": 0.985
+  },
+  {
+   "i": 90,
+   "text": "de",
+   "norm": "de",
+   "start": 32.41,
+   "end": 32.69,
+   "p": 0.947
+  },
+  {
+   "i": 91,
+   "text": "luz.",
+   "norm": "luz",
+   "start": 32.69,
+   "end": 33.24,
+   "p": 0.789
+  },
+  {
+   "i": 92,
+   "text": "Más",
+   "norm": "mas",
+   "start": 33.24,
+   "end": 33.48,
+   "p": 0.754
+  },
+  {
+   "i": 93,
+   "text": "luz",
+   "norm": "luz",
+   "start": 33.48,
+   "end": 33.72,
+   "p": 0.988
+  },
+  {
+   "i": 94,
+   "text": "significa",
+   "norm": "significa",
+   "start": 33.72,
+   "end": 34.46,
+   "p": 0.875
+  },
+  {
+   "i": 95,
+   "text": "más",
+   "norm": "mas",
+   "start": 34.46,
+   "end": 34.7,
+   "p": 0.982
+  },
+  {
+   "i": 96,
+   "text": "fotos",
+   "norm": "fotos",
+   "start": 34.7,
+   "end": 35.34,
+   "p": 0.987
+  },
+  {
+   "i": 97,
+   "text": "limpias",
+   "norm": "limpias",
+   "start": 35.34,
+   "end": 35.52,
+   "p": 0.984
+  },
+  {
+   "i": 98,
+   "text": "de",
+   "norm": "de",
+   "start": 35.52,
+   "end": 35.61,
+   "p": 0.969
+  },
+  {
+   "i": 99,
+   "text": "noche,",
+   "norm": "noche",
+   "start": 35.61,
+   "end": 36.0,
+   "p": 0.952
+  },
+  {
+   "i": 100,
+   "text": "pero",
+   "norm": "pero",
+   "start": 36.0,
+   "end": 36.27,
+   "p": 0.976
+  },
+  {
+   "i": 101,
+   "text": "también",
+   "norm": "tambien",
+   "start": 36.27,
+   "end": 36.74,
+   "p": 0.989
+  },
+  {
+   "i": 102,
+   "text": "cambia",
+   "norm": "cambia",
+   "start": 36.74,
+   "end": 37.18,
+   "p": 0.991
+  },
+  {
+   "i": 103,
+   "text": "algo",
+   "norm": "algo",
+   "start": 37.18,
+   "end": 37.38,
+   "p": 0.995
+  },
+  {
+   "i": 104,
+   "text": "que",
+   "norm": "que",
+   "start": 37.38,
+   "end": 37.76,
+   "p": 0.975
+  },
+  {
+   "i": 105,
+   "text": "vas",
+   "norm": "vas",
+   "start": 37.76,
+   "end": 37.81,
+   "p": 0.974
+  },
+  {
+   "i": 106,
+   "text": "a",
+   "norm": "a",
+   "start": 37.81,
+   "end": 37.87,
+   "p": 0.985
+  },
+  {
+   "i": 107,
+   "text": "notar",
+   "norm": "notar",
+   "start": 37.87,
+   "end": 38.27,
+   "p": 0.995
+  },
+  {
+   "i": 108,
+   "text": "en",
+   "norm": "en",
+   "start": 38.27,
+   "end": 38.39,
+   "p": 0.995
+  },
+  {
+   "i": 109,
+   "text": "cada",
+   "norm": "cada",
+   "start": 38.39,
+   "end": 38.6,
+   "p": 0.99
+  },
+  {
+   "i": 110,
+   "text": "retrato.",
+   "norm": "retrato",
+   "start": 38.6,
+   "end": 39.12,
+   "p": 0.961
+  }
+ ],
+ "segments": [
+  {
+   "i": 0,
+   "start": 0.05,
+   "end": 1.46,
+   "text": "¿Qué significa ese número que ves",
+   "first": 0,
+   "last": 5
+  },
+  {
+   "i": 1,
+   "start": 1.46,
+   "end": 2.99,
+   "text": "en las fichas de las cámaras?",
+   "first": 6,
+   "last": 11
+  },
+  {
+   "i": 2,
+   "start": 2.99,
+   "end": 3.96,
+   "text": "Es la apertura,",
+   "first": 12,
+   "last": 14
+  },
+  {
+   "i": 3,
+   "start": 3.96,
+   "end": 5.4,
+   "text": "el tamaño del agujero por donde",
+   "first": 15,
+   "last": 20
+  },
+  {
+   "i": 4,
+   "start": 5.4,
+   "end": 6.75,
+   "text": "entra la luz al sensor,",
+   "first": 21,
+   "last": 25
+  },
+  {
+   "i": 5,
+   "start": 6.75,
+   "end": 8.13,
+   "text": "y aquí viene lo confuso,",
+   "first": 26,
+   "last": 30
+  },
+  {
+   "i": 6,
+   "start": 8.13,
+   "end": 9.72,
+   "text": "el número es una división,",
+   "first": 31,
+   "last": 35
+  },
+  {
+   "i": 7,
+   "start": 9.72,
+   "end": 11.14,
+   "text": "distancia focal entre el",
+   "first": 36,
+   "last": 39
+  },
+  {
+   "i": 8,
+   "start": 11.14,
+   "end": 12.68,
+   "text": "diámetro del agujero,",
+   "first": 40,
+   "last": 42
+  },
+  {
+   "i": 9,
+   "start": 12.68,
+   "end": 14.85,
+   "text": "por eso entre más chico el número,",
+   "first": 43,
+   "last": 49
+  },
+  {
+   "i": 10,
+   "start": 14.85,
+   "end": 16.21,
+   "text": "más grande el agujero,",
+   "first": 50,
+   "last": 53
+  },
+  {
+   "i": 11,
+   "start": 16.21,
+   "end": 16.94,
+   "text": "por ejemplo,",
+   "first": 54,
+   "last": 55
+  },
+  {
+   "i": 12,
+   "start": 16.94,
+   "end": 19.73,
+   "text": "en el iPhone 18 Pro ahora puede",
+   "first": 56,
+   "last": 62
+  },
+  {
+   "i": 13,
+   "start": 19.73,
+   "end": 23.23,
+   "text": "cambiar de f/1.48 a f/4,",
+   "first": 63,
+   "last": 67
+  },
+  {
+   "i": 14,
+   "start": 23.23,
+   "end": 24.5,
+   "text": "¿y cuánta diferencia hay?",
+   "first": 68,
+   "last": 71
+  },
+  {
+   "i": 15,
+   "start": 24.64,
+   "end": 26.52,
+   "text": "La luz depende del área,",
+   "first": 72,
+   "last": 76
+  },
+  {
+   "i": 16,
+   "start": 26.52,
+   "end": 27.99,
+   "text": "no del diámetro,",
+   "first": 77,
+   "last": 79
+  },
+  {
+   "i": 17,
+   "start": 27.99,
+   "end": 31.23,
+   "text": "así que f/4 a f/1.48 entran",
+   "first": 80,
+   "last": 85
+  },
+  {
+   "i": 18,
+   "start": 31.23,
+   "end": 33.24,
+   "text": "unas 7 veces más de luz.",
+   "first": 86,
+   "last": 91
+  },
+  {
+   "i": 19,
+   "start": 33.24,
+   "end": 35.34,
+   "text": "Más luz significa más fotos",
+   "first": 92,
+   "last": 96
+  },
+  {
+   "i": 20,
+   "start": 35.34,
+   "end": 36.0,
+   "text": "limpias de noche,",
+   "first": 97,
+   "last": 99
+  },
+  {
+   "i": 21,
+   "start": 36.0,
+   "end": 37.81,
+   "text": "pero también cambia algo que vas",
+   "first": 100,
+   "last": 105
+  },
+  {
+   "i": 22,
+   "start": 37.81,
+   "end": 39.12,
+   "text": "a notar en cada retrato.",
+   "first": 106,
+   "last": 110
+  }
+ ]
+}

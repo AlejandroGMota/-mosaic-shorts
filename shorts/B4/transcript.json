@@ -1,0 +1,840 @@
+{
+ "schema": "mosaic-transcript/1",
+ "id": "B4",
+ "short": "b4-el-metal-que-regresa-a-su-forma-lo-que-si-y-lo-que-no",
+ "language": "es",
+ "duration": 29.407,
+ "engine": "whisper.cpp",
+ "model": "ggml-large-v3-turbo-q5_0.bin",
+ "source_take": "b4-el-metal-que-regresa-a-su-forma-lo-que-si-y-lo-que-no_toma-02.wav",
+ "created": "2026-10-27T20:59:00Z",
+ "text": "Antes del lanzamiento del iPhone 2, se rumoró que la bisagra del iPhone plegable sería de metal líquido. No es un metal derretido, es un vidrio metálico, un metal enfriado tan rápido que sus átomos no alcanzan a ordenarse en cristales. En cristales no tienen esas fronteras internas donde un metal normal se deforma para siempre, por eso pueden doblarse bastante más y regresar a su forma. Lo que sí confirmó Apple, la bisagra con la cubierta de titanio, lo del metal líquido sigue siendo un rumor.",
+ "words": [
+  {
+   "i": 0,
+   "text": "Antes",
+   "norm": "antes",
+   "start": 0.14,
+   "end": 0.33,
+   "p": 0.873
+  },
+  {
+   "i": 1,
+   "text": "del",
+   "norm": "del",
+   "start": 0.33,
+   "end": 0.48,
+   "p": 0.929
+  },
+  {
+   "i": 2,
+   "text": "lanzamiento",
+   "norm": "lanzamiento",
+   "start": 0.48,
+   "end": 1.14,
+   "p": 0.986
+  },
+  {
+   "i": 3,
+   "text": "del",
+   "norm": "del",
+   "start": 1.14,
+   "end": 1.32,
+   "p": 0.922
+  },
+  {
+   "i": 4,
+   "text": "iPhone",
+   "norm": "iphone",
+   "start": 1.32,
+   "end": 1.68,
+   "p": 0.875
+  },
+  {
+   "i": 5,
+   "text": "2,",
+   "norm": "2",
+   "start": 1.68,
+   "end": 2.1,
+   "p": 0.29
+  },
+  {
+   "i": 6,
+   "text": "se",
+   "norm": "se",
+   "start": 2.1,
+   "end": 2.15,
+   "p": 0.947
+  },
+  {
+   "i": 7,
+   "text": "rumoró",
+   "norm": "rumoro",
+   "start": 2.14,
+   "end": 2.62,
+   "p": 0.959
+  },
+  {
+   "i": 8,
+   "text": "que",
+   "norm": "que",
+   "start": 2.62,
+   "end": 2.77,
+   "p": 0.987
+  },
+  {
+   "i": 9,
+   "text": "la",
+   "norm": "la",
+   "start": 2.77,
+   "end": 2.95,
+   "p": 0.965
+  },
+  {
+   "i": 10,
+   "text": "bisagra",
+   "norm": "bisagra",
+   "start": 2.95,
+   "end": 3.58,
+   "p": 0.995
+  },
+  {
+   "i": 11,
+   "text": "del",
+   "norm": "del",
+   "start": 3.58,
+   "end": 3.63,
+   "p": 0.925
+  },
+  {
+   "i": 12,
+   "text": "iPhone",
+   "norm": "iphone",
+   "start": 3.61,
+   "end": 4.03,
+   "p": 0.904
+  },
+  {
+   "i": 13,
+   "text": "plegable",
+   "norm": "plegable",
+   "start": 4.03,
+   "end": 4.78,
+   "p": 0.952
+  },
+  {
+   "i": 14,
+   "text": "sería",
+   "norm": "seria",
+   "start": 4.78,
+   "end": 4.98,
+   "p": 0.855
+  },
+  {
+   "i": 15,
+   "text": "de",
+   "norm": "de",
+   "start": 4.98,
+   "end": 5.1,
+   "p": 0.731
+  },
+  {
+   "i": 16,
+   "text": "metal",
+   "norm": "metal",
+   "start": 5.1,
+   "end": 5.5,
+   "p": 0.872
+  },
+  {
+   "i": 17,
+   "text": "líquido.",
+   "norm": "liquido",
+   "start": 5.5,
+   "end": 6.26,
+   "p": 0.948
+  },
+  {
+   "i": 18,
+   "text": "No",
+   "norm": "no",
+   "start": 6.26,
+   "end": 6.42,
+   "p": 0.909
+  },
+  {
+   "i": 19,
+   "text": "es",
+   "norm": "es",
+   "start": 6.42,
+   "end": 6.59,
+   "p": 0.993
+  },
+  {
+   "i": 20,
+   "text": "un",
+   "norm": "un",
+   "start": 6.59,
+   "end": 6.74,
+   "p": 0.99
+  },
+  {
+   "i": 21,
+   "text": "metal",
+   "norm": "metal",
+   "start": 6.74,
+   "end": 7.14,
+   "p": 0.987
+  },
+  {
+   "i": 22,
+   "text": "derretido,",
+   "norm": "derretido",
+   "start": 7.14,
+   "end": 8.02,
+   "p": 0.948
+  },
+  {
+   "i": 23,
+   "text": "es",
+   "norm": "es",
+   "start": 8.02,
+   "end": 8.34,
+   "p": 0.975
+  },
+  {
+   "i": 24,
+   "text": "un",
+   "norm": "un",
+   "start": 8.34,
+   "end": 8.39,
+   "p": 0.988
+  },
+  {
+   "i": 25,
+   "text": "vidrio",
+   "norm": "vidrio",
+   "start": 8.36,
+   "end": 8.88,
+   "p": 0.987
+  },
+  {
+   "i": 26,
+   "text": "metálico,",
+   "norm": "metalico",
+   "start": 8.88,
+   "end": 9.54,
+   "p": 0.883
+  },
+  {
+   "i": 27,
+   "text": "un",
+   "norm": "un",
+   "start": 9.54,
+   "end": 9.85,
+   "p": 0.691
+  },
+  {
+   "i": 28,
+   "text": "metal",
+   "norm": "metal",
+   "start": 9.85,
+   "end": 10.36,
+   "p": 0.996
+  },
+  {
+   "i": 29,
+   "text": "enfriado",
+   "norm": "enfriado",
+   "start": 10.36,
+   "end": 11.04,
+   "p": 0.966
+  },
+  {
+   "i": 30,
+   "text": "tan",
+   "norm": "tan",
+   "start": 11.04,
+   "end": 11.2,
+   "p": 0.993
+  },
+  {
+   "i": 31,
+   "text": "rápido",
+   "norm": "rapido",
+   "start": 11.2,
+   "end": 11.7,
+   "p": 0.995
+  },
+  {
+   "i": 32,
+   "text": "que",
+   "norm": "que",
+   "start": 11.7,
+   "end": 11.86,
+   "p": 0.712
+  },
+  {
+   "i": 33,
+   "text": "sus",
+   "norm": "sus",
+   "start": 11.86,
+   "end": 12.02,
+   "p": 0.782
+  },
+  {
+   "i": 34,
+   "text": "átomos",
+   "norm": "atomos",
+   "start": 12.02,
+   "end": 12.36,
+   "p": 0.996
+  },
+  {
+   "i": 35,
+   "text": "no",
+   "norm": "no",
+   "start": 12.36,
+   "end": 12.68,
+   "p": 0.947
+  },
+  {
+   "i": 36,
+   "text": "alcanzan",
+   "norm": "alcanzan",
+   "start": 12.68,
+   "end": 12.93,
+   "p": 0.966
+  },
+  {
+   "i": 37,
+   "text": "a",
+   "norm": "a",
+   "start": 12.93,
+   "end": 12.98,
+   "p": 0.956
+  },
+  {
+   "i": 38,
+   "text": "ordenarse",
+   "norm": "ordenarse",
+   "start": 12.96,
+   "end": 13.49,
+   "p": 0.946
+  },
+  {
+   "i": 39,
+   "text": "en",
+   "norm": "en",
+   "start": 13.49,
+   "end": 13.61,
+   "p": 0.926
+  },
+  {
+   "i": 40,
+   "text": "cristales.",
+   "norm": "cristales",
+   "start": 13.61,
+   "end": 14.16,
+   "p": 0.967
+  },
+  {
+   "i": 41,
+   "text": "En",
+   "norm": "en",
+   "start": 14.16,
+   "end": 14.31,
+   "p": 0.43
+  },
+  {
+   "i": 42,
+   "text": "cristales",
+   "norm": "cristales",
+   "start": 14.31,
+   "end": 14.99,
+   "p": 0.995
+  },
+  {
+   "i": 43,
+   "text": "no",
+   "norm": "no",
+   "start": 14.99,
+   "end": 15.15,
+   "p": 0.757
+  },
+  {
+   "i": 44,
+   "text": "tienen",
+   "norm": "tienen",
+   "start": 15.15,
+   "end": 15.6,
+   "p": 0.95
+  },
+  {
+   "i": 45,
+   "text": "esas",
+   "norm": "esas",
+   "start": 15.6,
+   "end": 15.89,
+   "p": 0.962
+  },
+  {
+   "i": 46,
+   "text": "fronteras",
+   "norm": "fronteras",
+   "start": 15.89,
+   "end": 16.57,
+   "p": 0.997
+  },
+  {
+   "i": 47,
+   "text": "internas",
+   "norm": "internas",
+   "start": 16.57,
+   "end": 17.17,
+   "p": 0.997
+  },
+  {
+   "i": 48,
+   "text": "donde",
+   "norm": "donde",
+   "start": 17.17,
+   "end": 17.7,
+   "p": 0.905
+  },
+  {
+   "i": 49,
+   "text": "un",
+   "norm": "un",
+   "start": 17.7,
+   "end": 17.75,
+   "p": 0.983
+  },
+  {
+   "i": 50,
+   "text": "metal",
+   "norm": "metal",
+   "start": 17.75,
+   "end": 18.08,
+   "p": 0.989
+  },
+  {
+   "i": 51,
+   "text": "normal",
+   "norm": "normal",
+   "start": 18.08,
+   "end": 18.53,
+   "p": 0.979
+  },
+  {
+   "i": 52,
+   "text": "se",
+   "norm": "se",
+   "start": 18.53,
+   "end": 18.94,
+   "p": 0.987
+  },
+  {
+   "i": 53,
+   "text": "deforma",
+   "norm": "deforma",
+   "start": 18.94,
+   "end": 19.2,
+   "p": 0.997
+  },
+  {
+   "i": 54,
+   "text": "para",
+   "norm": "para",
+   "start": 19.2,
+   "end": 19.51,
+   "p": 0.988
+  },
+  {
+   "i": 55,
+   "text": "siempre,",
+   "norm": "siempre",
+   "start": 19.51,
+   "end": 20.24,
+   "p": 0.772
+  },
+  {
+   "i": 56,
+   "text": "por",
+   "norm": "por",
+   "start": 20.24,
+   "end": 20.58,
+   "p": 0.708
+  },
+  {
+   "i": 57,
+   "text": "eso",
+   "norm": "eso",
+   "start": 20.58,
+   "end": 20.63,
+   "p": 0.995
+  },
+  {
+   "i": 58,
+   "text": "pueden",
+   "norm": "pueden",
+   "start": 20.63,
+   "end": 21.03,
+   "p": 0.75
+  },
+  {
+   "i": 59,
+   "text": "doblarse",
+   "norm": "doblarse",
+   "start": 21.03,
+   "end": 21.58,
+   "p": 0.994
+  },
+  {
+   "i": 60,
+   "text": "bastante",
+   "norm": "bastante",
+   "start": 21.58,
+   "end": 22.19,
+   "p": 0.959
+  },
+  {
+   "i": 61,
+   "text": "más",
+   "norm": "mas",
+   "start": 22.19,
+   "end": 22.33,
+   "p": 0.962
+  },
+  {
+   "i": 62,
+   "text": "y",
+   "norm": "y",
+   "start": 22.33,
+   "end": 22.38,
+   "p": 0.983
+  },
+  {
+   "i": 63,
+   "text": "regresar",
+   "norm": "regresar",
+   "start": 22.34,
+   "end": 22.87,
+   "p": 0.996
+  },
+  {
+   "i": 64,
+   "text": "a",
+   "norm": "a",
+   "start": 22.87,
+   "end": 22.99,
+   "p": 0.995
+  },
+  {
+   "i": 65,
+   "text": "su",
+   "norm": "su",
+   "start": 22.99,
+   "end": 23.06,
+   "p": 0.996
+  },
+  {
+   "i": 66,
+   "text": "forma.",
+   "norm": "forma",
+   "start": 23.06,
+   "end": 23.44,
+   "p": 0.944
+  },
+  {
+   "i": 67,
+   "text": "Lo",
+   "norm": "lo",
+   "start": 23.44,
+   "end": 23.58,
+   "p": 0.966
+  },
+  {
+   "i": 68,
+   "text": "que",
+   "norm": "que",
+   "start": 23.58,
+   "end": 23.77,
+   "p": 0.998
+  },
+  {
+   "i": 69,
+   "text": "sí",
+   "norm": "si",
+   "start": 23.77,
+   "end": 23.87,
+   "p": 0.875
+  },
+  {
+   "i": 70,
+   "text": "confirmó",
+   "norm": "confirmo",
+   "start": 23.87,
+   "end": 24.37,
+   "p": 0.99
+  },
+  {
+   "i": 71,
+   "text": "Apple,",
+   "norm": "apple",
+   "start": 24.37,
+   "end": 24.88,
+   "p": 0.851
+  },
+  {
+   "i": 72,
+   "text": "la",
+   "norm": "la",
+   "start": 24.88,
+   "end": 24.93,
+   "p": 0.98
+  },
+  {
+   "i": 73,
+   "text": "bisagra",
+   "norm": "bisagra",
+   "start": 24.93,
+   "end": 25.53,
+   "p": 1.0
+  },
+  {
+   "i": 74,
+   "text": "con",
+   "norm": "con",
+   "start": 25.53,
+   "end": 25.58,
+   "p": 0.991
+  },
+  {
+   "i": 75,
+   "text": "la",
+   "norm": "la",
+   "start": 25.55,
+   "end": 25.67,
+   "p": 0.984
+  },
+  {
+   "i": 76,
+   "text": "cubierta",
+   "norm": "cubierta",
+   "start": 25.67,
+   "end": 26.17,
+   "p": 0.999
+  },
+  {
+   "i": 77,
+   "text": "de",
+   "norm": "de",
+   "start": 26.17,
+   "end": 26.39,
+   "p": 0.992
+  },
+  {
+   "i": 78,
+   "text": "titanio,",
+   "norm": "titanio",
+   "start": 26.39,
+   "end": 26.96,
+   "p": 0.952
+  },
+  {
+   "i": 79,
+   "text": "lo",
+   "norm": "lo",
+   "start": 26.96,
+   "end": 27.02,
+   "p": 0.976
+  },
+  {
+   "i": 80,
+   "text": "del",
+   "norm": "del",
+   "start": 27.02,
+   "end": 27.15,
+   "p": 0.98
+  },
+  {
+   "i": 81,
+   "text": "metal",
+   "norm": "metal",
+   "start": 27.15,
+   "end": 27.47,
+   "p": 0.993
+  },
+  {
+   "i": 82,
+   "text": "líquido",
+   "norm": "liquido",
+   "start": 27.47,
+   "end": 27.9,
+   "p": 0.999
+  },
+  {
+   "i": 83,
+   "text": "sigue",
+   "norm": "sigue",
+   "start": 27.9,
+   "end": 28.22,
+   "p": 0.89
+  },
+  {
+   "i": 84,
+   "text": "siendo",
+   "norm": "siendo",
+   "start": 28.22,
+   "end": 28.6,
+   "p": 0.999
+  },
+  {
+   "i": 85,
+   "text": "un",
+   "norm": "un",
+   "start": 28.6,
+   "end": 28.8,
+   "p": 0.985
+  },
+  {
+   "i": 86,
+   "text": "rumor.",
+   "norm": "rumor",
+   "start": 28.8,
+   "end": 29.4,
+   "p": 0.982
+  }
+ ],
+ "segments": [
+  {
+   "i": 0,
+   "start": 0.14,
+   "end": 2.1,
+   "text": "Antes del lanzamiento del iPhone 2,",
+   "first": 0,
+   "last": 5
+  },
+  {
+   "i": 1,
+   "start": 2.1,
+   "end": 4.03,
+   "text": "se rumoró que la bisagra del iPhone",
+   "first": 6,
+   "last": 12
+  },
+  {
+   "i": 2,
+   "start": 4.03,
+   "end": 6.26,
+   "text": "plegable sería de metal líquido.",
+   "first": 13,
+   "last": 17
+  },
+  {
+   "i": 3,
+   "start": 6.26,
+   "end": 8.02,
+   "text": "No es un metal derretido,",
+   "first": 18,
+   "last": 22
+  },
+  {
+   "i": 4,
+   "start": 8.02,
+   "end": 9.54,
+   "text": "es un vidrio metálico,",
+   "first": 23,
+   "last": 26
+  },
+  {
+   "i": 5,
+   "start": 9.54,
+   "end": 12.02,
+   "text": "un metal enfriado tan rápido que sus",
+   "first": 27,
+   "last": 33
+  },
+  {
+   "i": 6,
+   "start": 12.02,
+   "end": 14.16,
+   "text": "átomos no alcanzan a ordenarse en cristales.",
+   "first": 34,
+   "last": 40
+  },
+  {
+   "i": 7,
+   "start": 14.16,
+   "end": 16.57,
+   "text": "En cristales no tienen esas fronteras",
+   "first": 41,
+   "last": 46
+  },
+  {
+   "i": 8,
+   "start": 16.57,
+   "end": 18.94,
+   "text": "internas donde un metal normal se",
+   "first": 47,
+   "last": 52
+  },
+  {
+   "i": 9,
+   "start": 18.94,
+   "end": 20.24,
+   "text": "deforma para siempre,",
+   "first": 53,
+   "last": 55
+  },
+  {
+   "i": 10,
+   "start": 20.24,
+   "end": 22.19,
+   "text": "por eso pueden doblarse bastante",
+   "first": 56,
+   "last": 60
+  },
+  {
+   "i": 11,
+   "start": 22.19,
+   "end": 23.44,
+   "text": "más y regresar a su forma.",
+   "first": 61,
+   "last": 66
+  },
+  {
+   "i": 12,
+   "start": 23.44,
+   "end": 24.88,
+   "text": "Lo que sí confirmó Apple,",
+   "first": 67,
+   "last": 71
+  },
+  {
+   "i": 13,
+   "start": 24.88,
+   "end": 26.96,
+   "text": "la bisagra con la cubierta de titanio,",
+   "first": 72,
+   "last": 78
+  },
+  {
+   "i": 14,
+   "start": 26.96,
+   "end": 28.22,
+   "text": "lo del metal líquido sigue",
+   "first": 79,
+   "last": 83
+  },
+  {
+   "i": 15,
+   "start": 28.22,
+   "end": 29.4,
+   "text": "siendo un rumor.",
+   "first": 84,
+   "last": 86
+  }
+ ]
+}

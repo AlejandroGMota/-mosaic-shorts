@@ -1,0 +1,62 @@
+WEBVTT
+
+00:00:00.070 --> 00:00:01.710
+¿Por qué los Macs con chip M
+
+00:00:01.710 --> 00:00:03.930
+utilizan memoria unificada?
+
+00:00:03.930 --> 00:00:05.580
+En una computadora tradicional el
+
+00:00:05.580 --> 00:00:07.510
+procesador tiene una RAM y la tarjeta
+
+00:00:07.510 --> 00:00:08.910
+de video tiene la suya.
+
+00:00:08.910 --> 00:00:10.880
+Si la GPU necesita una imagen,
+
+00:00:10.880 --> 00:00:12.510
+primero hay que copiarla de
+
+00:00:12.510 --> 00:00:13.930
+una memoria a la otra.
+
+00:00:13.930 --> 00:00:16.650
+Copiar cuesta tiempo y cuesta energía.
+
+00:00:16.650 --> 00:00:18.480
+En el M1, por ejemplo,
+
+00:00:18.480 --> 00:00:18.920
+la CPU,
+
+00:00:18.920 --> 00:00:20.830
+la GPU y el motor de inteligencia
+
+00:00:20.830 --> 00:00:23.050
+artificial comparten la misma memoria
+
+00:00:23.050 --> 00:00:25.040
+dentro del mismo paquete del chip.
+
+00:00:25.040 --> 00:00:26.950
+Es decir, que nadie copia nada,
+
+00:00:26.950 --> 00:00:28.980
+todos leen del mismo lugar.
+
+00:00:28.980 --> 00:00:29.540
+El costo,
+
+00:00:29.540 --> 00:00:31.440
+no puedes agregar más RAM después.
+
+00:00:31.440 --> 00:00:33.000
+Lo que compras es lo que
+
+00:00:33.000 --> 00:00:34.257
+tendrás para siempre.
+

@@ -1,0 +1,74 @@
+WEBVTT
+
+00:00:00.120 --> 00:00:01.270
+En 2020,
+
+00:00:01.270 --> 00:00:02.590
+Apple dejó los procesadores de
+
+00:00:02.590 --> 00:00:04.200
+Intel por sus propios chips,
+
+00:00:04.200 --> 00:00:05.600
+empezando por el M1.
+
+00:00:05.600 --> 00:00:07.040
+Pero, ¿qué cambió?
+
+00:00:07.040 --> 00:00:08.660
+El idioma del procesador que
+
+00:00:08.660 --> 00:00:10.880
+Intel usa se llama x86,
+
+00:00:10.880 --> 00:00:12.570
+donde cada instrucción puede
+
+00:00:12.570 --> 00:00:14.440
+medir de 1 a 15 bytes.
+
+00:00:14.440 --> 00:00:15.260
+Para leerlas,
+
+00:00:15.260 --> 00:00:17.100
+el chip primero tiene que averiguar
+
+00:00:17.100 --> 00:00:18.920
+dónde termina cada una.
+
+00:00:18.920 --> 00:00:20.070
+ARM es más simple,
+
+00:00:20.070 --> 00:00:22.440
+todas las instrucciones miden lo mismo,
+
+00:00:22.440 --> 00:00:23.560
+4 bytes.
+
+00:00:23.560 --> 00:00:25.520
+Eso permite leer muchas al mismo tiempo.
+
+00:00:25.520 --> 00:00:27.970
+El M1 decodifica 8 instrucciones
+
+00:00:27.970 --> 00:00:28.880
+por ciclo.
+
+00:00:29.020 --> 00:00:30.580
+Los Intel en esa época,
+
+00:00:30.580 --> 00:00:31.120
+4.
+
+00:00:31.120 --> 00:00:32.280
+Más trabajo por ciclo,
+
+00:00:32.280 --> 00:00:33.620
+con menos energía.
+
+00:00:33.620 --> 00:00:36.150
+Y como Apple diseña sus propios núcleos,
+
+00:00:36.150 --> 00:00:38.980
+ARM ya no depende del calendario de nadie.
+

@@ -1,0 +1,92 @@
+1
+00:00:00,050 --> 00:00:01,460
+¿Qué significa ese número que ves
+
+2
+00:00:01,460 --> 00:00:02,990
+en las fichas de las cámaras?
+
+3
+00:00:02,990 --> 00:00:03,960
+Es la apertura,
+
+4
+00:00:03,960 --> 00:00:05,400
+el tamaño del agujero por donde
+
+5
+00:00:05,400 --> 00:00:06,750
+entra la luz al sensor,
+
+6
+00:00:06,750 --> 00:00:08,130
+y aquí viene lo confuso,
+
+7
+00:00:08,130 --> 00:00:09,720
+el número es una división,
+
+8
+00:00:09,720 --> 00:00:11,140
+distancia focal entre el
+
+9
+00:00:11,140 --> 00:00:12,680
+diámetro del agujero,
+
+10
+00:00:12,680 --> 00:00:14,850
+por eso entre más chico el número,
+
+11
+00:00:14,850 --> 00:00:16,210
+más grande el agujero,
+
+12
+00:00:16,210 --> 00:00:16,940
+por ejemplo,
+
+13
+00:00:16,940 --> 00:00:19,730
+en el iPhone 18 Pro ahora puede
+
+14
+00:00:19,730 --> 00:00:23,230
+cambiar de f/1.48 a f/4,
+
+15
+00:00:23,230 --> 00:00:24,500
+¿y cuánta diferencia hay?
+
+16
+00:00:24,640 --> 00:00:26,520
+La luz depende del área,
+
+17
+00:00:26,520 --> 00:00:27,990
+no del diámetro,
+
+18
+00:00:27,990 --> 00:00:31,230
+así que f/4 a f/1.48 entran
+
+19
+00:00:31,230 --> 00:00:33,240
+unas 7 veces más de luz.
+
+20
+00:00:33,240 --> 00:00:35,340
+Más luz significa más fotos
+
+21
+00:00:35,340 --> 00:00:36,000
+limpias de noche,
+
+22
+00:00:36,000 --> 00:00:37,810
+pero también cambia algo que vas
+
+23
+00:00:37,810 --> 00:00:39,120
+a notar en cada retrato.
+

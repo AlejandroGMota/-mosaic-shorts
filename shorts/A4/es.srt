@@ -1,0 +1,76 @@
+1
+00:00:00,180 --> 00:00:03,210
+Si f/1.48 deja entrar más luz,
+
+2
+00:00:03,210 --> 00:00:05,540
+¿por qué los teléfonos no la usan siempre?
+
+3
+00:00:05,540 --> 00:00:07,620
+Porque toda apertura tiene un costo.
+
+4
+00:00:07,620 --> 00:00:08,410
+Muy abierta,
+
+5
+00:00:08,410 --> 00:00:10,620
+la luz pasa por las orillas del lente,
+
+6
+00:00:10,620 --> 00:00:12,120
+no corveje perfecto,
+
+7
+00:00:12,120 --> 00:00:13,620
+se llama aberración,
+
+8
+00:00:13,620 --> 00:00:15,900
+y la foto pierde un poco de nitidez.
+
+9
+00:00:15,900 --> 00:00:16,850
+Muy cerrada,
+
+10
+00:00:16,850 --> 00:00:19,250
+en f/4 el agujero es tan pequeño que
+
+11
+00:00:19,250 --> 00:00:21,440
+la luz se dobla en los bordes,
+
+12
+00:00:21,440 --> 00:00:23,550
+se llama difracción y también
+
+13
+00:00:23,550 --> 00:00:24,460
+resta nitidez.
+
+14
+00:00:24,700 --> 00:00:26,490
+Entre los dos extremos hay un punto
+
+15
+00:00:26,490 --> 00:00:28,540
+que muchos teléfonos utilizan.
+
+16
+00:00:28,540 --> 00:00:32,110
+Apple dice que el suyo es f/1.8 y por
+
+17
+00:00:32,110 --> 00:00:33,820
+eso es la apertura por defecto.
+
+18
+00:00:33,820 --> 00:00:36,100
+La física siempre cobra o luz
+
+19
+00:00:36,100 --> 00:00:38,054
+o nitidez o profundidad.
+

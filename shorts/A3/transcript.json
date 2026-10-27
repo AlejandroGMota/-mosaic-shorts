@@ -1,0 +1,1008 @@
+{
+ "schema": "mosaic-transcript/1",
+ "id": "A3",
+ "short": "a3-por-que-el-fondo-sale-borroso",
+ "language": "es",
+ "duration": 36.004,
+ "engine": "whisper.cpp",
+ "model": "ggml-large-v3-turbo-q5_0.bin",
+ "source_take": "a3-por-que-el-fondo-sale-borroso_toma-01.wav",
+ "created": "2026-10-27T20:58:15Z",
+ "text": "Porque en algunas fotos el fondo sale borroso y en otras todo se está enfocando, se llama profundidad de campo, la franja de distancia que queda nítida, con el agujero muy abierto los rayos de luz llegan desde ángulos muy distintos, solo los que vienen de cierta distancia coinciden en un punto, todos los demás se vuelven un círculo borroso. Si cierras la apertura, los rayos llegan más rectos, los círculos se hacen más pequeños y casi todo queda nítido. Ahora, el iPhone fijía ese desenfoque usando software o en modo retrato. Con apertura variable, una parte del desenfoque es óptica, o sea, real.",
+ "words": [
+  {
+   "i": 0,
+   "text": "Porque",
+   "norm": "porque",
+   "start": 0.14,
+   "end": 0.39,
+   "p": 0.26
+  },
+  {
+   "i": 1,
+   "text": "en",
+   "norm": "en",
+   "start": 0.39,
+   "end": 0.52,
+   "p": 0.981
+  },
+  {
+   "i": 2,
+   "text": "algunas",
+   "norm": "algunas",
+   "start": 0.52,
+   "end": 1.01,
+   "p": 0.97
+  },
+  {
+   "i": 3,
+   "text": "fotos",
+   "norm": "fotos",
+   "start": 1.01,
+   "end": 1.39,
+   "p": 0.988
+  },
+  {
+   "i": 4,
+   "text": "el",
+   "norm": "el",
+   "start": 1.39,
+   "end": 1.44,
+   "p": 0.88
+  },
+  {
+   "i": 5,
+   "text": "fondo",
+   "norm": "fondo",
+   "start": 1.42,
+   "end": 1.74,
+   "p": 0.997
+  },
+  {
+   "i": 6,
+   "text": "sale",
+   "norm": "sale",
+   "start": 1.74,
+   "end": 2.0,
+   "p": 0.981
+  },
+  {
+   "i": 7,
+   "text": "borroso",
+   "norm": "borroso",
+   "start": 2.0,
+   "end": 2.53,
+   "p": 0.993
+  },
+  {
+   "i": 8,
+   "text": "y",
+   "norm": "y",
+   "start": 2.53,
+   "end": 2.58,
+   "p": 0.841
+  },
+  {
+   "i": 9,
+   "text": "en",
+   "norm": "en",
+   "start": 2.56,
+   "end": 2.73,
+   "p": 0.99
+  },
+  {
+   "i": 10,
+   "text": "otras",
+   "norm": "otras",
+   "start": 2.73,
+   "end": 3.48,
+   "p": 0.991
+  },
+  {
+   "i": 11,
+   "text": "todo",
+   "norm": "todo",
+   "start": 3.48,
+   "end": 3.53,
+   "p": 0.838
+  },
+  {
+   "i": 12,
+   "text": "se",
+   "norm": "se",
+   "start": 3.49,
+   "end": 3.66,
+   "p": 0.953
+  },
+  {
+   "i": 13,
+   "text": "está",
+   "norm": "esta",
+   "start": 3.66,
+   "end": 4.02,
+   "p": 0.907
+  },
+  {
+   "i": 14,
+   "text": "enfocando,",
+   "norm": "enfocando",
+   "start": 4.02,
+   "end": 4.82,
+   "p": 0.771
+  },
+  {
+   "i": 15,
+   "text": "se",
+   "norm": "se",
+   "start": 4.82,
+   "end": 4.88,
+   "p": 0.759
+  },
+  {
+   "i": 16,
+   "text": "llama",
+   "norm": "llama",
+   "start": 4.88,
+   "end": 5.18,
+   "p": 0.989
+  },
+  {
+   "i": 17,
+   "text": "profundidad",
+   "norm": "profundidad",
+   "start": 5.18,
+   "end": 5.77,
+   "p": 0.82
+  },
+  {
+   "i": 18,
+   "text": "de",
+   "norm": "de",
+   "start": 5.77,
+   "end": 5.82,
+   "p": 0.732
+  },
+  {
+   "i": 19,
+   "text": "campo,",
+   "norm": "campo",
+   "start": 5.82,
+   "end": 6.53,
+   "p": 0.81
+  },
+  {
+   "i": 20,
+   "text": "la",
+   "norm": "la",
+   "start": 6.53,
+   "end": 6.6,
+   "p": 0.839
+  },
+  {
+   "i": 21,
+   "text": "franja",
+   "norm": "franja",
+   "start": 6.6,
+   "end": 6.96,
+   "p": 0.976
+  },
+  {
+   "i": 22,
+   "text": "de",
+   "norm": "de",
+   "start": 6.96,
+   "end": 7.12,
+   "p": 0.96
+  },
+  {
+   "i": 23,
+   "text": "distancia",
+   "norm": "distancia",
+   "start": 7.12,
+   "end": 7.95,
+   "p": 0.991
+  },
+  {
+   "i": 24,
+   "text": "que",
+   "norm": "que",
+   "start": 7.95,
+   "end": 8.12,
+   "p": 0.93
+  },
+  {
+   "i": 25,
+   "text": "queda",
+   "norm": "queda",
+   "start": 8.12,
+   "end": 8.51,
+   "p": 0.983
+  },
+  {
+   "i": 26,
+   "text": "nítida,",
+   "norm": "nitida",
+   "start": 8.51,
+   "end": 9.14,
+   "p": 0.845
+  },
+  {
+   "i": 27,
+   "text": "con",
+   "norm": "con",
+   "start": 9.14,
+   "end": 9.23,
+   "p": 0.765
+  },
+  {
+   "i": 28,
+   "text": "el",
+   "norm": "el",
+   "start": 9.23,
+   "end": 9.32,
+   "p": 0.993
+  },
+  {
+   "i": 29,
+   "text": "agujero",
+   "norm": "agujero",
+   "start": 9.32,
+   "end": 9.68,
+   "p": 0.996
+  },
+  {
+   "i": 30,
+   "text": "muy",
+   "norm": "muy",
+   "start": 9.68,
+   "end": 9.89,
+   "p": 0.946
+  },
+  {
+   "i": 31,
+   "text": "abierto",
+   "norm": "abierto",
+   "start": 9.89,
+   "end": 10.4,
+   "p": 0.995
+  },
+  {
+   "i": 32,
+   "text": "los",
+   "norm": "los",
+   "start": 10.4,
+   "end": 10.58,
+   "p": 0.759
+  },
+  {
+   "i": 33,
+   "text": "rayos",
+   "norm": "rayos",
+   "start": 10.58,
+   "end": 10.93,
+   "p": 0.999
+  },
+  {
+   "i": 34,
+   "text": "de",
+   "norm": "de",
+   "start": 10.93,
+   "end": 11.0,
+   "p": 0.979
+  },
+  {
+   "i": 35,
+   "text": "luz",
+   "norm": "luz",
+   "start": 11.0,
+   "end": 11.18,
+   "p": 0.991
+  },
+  {
+   "i": 36,
+   "text": "llegan",
+   "norm": "llegan",
+   "start": 11.18,
+   "end": 11.54,
+   "p": 0.991
+  },
+  {
+   "i": 37,
+   "text": "desde",
+   "norm": "desde",
+   "start": 11.54,
+   "end": 11.85,
+   "p": 0.967
+  },
+  {
+   "i": 38,
+   "text": "ángulos",
+   "norm": "angulos",
+   "start": 11.85,
+   "end": 12.27,
+   "p": 0.988
+  },
+  {
+   "i": 39,
+   "text": "muy",
+   "norm": "muy",
+   "start": 12.27,
+   "end": 12.45,
+   "p": 0.988
+  },
+  {
+   "i": 40,
+   "text": "distintos,",
+   "norm": "distintos",
+   "start": 12.45,
+   "end": 13.36,
+   "p": 0.899
+  },
+  {
+   "i": 41,
+   "text": "solo",
+   "norm": "solo",
+   "start": 13.36,
+   "end": 13.45,
+   "p": 0.681
+  },
+  {
+   "i": 42,
+   "text": "los",
+   "norm": "los",
+   "start": 13.45,
+   "end": 13.64,
+   "p": 0.994
+  },
+  {
+   "i": 43,
+   "text": "que",
+   "norm": "que",
+   "start": 13.64,
+   "end": 13.83,
+   "p": 0.996
+  },
+  {
+   "i": 44,
+   "text": "vienen",
+   "norm": "vienen",
+   "start": 13.83,
+   "end": 14.21,
+   "p": 0.991
+  },
+  {
+   "i": 45,
+   "text": "de",
+   "norm": "de",
+   "start": 14.21,
+   "end": 14.33,
+   "p": 0.983
+  },
+  {
+   "i": 46,
+   "text": "cierta",
+   "norm": "cierta",
+   "start": 14.33,
+   "end": 14.77,
+   "p": 0.983
+  },
+  {
+   "i": 47,
+   "text": "distancia",
+   "norm": "distancia",
+   "start": 14.77,
+   "end": 15.26,
+   "p": 0.996
+  },
+  {
+   "i": 48,
+   "text": "coinciden",
+   "norm": "coinciden",
+   "start": 15.26,
+   "end": 15.82,
+   "p": 0.952
+  },
+  {
+   "i": 49,
+   "text": "en",
+   "norm": "en",
+   "start": 15.82,
+   "end": 15.94,
+   "p": 0.997
+  },
+  {
+   "i": 50,
+   "text": "un",
+   "norm": "un",
+   "start": 15.94,
+   "end": 16.06,
+   "p": 0.989
+  },
+  {
+   "i": 51,
+   "text": "punto,",
+   "norm": "punto",
+   "start": 16.06,
+   "end": 16.64,
+   "p": 0.926
+  },
+  {
+   "i": 52,
+   "text": "todos",
+   "norm": "todos",
+   "start": 16.64,
+   "end": 16.8,
+   "p": 0.9
+  },
+  {
+   "i": 53,
+   "text": "los",
+   "norm": "los",
+   "start": 16.8,
+   "end": 16.98,
+   "p": 0.979
+  },
+  {
+   "i": 54,
+   "text": "demás",
+   "norm": "demas",
+   "start": 16.98,
+   "end": 17.42,
+   "p": 0.997
+  },
+  {
+   "i": 55,
+   "text": "se",
+   "norm": "se",
+   "start": 17.42,
+   "end": 17.47,
+   "p": 0.986
+  },
+  {
+   "i": 56,
+   "text": "vuelven",
+   "norm": "vuelven",
+   "start": 17.45,
+   "end": 17.86,
+   "p": 0.967
+  },
+  {
+   "i": 57,
+   "text": "un",
+   "norm": "un",
+   "start": 17.86,
+   "end": 17.98,
+   "p": 0.972
+  },
+  {
+   "i": 58,
+   "text": "círculo",
+   "norm": "circulo",
+   "start": 17.98,
+   "end": 18.41,
+   "p": 0.987
+  },
+  {
+   "i": 59,
+   "text": "borroso.",
+   "norm": "borroso",
+   "start": 18.41,
+   "end": 19.0,
+   "p": 0.856
+  },
+  {
+   "i": 60,
+   "text": "Si",
+   "norm": "si",
+   "start": 19.12,
+   "end": 19.17,
+   "p": 0.77
+  },
+  {
+   "i": 61,
+   "text": "cierras",
+   "norm": "cierras",
+   "start": 19.14,
+   "end": 19.55,
+   "p": 0.983
+  },
+  {
+   "i": 62,
+   "text": "la",
+   "norm": "la",
+   "start": 19.55,
+   "end": 19.67,
+   "p": 0.974
+  },
+  {
+   "i": 63,
+   "text": "apertura,",
+   "norm": "apertura",
+   "start": 19.67,
+   "end": 20.39,
+   "p": 0.823
+  },
+  {
+   "i": 64,
+   "text": "los",
+   "norm": "los",
+   "start": 20.39,
+   "end": 20.46,
+   "p": 0.985
+  },
+  {
+   "i": 65,
+   "text": "rayos",
+   "norm": "rayos",
+   "start": 20.46,
+   "end": 20.76,
+   "p": 0.999
+  },
+  {
+   "i": 66,
+   "text": "llegan",
+   "norm": "llegan",
+   "start": 20.76,
+   "end": 21.15,
+   "p": 0.984
+  },
+  {
+   "i": 67,
+   "text": "más",
+   "norm": "mas",
+   "start": 21.15,
+   "end": 21.53,
+   "p": 0.953
+  },
+  {
+   "i": 68,
+   "text": "rectos,",
+   "norm": "rectos",
+   "start": 21.53,
+   "end": 21.8,
+   "p": 0.975
+  },
+  {
+   "i": 69,
+   "text": "los",
+   "norm": "los",
+   "start": 21.8,
+   "end": 21.98,
+   "p": 0.994
+  },
+  {
+   "i": 70,
+   "text": "círculos",
+   "norm": "circulos",
+   "start": 21.98,
+   "end": 22.48,
+   "p": 0.997
+  },
+  {
+   "i": 71,
+   "text": "se",
+   "norm": "se",
+   "start": 22.48,
+   "end": 22.59,
+   "p": 0.971
+  },
+  {
+   "i": 72,
+   "text": "hacen",
+   "norm": "hacen",
+   "start": 22.59,
+   "end": 22.97,
+   "p": 0.988
+  },
+  {
+   "i": 73,
+   "text": "más",
+   "norm": "mas",
+   "start": 22.97,
+   "end": 23.08,
+   "p": 0.993
+  },
+  {
+   "i": 74,
+   "text": "pequeños",
+   "norm": "pequenos",
+   "start": 23.08,
+   "end": 23.56,
+   "p": 0.997
+  },
+  {
+   "i": 75,
+   "text": "y",
+   "norm": "y",
+   "start": 23.56,
+   "end": 23.82,
+   "p": 0.842
+  },
+  {
+   "i": 76,
+   "text": "casi",
+   "norm": "casi",
+   "start": 23.82,
+   "end": 23.88,
+   "p": 0.981
+  },
+  {
+   "i": 77,
+   "text": "todo",
+   "norm": "todo",
+   "start": 23.88,
+   "end": 24.13,
+   "p": 0.983
+  },
+  {
+   "i": 78,
+   "text": "queda",
+   "norm": "queda",
+   "start": 24.13,
+   "end": 24.44,
+   "p": 0.991
+  },
+  {
+   "i": 79,
+   "text": "nítido.",
+   "norm": "nitido",
+   "start": 24.44,
+   "end": 25.5,
+   "p": 0.951
+  },
+  {
+   "i": 80,
+   "text": "Ahora,",
+   "norm": "ahora",
+   "start": 25.5,
+   "end": 25.87,
+   "p": 0.754
+  },
+  {
+   "i": 81,
+   "text": "el",
+   "norm": "el",
+   "start": 25.87,
+   "end": 26.04,
+   "p": 0.968
+  },
+  {
+   "i": 82,
+   "text": "iPhone",
+   "norm": "iphone",
+   "start": 26.04,
+   "end": 26.58,
+   "p": 0.958
+  },
+  {
+   "i": 83,
+   "text": "fijía",
+   "norm": "fijia",
+   "start": 26.58,
+   "end": 27.0,
+   "p": 0.426
+  },
+  {
+   "i": 84,
+   "text": "ese",
+   "norm": "ese",
+   "start": 27.0,
+   "end": 27.26,
+   "p": 0.965
+  },
+  {
+   "i": 85,
+   "text": "desenfoque",
+   "norm": "desenfoque",
+   "start": 27.26,
+   "end": 28.14,
+   "p": 0.993
+  },
+  {
+   "i": 86,
+   "text": "usando",
+   "norm": "usando",
+   "start": 28.14,
+   "end": 28.66,
+   "p": 0.988
+  },
+  {
+   "i": 87,
+   "text": "software",
+   "norm": "software",
+   "start": 28.66,
+   "end": 29.37,
+   "p": 0.927
+  },
+  {
+   "i": 88,
+   "text": "o",
+   "norm": "o",
+   "start": 29.37,
+   "end": 29.46,
+   "p": 0.868
+  },
+  {
+   "i": 89,
+   "text": "en",
+   "norm": "en",
+   "start": 29.46,
+   "end": 29.64,
+   "p": 0.964
+  },
+  {
+   "i": 90,
+   "text": "modo",
+   "norm": "modo",
+   "start": 29.64,
+   "end": 29.98,
+   "p": 0.979
+  },
+  {
+   "i": 91,
+   "text": "retrato.",
+   "norm": "retrato",
+   "start": 29.98,
+   "end": 31.0,
+   "p": 0.837
+  },
+  {
+   "i": 92,
+   "text": "Con",
+   "norm": "con",
+   "start": 31.0,
+   "end": 31.24,
+   "p": 0.874
+  },
+  {
+   "i": 93,
+   "text": "apertura",
+   "norm": "apertura",
+   "start": 31.24,
+   "end": 32.28,
+   "p": 0.956
+  },
+  {
+   "i": 94,
+   "text": "variable,",
+   "norm": "variable",
+   "start": 32.28,
+   "end": 32.67,
+   "p": 0.788
+  },
+  {
+   "i": 95,
+   "text": "una",
+   "norm": "una",
+   "start": 32.67,
+   "end": 32.92,
+   "p": 0.992
+  },
+  {
+   "i": 96,
+   "text": "parte",
+   "norm": "parte",
+   "start": 32.92,
+   "end": 33.32,
+   "p": 0.999
+  },
+  {
+   "i": 97,
+   "text": "del",
+   "norm": "del",
+   "start": 33.32,
+   "end": 33.56,
+   "p": 0.977
+  },
+  {
+   "i": 98,
+   "text": "desenfoque",
+   "norm": "desenfoque",
+   "start": 33.56,
+   "end": 34.4,
+   "p": 0.998
+  },
+  {
+   "i": 99,
+   "text": "es",
+   "norm": "es",
+   "start": 34.4,
+   "end": 34.52,
+   "p": 0.989
+  },
+  {
+   "i": 100,
+   "text": "óptica,",
+   "norm": "optica",
+   "start": 34.52,
+   "end": 35.15,
+   "p": 0.963
+  },
+  {
+   "i": 101,
+   "text": "o",
+   "norm": "o",
+   "start": 35.15,
+   "end": 35.23,
+   "p": 0.959
+  },
+  {
+   "i": 102,
+   "text": "sea,",
+   "norm": "sea",
+   "start": 35.23,
+   "end": 35.64,
+   "p": 0.767
+  },
+  {
+   "i": 103,
+   "text": "real.",
+   "norm": "real",
+   "start": 35.64,
+   "end": 36.0,
+   "p": 0.972
+  }
+ ],
+ "segments": [
+  {
+   "i": 0,
+   "start": 0.14,
+   "end": 2.0,
+   "text": "Porque en algunas fotos el fondo sale",
+   "first": 0,
+   "last": 6
+  },
+  {
+   "i": 1,
+   "start": 2.0,
+   "end": 4.82,
+   "text": "borroso y en otras todo se está enfocando,",
+   "first": 7,
+   "last": 14
+  },
+  {
+   "i": 2,
+   "start": 4.82,
+   "end": 6.53,
+   "text": "se llama profundidad de campo,",
+   "first": 15,
+   "last": 19
+  },
+  {
+   "i": 3,
+   "start": 6.53,
+   "end": 9.14,
+   "text": "la franja de distancia que queda nítida,",
+   "first": 20,
+   "last": 26
+  },
+  {
+   "i": 4,
+   "start": 9.14,
+   "end": 11.0,
+   "text": "con el agujero muy abierto los rayos de",
+   "first": 27,
+   "last": 34
+  },
+  {
+   "i": 5,
+   "start": 11.0,
+   "end": 13.36,
+   "text": "luz llegan desde ángulos muy distintos,",
+   "first": 35,
+   "last": 40
+  },
+  {
+   "i": 6,
+   "start": 13.36,
+   "end": 15.26,
+   "text": "solo los que vienen de cierta distancia",
+   "first": 41,
+   "last": 47
+  },
+  {
+   "i": 7,
+   "start": 15.26,
+   "end": 16.64,
+   "text": "coinciden en un punto,",
+   "first": 48,
+   "last": 51
+  },
+  {
+   "i": 8,
+   "start": 16.64,
+   "end": 17.86,
+   "text": "todos los demás se vuelven",
+   "first": 52,
+   "last": 56
+  },
+  {
+   "i": 9,
+   "start": 17.86,
+   "end": 19.0,
+   "text": "un círculo borroso.",
+   "first": 57,
+   "last": 59
+  },
+  {
+   "i": 10,
+   "start": 19.12,
+   "end": 20.39,
+   "text": "Si cierras la apertura,",
+   "first": 60,
+   "last": 63
+  },
+  {
+   "i": 11,
+   "start": 20.39,
+   "end": 21.8,
+   "text": "los rayos llegan más rectos,",
+   "first": 64,
+   "last": 68
+  },
+  {
+   "i": 12,
+   "start": 21.8,
+   "end": 23.56,
+   "text": "los círculos se hacen más pequeños",
+   "first": 69,
+   "last": 74
+  },
+  {
+   "i": 13,
+   "start": 23.56,
+   "end": 25.5,
+   "text": "y casi todo queda nítido.",
+   "first": 75,
+   "last": 79
+  },
+  {
+   "i": 14,
+   "start": 25.5,
+   "end": 25.87,
+   "text": "Ahora,",
+   "first": 80,
+   "last": 80
+  },
+  {
+   "i": 15,
+   "start": 25.87,
+   "end": 28.66,
+   "text": "el iPhone fijía ese desenfoque usando",
+   "first": 81,
+   "last": 86
+  },
+  {
+   "i": 16,
+   "start": 28.66,
+   "end": 31.0,
+   "text": "software o en modo retrato.",
+   "first": 87,
+   "last": 91
+  },
+  {
+   "i": 17,
+   "start": 31.0,
+   "end": 32.67,
+   "text": "Con apertura variable,",
+   "first": 92,
+   "last": 94
+  },
+  {
+   "i": 18,
+   "start": 32.67,
+   "end": 35.15,
+   "text": "una parte del desenfoque es óptica,",
+   "first": 95,
+   "last": 100
+  },
+  {
+   "i": 19,
+   "start": 35.15,
+   "end": 36.0,
+   "text": "o sea, real.",
+   "first": 101,
+   "last": 103
+  }
+ ]
+}

@@ -1,0 +1,920 @@
+{
+ "schema": "mosaic-transcript/1",
+ "id": "A5",
+ "short": "a5-por-que-las-luces-salen-como-estrellas",
+ "language": "es",
+ "duration": 30.43,
+ "engine": "whisper.cpp",
+ "model": "ggml-large-v3-turbo-q5_0.bin",
+ "source_take": "a5-por-que-las-luces-salen-como-estrellas_toma-01.wav",
+ "created": "2026-10-27T20:58:32Z",
+ "text": "¿Por qué en algunas fotos de noche, las luces parecen como estrellitas? Es por las hojas de apertura. Cuando cierras el diafragma, la luz se difracta en cada borde recto del hexágono y forman rayos. Un truco de física, si el número de las hojas es par, los rayos opuestos se enciman. Por eso, 6 hojas dan una estrella de 6 puntas. Si fueran 7 hojas, verías 14 puntas. El iPhone 18 Pro tiene 6 hojas y Apple lo menciona como efecto creativo. cierra a F4, apunta una lámpara y vas a ver tu estrella.",
+ "words": [
+  {
+   "i": 0,
+   "text": "¿Por",
+   "norm": "por",
+   "start": 0.02,
+   "end": 0.22,
+   "p": 0.76
+  },
+  {
+   "i": 1,
+   "text": "qué",
+   "norm": "que",
+   "start": 0.22,
+   "end": 0.39,
+   "p": 0.91
+  },
+  {
+   "i": 2,
+   "text": "en",
+   "norm": "en",
+   "start": 0.39,
+   "end": 0.5,
+   "p": 0.952
+  },
+  {
+   "i": 3,
+   "text": "algunas",
+   "norm": "algunas",
+   "start": 0.5,
+   "end": 0.9,
+   "p": 0.938
+  },
+  {
+   "i": 4,
+   "text": "fotos",
+   "norm": "fotos",
+   "start": 0.9,
+   "end": 1.18,
+   "p": 0.991
+  },
+  {
+   "i": 5,
+   "text": "de",
+   "norm": "de",
+   "start": 1.18,
+   "end": 1.31,
+   "p": 0.974
+  },
+  {
+   "i": 6,
+   "text": "noche,",
+   "norm": "noche",
+   "start": 1.31,
+   "end": 1.72,
+   "p": 0.648
+  },
+  {
+   "i": 7,
+   "text": "las",
+   "norm": "las",
+   "start": 1.72,
+   "end": 1.89,
+   "p": 0.966
+  },
+  {
+   "i": 8,
+   "text": "luces",
+   "norm": "luces",
+   "start": 1.89,
+   "end": 2.26,
+   "p": 0.998
+  },
+  {
+   "i": 9,
+   "text": "parecen",
+   "norm": "parecen",
+   "start": 2.26,
+   "end": 2.56,
+   "p": 0.994
+  },
+  {
+   "i": 10,
+   "text": "como",
+   "norm": "como",
+   "start": 2.56,
+   "end": 2.78,
+   "p": 0.966
+  },
+  {
+   "i": 11,
+   "text": "estrellitas?",
+   "norm": "estrellitas",
+   "start": 2.78,
+   "end": 3.6,
+   "p": 0.986
+  },
+  {
+   "i": 12,
+   "text": "Es",
+   "norm": "es",
+   "start": 3.6,
+   "end": 3.74,
+   "p": 0.947
+  },
+  {
+   "i": 13,
+   "text": "por",
+   "norm": "por",
+   "start": 3.74,
+   "end": 3.93,
+   "p": 0.995
+  },
+  {
+   "i": 14,
+   "text": "las",
+   "norm": "las",
+   "start": 3.93,
+   "end": 4.13,
+   "p": 0.992
+  },
+  {
+   "i": 15,
+   "text": "hojas",
+   "norm": "hojas",
+   "start": 4.13,
+   "end": 4.46,
+   "p": 0.992
+  },
+  {
+   "i": 16,
+   "text": "de",
+   "norm": "de",
+   "start": 4.46,
+   "end": 4.59,
+   "p": 0.989
+  },
+  {
+   "i": 17,
+   "text": "apertura.",
+   "norm": "apertura",
+   "start": 4.59,
+   "end": 5.31,
+   "p": 0.893
+  },
+  {
+   "i": 18,
+   "text": "Cuando",
+   "norm": "cuando",
+   "start": 5.31,
+   "end": 5.54,
+   "p": 0.694
+  },
+  {
+   "i": 19,
+   "text": "cierras",
+   "norm": "cierras",
+   "start": 5.54,
+   "end": 5.89,
+   "p": 0.983
+  },
+  {
+   "i": 20,
+   "text": "el",
+   "norm": "el",
+   "start": 5.89,
+   "end": 6.0,
+   "p": 0.98
+  },
+  {
+   "i": 21,
+   "text": "diafragma,",
+   "norm": "diafragma",
+   "start": 6.0,
+   "end": 6.71,
+   "p": 0.96
+  },
+  {
+   "i": 22,
+   "text": "la",
+   "norm": "la",
+   "start": 6.71,
+   "end": 6.81,
+   "p": 0.736
+  },
+  {
+   "i": 23,
+   "text": "luz",
+   "norm": "luz",
+   "start": 6.81,
+   "end": 6.98,
+   "p": 0.986
+  },
+  {
+   "i": 24,
+   "text": "se",
+   "norm": "se",
+   "start": 6.98,
+   "end": 7.25,
+   "p": 0.972
+  },
+  {
+   "i": 25,
+   "text": "difracta",
+   "norm": "difracta",
+   "start": 7.25,
+   "end": 7.73,
+   "p": 0.947
+  },
+  {
+   "i": 26,
+   "text": "en",
+   "norm": "en",
+   "start": 7.73,
+   "end": 7.83,
+   "p": 0.887
+  },
+  {
+   "i": 27,
+   "text": "cada",
+   "norm": "cada",
+   "start": 7.83,
+   "end": 8.16,
+   "p": 0.96
+  },
+  {
+   "i": 28,
+   "text": "borde",
+   "norm": "borde",
+   "start": 8.16,
+   "end": 8.44,
+   "p": 0.944
+  },
+  {
+   "i": 29,
+   "text": "recto",
+   "norm": "recto",
+   "start": 8.44,
+   "end": 8.88,
+   "p": 0.828
+  },
+  {
+   "i": 30,
+   "text": "del",
+   "norm": "del",
+   "start": 8.88,
+   "end": 8.93,
+   "p": 0.814
+  },
+  {
+   "i": 31,
+   "text": "hexágono",
+   "norm": "hexagono",
+   "start": 8.92,
+   "end": 9.6,
+   "p": 0.97
+  },
+  {
+   "i": 32,
+   "text": "y",
+   "norm": "y",
+   "start": 9.6,
+   "end": 9.8,
+   "p": 0.664
+  },
+  {
+   "i": 33,
+   "text": "forman",
+   "norm": "forman",
+   "start": 9.8,
+   "end": 10.31,
+   "p": 0.954
+  },
+  {
+   "i": 34,
+   "text": "rayos.",
+   "norm": "rayos",
+   "start": 10.31,
+   "end": 10.82,
+   "p": 0.986
+  },
+  {
+   "i": 35,
+   "text": "Un",
+   "norm": "un",
+   "start": 10.82,
+   "end": 10.98,
+   "p": 0.98
+  },
+  {
+   "i": 36,
+   "text": "truco",
+   "norm": "truco",
+   "start": 10.98,
+   "end": 11.38,
+   "p": 0.992
+  },
+  {
+   "i": 37,
+   "text": "de",
+   "norm": "de",
+   "start": 11.38,
+   "end": 11.54,
+   "p": 0.996
+  },
+  {
+   "i": 38,
+   "text": "física,",
+   "norm": "fisica",
+   "start": 11.54,
+   "end": 12.22,
+   "p": 0.658
+  },
+  {
+   "i": 39,
+   "text": "si",
+   "norm": "si",
+   "start": 12.22,
+   "end": 12.52,
+   "p": 0.968
+  },
+  {
+   "i": 40,
+   "text": "el",
+   "norm": "el",
+   "start": 12.52,
+   "end": 12.57,
+   "p": 0.986
+  },
+  {
+   "i": 41,
+   "text": "número",
+   "norm": "numero",
+   "start": 12.54,
+   "end": 13.08,
+   "p": 0.967
+  },
+  {
+   "i": 42,
+   "text": "de",
+   "norm": "de",
+   "start": 13.08,
+   "end": 13.13,
+   "p": 0.986
+  },
+  {
+   "i": 43,
+   "text": "las",
+   "norm": "las",
+   "start": 13.13,
+   "end": 13.36,
+   "p": 0.915
+  },
+  {
+   "i": 44,
+   "text": "hojas",
+   "norm": "hojas",
+   "start": 13.36,
+   "end": 13.74,
+   "p": 0.998
+  },
+  {
+   "i": 45,
+   "text": "es",
+   "norm": "es",
+   "start": 13.74,
+   "end": 13.89,
+   "p": 0.961
+  },
+  {
+   "i": 46,
+   "text": "par,",
+   "norm": "par",
+   "start": 13.89,
+   "end": 14.47,
+   "p": 0.969
+  },
+  {
+   "i": 47,
+   "text": "los",
+   "norm": "los",
+   "start": 14.47,
+   "end": 14.52,
+   "p": 0.973
+  },
+  {
+   "i": 48,
+   "text": "rayos",
+   "norm": "rayos",
+   "start": 14.48,
+   "end": 14.74,
+   "p": 1.0
+  },
+  {
+   "i": 49,
+   "text": "opuestos",
+   "norm": "opuestos",
+   "start": 14.74,
+   "end": 15.17,
+   "p": 0.997
+  },
+  {
+   "i": 50,
+   "text": "se",
+   "norm": "se",
+   "start": 15.17,
+   "end": 15.28,
+   "p": 0.968
+  },
+  {
+   "i": 51,
+   "text": "enciman.",
+   "norm": "enciman",
+   "start": 15.28,
+   "end": 15.86,
+   "p": 0.813
+  },
+  {
+   "i": 52,
+   "text": "Por",
+   "norm": "por",
+   "start": 15.86,
+   "end": 16.08,
+   "p": 0.981
+  },
+  {
+   "i": 53,
+   "text": "eso,",
+   "norm": "eso",
+   "start": 16.08,
+   "end": 16.45,
+   "p": 0.864
+  },
+  {
+   "i": 54,
+   "text": "6",
+   "norm": "6",
+   "start": 16.45,
+   "end": 16.7,
+   "p": 0.756
+  },
+  {
+   "i": 55,
+   "text": "hojas",
+   "norm": "hojas",
+   "start": 16.7,
+   "end": 17.04,
+   "p": 0.998
+  },
+  {
+   "i": 56,
+   "text": "dan",
+   "norm": "dan",
+   "start": 17.04,
+   "end": 17.26,
+   "p": 0.95
+  },
+  {
+   "i": 57,
+   "text": "una",
+   "norm": "una",
+   "start": 17.26,
+   "end": 17.58,
+   "p": 0.97
+  },
+  {
+   "i": 58,
+   "text": "estrella",
+   "norm": "estrella",
+   "start": 17.58,
+   "end": 18.12,
+   "p": 0.998
+  },
+  {
+   "i": 59,
+   "text": "de",
+   "norm": "de",
+   "start": 18.12,
+   "end": 18.22,
+   "p": 0.998
+  },
+  {
+   "i": 60,
+   "text": "6",
+   "norm": "6",
+   "start": 18.22,
+   "end": 18.44,
+   "p": 0.958
+  },
+  {
+   "i": 61,
+   "text": "puntas.",
+   "norm": "puntas",
+   "start": 18.44,
+   "end": 19.15,
+   "p": 0.912
+  },
+  {
+   "i": 62,
+   "text": "Si",
+   "norm": "si",
+   "start": 19.15,
+   "end": 19.51,
+   "p": 0.907
+  },
+  {
+   "i": 63,
+   "text": "fueran",
+   "norm": "fueran",
+   "start": 19.51,
+   "end": 19.73,
+   "p": 0.994
+  },
+  {
+   "i": 64,
+   "text": "7",
+   "norm": "7",
+   "start": 19.73,
+   "end": 19.9,
+   "p": 0.96
+  },
+  {
+   "i": 65,
+   "text": "hojas,",
+   "norm": "hojas",
+   "start": 19.9,
+   "end": 20.41,
+   "p": 0.922
+  },
+  {
+   "i": 66,
+   "text": "verías",
+   "norm": "verias",
+   "start": 20.41,
+   "end": 21.13,
+   "p": 0.972
+  },
+  {
+   "i": 67,
+   "text": "14",
+   "norm": "14",
+   "start": 21.13,
+   "end": 21.18,
+   "p": 0.994
+  },
+  {
+   "i": 68,
+   "text": "puntas.",
+   "norm": "puntas",
+   "start": 21.17,
+   "end": 21.78,
+   "p": 0.991
+  },
+  {
+   "i": 69,
+   "text": "El",
+   "norm": "el",
+   "start": 21.78,
+   "end": 21.92,
+   "p": 0.864
+  },
+  {
+   "i": 70,
+   "text": "iPhone",
+   "norm": "iphone",
+   "start": 21.92,
+   "end": 22.3,
+   "p": 0.966
+  },
+  {
+   "i": 71,
+   "text": "18",
+   "norm": "18",
+   "start": 22.3,
+   "end": 22.74,
+   "p": 0.986
+  },
+  {
+   "i": 72,
+   "text": "Pro",
+   "norm": "pro",
+   "start": 22.74,
+   "end": 22.88,
+   "p": 0.978
+  },
+  {
+   "i": 73,
+   "text": "tiene",
+   "norm": "tiene",
+   "start": 22.88,
+   "end": 23.2,
+   "p": 0.955
+  },
+  {
+   "i": 74,
+   "text": "6",
+   "norm": "6",
+   "start": 23.2,
+   "end": 23.49,
+   "p": 0.974
+  },
+  {
+   "i": 75,
+   "text": "hojas",
+   "norm": "hojas",
+   "start": 23.49,
+   "end": 23.71,
+   "p": 0.999
+  },
+  {
+   "i": 76,
+   "text": "y",
+   "norm": "y",
+   "start": 23.71,
+   "end": 23.77,
+   "p": 0.681
+  },
+  {
+   "i": 77,
+   "text": "Apple",
+   "norm": "apple",
+   "start": 23.77,
+   "end": 24.09,
+   "p": 0.97
+  },
+  {
+   "i": 78,
+   "text": "lo",
+   "norm": "lo",
+   "start": 24.09,
+   "end": 24.22,
+   "p": 0.914
+  },
+  {
+   "i": 79,
+   "text": "menciona",
+   "norm": "menciona",
+   "start": 24.22,
+   "end": 24.78,
+   "p": 0.991
+  },
+  {
+   "i": 80,
+   "text": "como",
+   "norm": "como",
+   "start": 24.78,
+   "end": 25.06,
+   "p": 0.993
+  },
+  {
+   "i": 81,
+   "text": "efecto",
+   "norm": "efecto",
+   "start": 25.06,
+   "end": 25.43,
+   "p": 0.834
+  },
+  {
+   "i": 82,
+   "text": "creativo.",
+   "norm": "creativo",
+   "start": 25.43,
+   "end": 26.18,
+   "p": 0.978
+  },
+  {
+   "i": 83,
+   "text": "cierra",
+   "norm": "cierra",
+   "start": 26.31,
+   "end": 27.02,
+   "p": 0.71
+  },
+  {
+   "i": 84,
+   "text": "a",
+   "norm": "a",
+   "start": 27.02,
+   "end": 27.14,
+   "p": 0.872
+  },
+  {
+   "i": 85,
+   "text": "F4,",
+   "norm": "f4",
+   "start": 27.14,
+   "end": 27.89,
+   "p": 0.79
+  },
+  {
+   "i": 86,
+   "text": "apunta",
+   "norm": "apunta",
+   "start": 27.89,
+   "end": 28.2,
+   "p": 0.951
+  },
+  {
+   "i": 87,
+   "text": "una",
+   "norm": "una",
+   "start": 28.2,
+   "end": 28.44,
+   "p": 0.802
+  },
+  {
+   "i": 88,
+   "text": "lámpara",
+   "norm": "lampara",
+   "start": 28.44,
+   "end": 28.92,
+   "p": 0.994
+  },
+  {
+   "i": 89,
+   "text": "y",
+   "norm": "y",
+   "start": 28.92,
+   "end": 29.0,
+   "p": 0.848
+  },
+  {
+   "i": 90,
+   "text": "vas",
+   "norm": "vas",
+   "start": 29.0,
+   "end": 29.24,
+   "p": 0.939
+  },
+  {
+   "i": 91,
+   "text": "a",
+   "norm": "a",
+   "start": 29.24,
+   "end": 29.32,
+   "p": 0.995
+  },
+  {
+   "i": 92,
+   "text": "ver",
+   "norm": "ver",
+   "start": 29.32,
+   "end": 29.57,
+   "p": 0.996
+  },
+  {
+   "i": 93,
+   "text": "tu",
+   "norm": "tu",
+   "start": 29.57,
+   "end": 29.83,
+   "p": 0.895
+  },
+  {
+   "i": 94,
+   "text": "estrella.",
+   "norm": "estrella",
+   "start": 29.83,
+   "end": 30.42,
+   "p": 0.916
+  }
+ ],
+ "segments": [
+  {
+   "i": 0,
+   "start": 0.02,
+   "end": 1.72,
+   "text": "¿Por qué en algunas fotos de noche,",
+   "first": 0,
+   "last": 6
+  },
+  {
+   "i": 1,
+   "start": 1.72,
+   "end": 3.6,
+   "text": "las luces parecen como estrellitas?",
+   "first": 7,
+   "last": 11
+  },
+  {
+   "i": 2,
+   "start": 3.6,
+   "end": 5.31,
+   "text": "Es por las hojas de apertura.",
+   "first": 12,
+   "last": 17
+  },
+  {
+   "i": 3,
+   "start": 5.31,
+   "end": 6.71,
+   "text": "Cuando cierras el diafragma,",
+   "first": 18,
+   "last": 21
+  },
+  {
+   "i": 4,
+   "start": 6.71,
+   "end": 8.88,
+   "text": "la luz se difracta en cada borde recto",
+   "first": 22,
+   "last": 29
+  },
+  {
+   "i": 5,
+   "start": 8.88,
+   "end": 10.82,
+   "text": "del hexágono y forman rayos.",
+   "first": 30,
+   "last": 34
+  },
+  {
+   "i": 6,
+   "start": 10.82,
+   "end": 12.22,
+   "text": "Un truco de física,",
+   "first": 35,
+   "last": 38
+  },
+  {
+   "i": 7,
+   "start": 12.22,
+   "end": 14.47,
+   "text": "si el número de las hojas es par,",
+   "first": 39,
+   "last": 46
+  },
+  {
+   "i": 8,
+   "start": 14.47,
+   "end": 15.86,
+   "text": "los rayos opuestos se enciman.",
+   "first": 47,
+   "last": 51
+  },
+  {
+   "i": 9,
+   "start": 15.86,
+   "end": 16.45,
+   "text": "Por eso,",
+   "first": 52,
+   "last": 53
+  },
+  {
+   "i": 10,
+   "start": 16.45,
+   "end": 19.15,
+   "text": "6 hojas dan una estrella de 6 puntas.",
+   "first": 54,
+   "last": 61
+  },
+  {
+   "i": 11,
+   "start": 19.15,
+   "end": 20.41,
+   "text": "Si fueran 7 hojas,",
+   "first": 62,
+   "last": 65
+  },
+  {
+   "i": 12,
+   "start": 20.41,
+   "end": 21.78,
+   "text": "verías 14 puntas.",
+   "first": 66,
+   "last": 68
+  },
+  {
+   "i": 13,
+   "start": 21.78,
+   "end": 24.09,
+   "text": "El iPhone 18 Pro tiene 6 hojas y Apple",
+   "first": 69,
+   "last": 77
+  },
+  {
+   "i": 14,
+   "start": 24.09,
+   "end": 26.18,
+   "text": "lo menciona como efecto creativo.",
+   "first": 78,
+   "last": 82
+  },
+  {
+   "i": 15,
+   "start": 26.31,
+   "end": 27.89,
+   "text": "cierra a F4,",
+   "first": 83,
+   "last": 85
+  },
+  {
+   "i": 16,
+   "start": 27.89,
+   "end": 29.24,
+   "text": "apunta una lámpara y vas",
+   "first": 86,
+   "last": 90
+  },
+  {
+   "i": 17,
+   "start": 29.24,
+   "end": 30.42,
+   "text": "a ver tu estrella.",
+   "first": 91,
+   "last": 94
+  }
+ ]
+}

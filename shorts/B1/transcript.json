@@ -1,0 +1,1104 @@
+{
+ "schema": "mosaic-transcript/1",
+ "id": "B1",
+ "short": "b1-como-se-dobla-una-pantalla",
+ "language": "es",
+ "duration": 36.015,
+ "engine": "whisper.cpp",
+ "model": "ggml-large-v3-turbo-q5_0.bin",
+ "source_take": "b1-como-se-dobla-una-pantalla_toma-01.wav",
+ "created": "2026-10-27T20:58:40Z",
+ "text": "Si el vidrio se rompe cuando lo doblas, entonces, ¿cómo se dobla una pantalla de un teléfono plegable? Primero, la pantalla no está sobre vidrio rígido, sino sobre una base de plástico muy delgada. Los píxeles OLED se fabrican encima de esa capa flexible. Segundo, la física de un doblez. Cuando doblas algo, la cara de afuera se estira y la adentro se comprime. Pero en medio hay una línea que ni se estira ni se comprime, el plano neutro. Los ingenieros acomodan las capas para que lo más frágil, los circuitos y los píxeles, queden justo en esa parte plana. Así la pantalla se dobla miles de veces sin que se rompa.",
+ "words": [
+  {
+   "i": 0,
+   "text": "Si",
+   "norm": "si",
+   "start": 0.11,
+   "end": 0.19,
+   "p": 0.791
+  },
+  {
+   "i": 1,
+   "text": "el",
+   "norm": "el",
+   "start": 0.19,
+   "end": 0.24,
+   "p": 0.989
+  },
+  {
+   "i": 2,
+   "text": "vidrio",
+   "norm": "vidrio",
+   "start": 0.24,
+   "end": 0.6,
+   "p": 0.996
+  },
+  {
+   "i": 3,
+   "text": "se",
+   "norm": "se",
+   "start": 0.6,
+   "end": 0.72,
+   "p": 0.991
+  },
+  {
+   "i": 4,
+   "text": "rompe",
+   "norm": "rompe",
+   "start": 0.72,
+   "end": 1.02,
+   "p": 0.995
+  },
+  {
+   "i": 5,
+   "text": "cuando",
+   "norm": "cuando",
+   "start": 1.02,
+   "end": 1.38,
+   "p": 0.971
+  },
+  {
+   "i": 6,
+   "text": "lo",
+   "norm": "lo",
+   "start": 1.38,
+   "end": 1.5,
+   "p": 0.985
+  },
+  {
+   "i": 7,
+   "text": "doblas,",
+   "norm": "doblas",
+   "start": 1.5,
+   "end": 2.11,
+   "p": 0.958
+  },
+  {
+   "i": 8,
+   "text": "entonces,",
+   "norm": "entonces",
+   "start": 2.11,
+   "end": 2.77,
+   "p": 0.663
+  },
+  {
+   "i": 9,
+   "text": "¿cómo",
+   "norm": "como",
+   "start": 2.77,
+   "end": 3.04,
+   "p": 0.815
+  },
+  {
+   "i": 10,
+   "text": "se",
+   "norm": "se",
+   "start": 3.04,
+   "end": 3.15,
+   "p": 0.99
+  },
+  {
+   "i": 11,
+   "text": "dobla",
+   "norm": "dobla",
+   "start": 3.15,
+   "end": 3.43,
+   "p": 0.944
+  },
+  {
+   "i": 12,
+   "text": "una",
+   "norm": "una",
+   "start": 3.43,
+   "end": 3.6,
+   "p": 0.975
+  },
+  {
+   "i": 13,
+   "text": "pantalla",
+   "norm": "pantalla",
+   "start": 3.6,
+   "end": 4.1,
+   "p": 0.994
+  },
+  {
+   "i": 14,
+   "text": "de",
+   "norm": "de",
+   "start": 4.1,
+   "end": 4.24,
+   "p": 0.97
+  },
+  {
+   "i": 15,
+   "text": "un",
+   "norm": "un",
+   "start": 4.24,
+   "end": 4.37,
+   "p": 0.905
+  },
+  {
+   "i": 16,
+   "text": "teléfono",
+   "norm": "telefono",
+   "start": 4.37,
+   "end": 4.68,
+   "p": 0.974
+  },
+  {
+   "i": 17,
+   "text": "plegable?",
+   "norm": "plegable",
+   "start": 4.68,
+   "end": 5.3,
+   "p": 0.902
+  },
+  {
+   "i": 18,
+   "text": "Primero,",
+   "norm": "primero",
+   "start": 5.3,
+   "end": 6.02,
+   "p": 0.854
+  },
+  {
+   "i": 19,
+   "text": "la",
+   "norm": "la",
+   "start": 6.02,
+   "end": 6.18,
+   "p": 0.972
+  },
+  {
+   "i": 20,
+   "text": "pantalla",
+   "norm": "pantalla",
+   "start": 6.18,
+   "end": 6.83,
+   "p": 0.996
+  },
+  {
+   "i": 21,
+   "text": "no",
+   "norm": "no",
+   "start": 6.83,
+   "end": 6.99,
+   "p": 0.962
+  },
+  {
+   "i": 22,
+   "text": "está",
+   "norm": "esta",
+   "start": 6.99,
+   "end": 7.41,
+   "p": 0.95
+  },
+  {
+   "i": 23,
+   "text": "sobre",
+   "norm": "sobre",
+   "start": 7.41,
+   "end": 7.71,
+   "p": 0.996
+  },
+  {
+   "i": 24,
+   "text": "vidrio",
+   "norm": "vidrio",
+   "start": 7.71,
+   "end": 8.24,
+   "p": 0.974
+  },
+  {
+   "i": 25,
+   "text": "rígido,",
+   "norm": "rigido",
+   "start": 8.24,
+   "end": 8.9,
+   "p": 0.96
+  },
+  {
+   "i": 26,
+   "text": "sino",
+   "norm": "sino",
+   "start": 8.9,
+   "end": 9.15,
+   "p": 0.942
+  },
+  {
+   "i": 27,
+   "text": "sobre",
+   "norm": "sobre",
+   "start": 9.15,
+   "end": 9.46,
+   "p": 0.99
+  },
+  {
+   "i": 28,
+   "text": "una",
+   "norm": "una",
+   "start": 9.46,
+   "end": 9.67,
+   "p": 0.994
+  },
+  {
+   "i": 29,
+   "text": "base",
+   "norm": "base",
+   "start": 9.67,
+   "end": 9.9,
+   "p": 0.997
+  },
+  {
+   "i": 30,
+   "text": "de",
+   "norm": "de",
+   "start": 9.9,
+   "end": 10.08,
+   "p": 0.985
+  },
+  {
+   "i": 31,
+   "text": "plástico",
+   "norm": "plastico",
+   "start": 10.08,
+   "end": 10.74,
+   "p": 0.993
+  },
+  {
+   "i": 32,
+   "text": "muy",
+   "norm": "muy",
+   "start": 10.74,
+   "end": 10.84,
+   "p": 0.967
+  },
+  {
+   "i": 33,
+   "text": "delgada.",
+   "norm": "delgada",
+   "start": 10.84,
+   "end": 11.5,
+   "p": 0.937
+  },
+  {
+   "i": 34,
+   "text": "Los",
+   "norm": "los",
+   "start": 11.5,
+   "end": 11.74,
+   "p": 0.992
+  },
+  {
+   "i": 35,
+   "text": "píxeles",
+   "norm": "pixeles",
+   "start": 11.74,
+   "end": 12.19,
+   "p": 0.974
+  },
+  {
+   "i": 36,
+   "text": "OLED",
+   "norm": "oled",
+   "start": 12.19,
+   "end": 12.45,
+   "p": 0.854
+  },
+  {
+   "i": 37,
+   "text": "se",
+   "norm": "se",
+   "start": 12.45,
+   "end": 12.62,
+   "p": 0.946
+  },
+  {
+   "i": 38,
+   "text": "fabrican",
+   "norm": "fabrican",
+   "start": 12.62,
+   "end": 13.13,
+   "p": 0.997
+  },
+  {
+   "i": 39,
+   "text": "encima",
+   "norm": "encima",
+   "start": 13.13,
+   "end": 13.61,
+   "p": 0.995
+  },
+  {
+   "i": 40,
+   "text": "de",
+   "norm": "de",
+   "start": 13.61,
+   "end": 13.68,
+   "p": 0.997
+  },
+  {
+   "i": 41,
+   "text": "esa",
+   "norm": "esa",
+   "start": 13.68,
+   "end": 13.89,
+   "p": 0.961
+  },
+  {
+   "i": 42,
+   "text": "capa",
+   "norm": "capa",
+   "start": 13.89,
+   "end": 14.44,
+   "p": 0.999
+  },
+  {
+   "i": 43,
+   "text": "flexible.",
+   "norm": "flexible",
+   "start": 14.44,
+   "end": 15.0,
+   "p": 0.988
+  },
+  {
+   "i": 44,
+   "text": "Segundo,",
+   "norm": "segundo",
+   "start": 15.0,
+   "end": 15.68,
+   "p": 0.988
+  },
+  {
+   "i": 45,
+   "text": "la",
+   "norm": "la",
+   "start": 15.68,
+   "end": 15.82,
+   "p": 0.987
+  },
+  {
+   "i": 46,
+   "text": "física",
+   "norm": "fisica",
+   "start": 15.82,
+   "end": 16.28,
+   "p": 0.984
+  },
+  {
+   "i": 47,
+   "text": "de",
+   "norm": "de",
+   "start": 16.28,
+   "end": 16.43,
+   "p": 0.988
+  },
+  {
+   "i": 48,
+   "text": "un",
+   "norm": "un",
+   "start": 16.43,
+   "end": 16.58,
+   "p": 0.993
+  },
+  {
+   "i": 49,
+   "text": "doblez.",
+   "norm": "doblez",
+   "start": 16.58,
+   "end": 17.3,
+   "p": 0.949
+  },
+  {
+   "i": 50,
+   "text": "Cuando",
+   "norm": "cuando",
+   "start": 17.3,
+   "end": 17.71,
+   "p": 0.832
+  },
+  {
+   "i": 51,
+   "text": "doblas",
+   "norm": "doblas",
+   "start": 17.71,
+   "end": 18.09,
+   "p": 0.993
+  },
+  {
+   "i": 52,
+   "text": "algo,",
+   "norm": "algo",
+   "start": 18.09,
+   "end": 18.5,
+   "p": 0.958
+  },
+  {
+   "i": 53,
+   "text": "la",
+   "norm": "la",
+   "start": 18.5,
+   "end": 18.64,
+   "p": 0.955
+  },
+  {
+   "i": 54,
+   "text": "cara",
+   "norm": "cara",
+   "start": 18.64,
+   "end": 18.92,
+   "p": 0.997
+  },
+  {
+   "i": 55,
+   "text": "de",
+   "norm": "de",
+   "start": 18.92,
+   "end": 19.06,
+   "p": 0.991
+  },
+  {
+   "i": 56,
+   "text": "afuera",
+   "norm": "afuera",
+   "start": 19.06,
+   "end": 19.53,
+   "p": 0.995
+  },
+  {
+   "i": 57,
+   "text": "se",
+   "norm": "se",
+   "start": 19.53,
+   "end": 19.67,
+   "p": 0.977
+  },
+  {
+   "i": 58,
+   "text": "estira",
+   "norm": "estira",
+   "start": 19.67,
+   "end": 20.2,
+   "p": 0.996
+  },
+  {
+   "i": 59,
+   "text": "y",
+   "norm": "y",
+   "start": 20.2,
+   "end": 20.44,
+   "p": 0.832
+  },
+  {
+   "i": 60,
+   "text": "la",
+   "norm": "la",
+   "start": 20.44,
+   "end": 20.56,
+   "p": 0.922
+  },
+  {
+   "i": 61,
+   "text": "adentro",
+   "norm": "adentro",
+   "start": 20.56,
+   "end": 21.15,
+   "p": 0.847
+  },
+  {
+   "i": 62,
+   "text": "se",
+   "norm": "se",
+   "start": 21.15,
+   "end": 21.2,
+   "p": 0.987
+  },
+  {
+   "i": 63,
+   "text": "comprime.",
+   "norm": "comprime",
+   "start": 21.2,
+   "end": 21.7,
+   "p": 0.899
+  },
+  {
+   "i": 64,
+   "text": "Pero",
+   "norm": "pero",
+   "start": 21.7,
+   "end": 21.96,
+   "p": 0.894
+  },
+  {
+   "i": 65,
+   "text": "en",
+   "norm": "en",
+   "start": 21.96,
+   "end": 22.09,
+   "p": 0.97
+  },
+  {
+   "i": 66,
+   "text": "medio",
+   "norm": "medio",
+   "start": 22.09,
+   "end": 22.42,
+   "p": 0.976
+  },
+  {
+   "i": 67,
+   "text": "hay",
+   "norm": "hay",
+   "start": 22.42,
+   "end": 22.61,
+   "p": 0.861
+  },
+  {
+   "i": 68,
+   "text": "una",
+   "norm": "una",
+   "start": 22.61,
+   "end": 22.82,
+   "p": 0.995
+  },
+  {
+   "i": 69,
+   "text": "línea",
+   "norm": "linea",
+   "start": 22.82,
+   "end": 23.13,
+   "p": 0.976
+  },
+  {
+   "i": 70,
+   "text": "que",
+   "norm": "que",
+   "start": 23.13,
+   "end": 23.31,
+   "p": 0.993
+  },
+  {
+   "i": 71,
+   "text": "ni",
+   "norm": "ni",
+   "start": 23.31,
+   "end": 23.45,
+   "p": 0.989
+  },
+  {
+   "i": 72,
+   "text": "se",
+   "norm": "se",
+   "start": 23.45,
+   "end": 23.77,
+   "p": 0.992
+  },
+  {
+   "i": 73,
+   "text": "estira",
+   "norm": "estira",
+   "start": 23.77,
+   "end": 23.98,
+   "p": 0.994
+  },
+  {
+   "i": 74,
+   "text": "ni",
+   "norm": "ni",
+   "start": 23.98,
+   "end": 24.09,
+   "p": 0.972
+  },
+  {
+   "i": 75,
+   "text": "se",
+   "norm": "se",
+   "start": 24.09,
+   "end": 24.22,
+   "p": 0.988
+  },
+  {
+   "i": 76,
+   "text": "comprime,",
+   "norm": "comprime",
+   "start": 24.22,
+   "end": 24.91,
+   "p": 0.814
+  },
+  {
+   "i": 77,
+   "text": "el",
+   "norm": "el",
+   "start": 24.91,
+   "end": 25.0,
+   "p": 0.98
+  },
+  {
+   "i": 78,
+   "text": "plano",
+   "norm": "plano",
+   "start": 25.0,
+   "end": 25.32,
+   "p": 0.981
+  },
+  {
+   "i": 79,
+   "text": "neutro.",
+   "norm": "neutro",
+   "start": 25.32,
+   "end": 26.0,
+   "p": 0.987
+  },
+  {
+   "i": 80,
+   "text": "Los",
+   "norm": "los",
+   "start": 26.14,
+   "end": 26.24,
+   "p": 0.958
+  },
+  {
+   "i": 81,
+   "text": "ingenieros",
+   "norm": "ingenieros",
+   "start": 26.24,
+   "end": 26.85,
+   "p": 0.991
+  },
+  {
+   "i": 82,
+   "text": "acomodan",
+   "norm": "acomodan",
+   "start": 26.85,
+   "end": 27.37,
+   "p": 0.938
+  },
+  {
+   "i": 83,
+   "text": "las",
+   "norm": "las",
+   "start": 27.37,
+   "end": 27.57,
+   "p": 0.988
+  },
+  {
+   "i": 84,
+   "text": "capas",
+   "norm": "capas",
+   "start": 27.57,
+   "end": 28.11,
+   "p": 0.997
+  },
+  {
+   "i": 85,
+   "text": "para",
+   "norm": "para",
+   "start": 28.11,
+   "end": 28.16,
+   "p": 0.945
+  },
+  {
+   "i": 86,
+   "text": "que",
+   "norm": "que",
+   "start": 28.16,
+   "end": 28.36,
+   "p": 0.993
+  },
+  {
+   "i": 87,
+   "text": "lo",
+   "norm": "lo",
+   "start": 28.36,
+   "end": 28.48,
+   "p": 0.938
+  },
+  {
+   "i": 88,
+   "text": "más",
+   "norm": "mas",
+   "start": 28.48,
+   "end": 28.71,
+   "p": 0.984
+  },
+  {
+   "i": 89,
+   "text": "frágil,",
+   "norm": "fragil",
+   "start": 28.71,
+   "end": 29.21,
+   "p": 0.978
+  },
+  {
+   "i": 90,
+   "text": "los",
+   "norm": "los",
+   "start": 29.21,
+   "end": 29.41,
+   "p": 0.989
+  },
+  {
+   "i": 91,
+   "text": "circuitos",
+   "norm": "circuitos",
+   "start": 29.41,
+   "end": 30.0,
+   "p": 0.998
+  },
+  {
+   "i": 92,
+   "text": "y",
+   "norm": "y",
+   "start": 30.0,
+   "end": 30.06,
+   "p": 0.967
+  },
+  {
+   "i": 93,
+   "text": "los",
+   "norm": "los",
+   "start": 30.06,
+   "end": 30.26,
+   "p": 0.99
+  },
+  {
+   "i": 94,
+   "text": "píxeles,",
+   "norm": "pixeles",
+   "start": 30.26,
+   "end": 31.0,
+   "p": 0.952
+  },
+  {
+   "i": 95,
+   "text": "queden",
+   "norm": "queden",
+   "start": 31.0,
+   "end": 31.44,
+   "p": 0.742
+  },
+  {
+   "i": 96,
+   "text": "justo",
+   "norm": "justo",
+   "start": 31.44,
+   "end": 31.54,
+   "p": 0.974
+  },
+  {
+   "i": 97,
+   "text": "en",
+   "norm": "en",
+   "start": 31.54,
+   "end": 31.69,
+   "p": 0.986
+  },
+  {
+   "i": 98,
+   "text": "esa",
+   "norm": "esa",
+   "start": 31.69,
+   "end": 32.2,
+   "p": 0.978
+  },
+  {
+   "i": 99,
+   "text": "parte",
+   "norm": "parte",
+   "start": 32.2,
+   "end": 32.37,
+   "p": 0.996
+  },
+  {
+   "i": 100,
+   "text": "plana.",
+   "norm": "plana",
+   "start": 32.37,
+   "end": 32.7,
+   "p": 0.975
+  },
+  {
+   "i": 101,
+   "text": "Así",
+   "norm": "asi",
+   "start": 32.7,
+   "end": 32.9,
+   "p": 0.978
+  },
+  {
+   "i": 102,
+   "text": "la",
+   "norm": "la",
+   "start": 32.9,
+   "end": 33.03,
+   "p": 0.752
+  },
+  {
+   "i": 103,
+   "text": "pantalla",
+   "norm": "pantalla",
+   "start": 33.03,
+   "end": 33.58,
+   "p": 0.998
+  },
+  {
+   "i": 104,
+   "text": "se",
+   "norm": "se",
+   "start": 33.58,
+   "end": 33.71,
+   "p": 0.99
+  },
+  {
+   "i": 105,
+   "text": "dobla",
+   "norm": "dobla",
+   "start": 33.71,
+   "end": 34.04,
+   "p": 0.993
+  },
+  {
+   "i": 106,
+   "text": "miles",
+   "norm": "miles",
+   "start": 34.04,
+   "end": 34.38,
+   "p": 0.994
+  },
+  {
+   "i": 107,
+   "text": "de",
+   "norm": "de",
+   "start": 34.38,
+   "end": 34.81,
+   "p": 0.996
+  },
+  {
+   "i": 108,
+   "text": "veces",
+   "norm": "veces",
+   "start": 34.81,
+   "end": 34.86,
+   "p": 0.999
+  },
+  {
+   "i": 109,
+   "text": "sin",
+   "norm": "sin",
+   "start": 34.85,
+   "end": 35.05,
+   "p": 0.889
+  },
+  {
+   "i": 110,
+   "text": "que",
+   "norm": "que",
+   "start": 35.05,
+   "end": 35.24,
+   "p": 0.997
+  },
+  {
+   "i": 111,
+   "text": "se",
+   "norm": "se",
+   "start": 35.24,
+   "end": 35.58,
+   "p": 0.996
+  },
+  {
+   "i": 112,
+   "text": "rompa.",
+   "norm": "rompa",
+   "start": 35.58,
+   "end": 36.015,
+   "p": 0.994
+  }
+ ],
+ "segments": [
+  {
+   "i": 0,
+   "start": 0.11,
+   "end": 2.11,
+   "text": "Si el vidrio se rompe cuando lo doblas,",
+   "first": 0,
+   "last": 7
+  },
+  {
+   "i": 1,
+   "start": 2.11,
+   "end": 2.77,
+   "text": "entonces,",
+   "first": 8,
+   "last": 8
+  },
+  {
+   "i": 2,
+   "start": 2.77,
+   "end": 4.1,
+   "text": "¿cómo se dobla una pantalla",
+   "first": 9,
+   "last": 13
+  },
+  {
+   "i": 3,
+   "start": 4.1,
+   "end": 5.3,
+   "text": "de un teléfono plegable?",
+   "first": 14,
+   "last": 17
+  },
+  {
+   "i": 4,
+   "start": 5.3,
+   "end": 6.02,
+   "text": "Primero,",
+   "first": 18,
+   "last": 18
+  },
+  {
+   "i": 5,
+   "start": 6.02,
+   "end": 8.9,
+   "text": "la pantalla no está sobre vidrio rígido,",
+   "first": 19,
+   "last": 25
+  },
+  {
+   "i": 6,
+   "start": 8.9,
+   "end": 10.08,
+   "text": "sino sobre una base de",
+   "first": 26,
+   "last": 30
+  },
+  {
+   "i": 7,
+   "start": 10.08,
+   "end": 11.5,
+   "text": "plástico muy delgada.",
+   "first": 31,
+   "last": 33
+  },
+  {
+   "i": 8,
+   "start": 11.5,
+   "end": 13.61,
+   "text": "Los píxeles OLED se fabrican encima",
+   "first": 34,
+   "last": 39
+  },
+  {
+   "i": 9,
+   "start": 13.61,
+   "end": 15.0,
+   "text": "de esa capa flexible.",
+   "first": 40,
+   "last": 43
+  },
+  {
+   "i": 10,
+   "start": 15.0,
+   "end": 17.3,
+   "text": "Segundo, la física de un doblez.",
+   "first": 44,
+   "last": 49
+  },
+  {
+   "i": 11,
+   "start": 17.3,
+   "end": 18.5,
+   "text": "Cuando doblas algo,",
+   "first": 50,
+   "last": 52
+  },
+  {
+   "i": 12,
+   "start": 18.5,
+   "end": 20.2,
+   "text": "la cara de afuera se estira",
+   "first": 53,
+   "last": 58
+  },
+  {
+   "i": 13,
+   "start": 20.2,
+   "end": 21.7,
+   "text": "y la adentro se comprime.",
+   "first": 59,
+   "last": 63
+  },
+  {
+   "i": 14,
+   "start": 21.7,
+   "end": 23.31,
+   "text": "Pero en medio hay una línea que",
+   "first": 64,
+   "last": 70
+  },
+  {
+   "i": 15,
+   "start": 23.31,
+   "end": 24.91,
+   "text": "ni se estira ni se comprime,",
+   "first": 71,
+   "last": 76
+  },
+  {
+   "i": 16,
+   "start": 24.91,
+   "end": 26.0,
+   "text": "el plano neutro.",
+   "first": 77,
+   "last": 79
+  },
+  {
+   "i": 17,
+   "start": 26.14,
+   "end": 28.11,
+   "text": "Los ingenieros acomodan las capas",
+   "first": 80,
+   "last": 84
+  },
+  {
+   "i": 18,
+   "start": 28.11,
+   "end": 29.21,
+   "text": "para que lo más frágil,",
+   "first": 85,
+   "last": 89
+  },
+  {
+   "i": 19,
+   "start": 29.21,
+   "end": 31.0,
+   "text": "los circuitos y los píxeles,",
+   "first": 90,
+   "last": 94
+  },
+  {
+   "i": 20,
+   "start": 31.0,
+   "end": 32.7,
+   "text": "queden justo en esa parte plana.",
+   "first": 95,
+   "last": 100
+  },
+  {
+   "i": 21,
+   "start": 32.7,
+   "end": 34.38,
+   "text": "Así la pantalla se dobla miles",
+   "first": 101,
+   "last": 106
+  },
+  {
+   "i": 22,
+   "start": 34.38,
+   "end": 36.015,
+   "text": "de veces sin que se rompa.",
+   "first": 107,
+   "last": 112
+  }
+ ]
+}

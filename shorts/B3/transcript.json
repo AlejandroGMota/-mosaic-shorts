@@ -1,0 +1,904 @@
+{
+ "schema": "mosaic-transcript/1",
+ "id": "B3",
+ "short": "b3-una-pantalla-que-se-cura-sola-la-patente-de-apple",
+ "language": "es",
+ "duration": 27.803,
+ "engine": "whisper.cpp",
+ "model": "ggml-large-v3-turbo-q5_0.bin",
+ "source_take": "b3-una-pantalla-que-se-cura-sola-la-patente-de-apple_toma-01.wav",
+ "created": "2026-10-27T20:58:54Z",
+ "text": "Y si tu pantalla se repara sola, Apple tiene una patente para pantallas pregables con una capa que se autorrepara. La idea, en la cubierta va un polímero especial que si se raya o se marca un poco, ese material puede volver a fluir y cerrar la marca. Y el proceso se activa o se acelera con calor, con luz o con corriente eléctrica. Ahora lo importante, una patente no es un producto. Apple registra muchas ideas que nunca llegan a la tienda. Pero eso dice mucho sobre el problema que está intentando resolver.",
+ "words": [
+  {
+   "i": 0,
+   "text": "Y",
+   "norm": "y",
+   "start": 0.08,
+   "end": 0.14,
+   "p": 0.23
+  },
+  {
+   "i": 1,
+   "text": "si",
+   "norm": "si",
+   "start": 0.14,
+   "end": 0.24,
+   "p": 0.959
+  },
+  {
+   "i": 2,
+   "text": "tu",
+   "norm": "tu",
+   "start": 0.24,
+   "end": 0.4,
+   "p": 0.971
+  },
+  {
+   "i": 3,
+   "text": "pantalla",
+   "norm": "pantalla",
+   "start": 0.4,
+   "end": 1.03,
+   "p": 0.99
+  },
+  {
+   "i": 4,
+   "text": "se",
+   "norm": "se",
+   "start": 1.03,
+   "end": 1.23,
+   "p": 0.979
+  },
+  {
+   "i": 5,
+   "text": "repara",
+   "norm": "repara",
+   "start": 1.23,
+   "end": 1.66,
+   "p": 0.897
+  },
+  {
+   "i": 6,
+   "text": "sola,",
+   "norm": "sola",
+   "start": 1.66,
+   "end": 2.23,
+   "p": 0.607
+  },
+  {
+   "i": 7,
+   "text": "Apple",
+   "norm": "apple",
+   "start": 2.23,
+   "end": 2.43,
+   "p": 0.851
+  },
+  {
+   "i": 8,
+   "text": "tiene",
+   "norm": "tiene",
+   "start": 2.43,
+   "end": 2.74,
+   "p": 0.975
+  },
+  {
+   "i": 9,
+   "text": "una",
+   "norm": "una",
+   "start": 2.74,
+   "end": 2.97,
+   "p": 0.958
+  },
+  {
+   "i": 10,
+   "text": "patente",
+   "norm": "patente",
+   "start": 2.97,
+   "end": 3.38,
+   "p": 0.996
+  },
+  {
+   "i": 11,
+   "text": "para",
+   "norm": "para",
+   "start": 3.38,
+   "end": 3.62,
+   "p": 0.976
+  },
+  {
+   "i": 12,
+   "text": "pantallas",
+   "norm": "pantallas",
+   "start": 3.62,
+   "end": 4.09,
+   "p": 0.967
+  },
+  {
+   "i": 13,
+   "text": "pregables",
+   "norm": "pregables",
+   "start": 4.09,
+   "end": 4.71,
+   "p": 0.92
+  },
+  {
+   "i": 14,
+   "text": "con",
+   "norm": "con",
+   "start": 4.71,
+   "end": 4.82,
+   "p": 0.562
+  },
+  {
+   "i": 15,
+   "text": "una",
+   "norm": "una",
+   "start": 4.82,
+   "end": 4.99,
+   "p": 0.955
+  },
+  {
+   "i": 16,
+   "text": "capa",
+   "norm": "capa",
+   "start": 4.99,
+   "end": 5.37,
+   "p": 0.969
+  },
+  {
+   "i": 17,
+   "text": "que",
+   "norm": "que",
+   "start": 5.37,
+   "end": 5.46,
+   "p": 0.963
+  },
+  {
+   "i": 18,
+   "text": "se",
+   "norm": "se",
+   "start": 5.46,
+   "end": 5.58,
+   "p": 0.863
+  },
+  {
+   "i": 19,
+   "text": "autorrepara.",
+   "norm": "autorrepara",
+   "start": 5.58,
+   "end": 6.26,
+   "p": 0.791
+  },
+  {
+   "i": 20,
+   "text": "La",
+   "norm": "la",
+   "start": 6.26,
+   "end": 6.4,
+   "p": 0.915
+  },
+  {
+   "i": 21,
+   "text": "idea,",
+   "norm": "idea",
+   "start": 6.4,
+   "end": 6.8,
+   "p": 0.706
+  },
+  {
+   "i": 22,
+   "text": "en",
+   "norm": "en",
+   "start": 6.8,
+   "end": 6.96,
+   "p": 0.968
+  },
+  {
+   "i": 23,
+   "text": "la",
+   "norm": "la",
+   "start": 6.96,
+   "end": 7.08,
+   "p": 0.994
+  },
+  {
+   "i": 24,
+   "text": "cubierta",
+   "norm": "cubierta",
+   "start": 7.08,
+   "end": 7.61,
+   "p": 0.996
+  },
+  {
+   "i": 25,
+   "text": "va",
+   "norm": "va",
+   "start": 7.61,
+   "end": 7.75,
+   "p": 0.88
+  },
+  {
+   "i": 26,
+   "text": "un",
+   "norm": "un",
+   "start": 7.75,
+   "end": 7.89,
+   "p": 0.95
+  },
+  {
+   "i": 27,
+   "text": "polímero",
+   "norm": "polimero",
+   "start": 7.89,
+   "end": 8.49,
+   "p": 0.976
+  },
+  {
+   "i": 28,
+   "text": "especial",
+   "norm": "especial",
+   "start": 8.49,
+   "end": 8.96,
+   "p": 0.991
+  },
+  {
+   "i": 29,
+   "text": "que",
+   "norm": "que",
+   "start": 8.96,
+   "end": 9.16,
+   "p": 0.798
+  },
+  {
+   "i": 30,
+   "text": "si",
+   "norm": "si",
+   "start": 9.16,
+   "end": 9.3,
+   "p": 0.945
+  },
+  {
+   "i": 31,
+   "text": "se",
+   "norm": "se",
+   "start": 9.3,
+   "end": 9.44,
+   "p": 0.99
+  },
+  {
+   "i": 32,
+   "text": "raya",
+   "norm": "raya",
+   "start": 9.44,
+   "end": 9.71,
+   "p": 0.96
+  },
+  {
+   "i": 33,
+   "text": "o",
+   "norm": "o",
+   "start": 9.71,
+   "end": 9.78,
+   "p": 0.995
+  },
+  {
+   "i": 34,
+   "text": "se",
+   "norm": "se",
+   "start": 9.78,
+   "end": 9.92,
+   "p": 0.951
+  },
+  {
+   "i": 35,
+   "text": "marca",
+   "norm": "marca",
+   "start": 9.92,
+   "end": 10.32,
+   "p": 0.97
+  },
+  {
+   "i": 36,
+   "text": "un",
+   "norm": "un",
+   "start": 10.32,
+   "end": 10.4,
+   "p": 0.986
+  },
+  {
+   "i": 37,
+   "text": "poco,",
+   "norm": "poco",
+   "start": 10.4,
+   "end": 10.97,
+   "p": 0.917
+  },
+  {
+   "i": 38,
+   "text": "ese",
+   "norm": "ese",
+   "start": 10.97,
+   "end": 11.12,
+   "p": 0.604
+  },
+  {
+   "i": 39,
+   "text": "material",
+   "norm": "material",
+   "start": 11.12,
+   "end": 11.64,
+   "p": 0.99
+  },
+  {
+   "i": 40,
+   "text": "puede",
+   "norm": "puede",
+   "start": 11.64,
+   "end": 11.96,
+   "p": 0.982
+  },
+  {
+   "i": 41,
+   "text": "volver",
+   "norm": "volver",
+   "start": 11.96,
+   "end": 12.41,
+   "p": 0.996
+  },
+  {
+   "i": 42,
+   "text": "a",
+   "norm": "a",
+   "start": 12.41,
+   "end": 12.46,
+   "p": 0.992
+  },
+  {
+   "i": 43,
+   "text": "fluir",
+   "norm": "fluir",
+   "start": 12.42,
+   "end": 12.73,
+   "p": 0.995
+  },
+  {
+   "i": 44,
+   "text": "y",
+   "norm": "y",
+   "start": 12.73,
+   "end": 12.79,
+   "p": 0.964
+  },
+  {
+   "i": 45,
+   "text": "cerrar",
+   "norm": "cerrar",
+   "start": 12.79,
+   "end": 13.3,
+   "p": 0.995
+  },
+  {
+   "i": 46,
+   "text": "la",
+   "norm": "la",
+   "start": 13.3,
+   "end": 13.57,
+   "p": 0.99
+  },
+  {
+   "i": 47,
+   "text": "marca.",
+   "norm": "marca",
+   "start": 13.57,
+   "end": 13.7,
+   "p": 0.776
+  },
+  {
+   "i": 48,
+   "text": "Y",
+   "norm": "y",
+   "start": 13.7,
+   "end": 13.84,
+   "p": 0.906
+  },
+  {
+   "i": 49,
+   "text": "el",
+   "norm": "el",
+   "start": 13.84,
+   "end": 13.9,
+   "p": 0.995
+  },
+  {
+   "i": 50,
+   "text": "proceso",
+   "norm": "proceso",
+   "start": 13.9,
+   "end": 14.4,
+   "p": 0.995
+  },
+  {
+   "i": 51,
+   "text": "se",
+   "norm": "se",
+   "start": 14.4,
+   "end": 14.51,
+   "p": 0.994
+  },
+  {
+   "i": 52,
+   "text": "activa",
+   "norm": "activa",
+   "start": 14.51,
+   "end": 14.93,
+   "p": 0.987
+  },
+  {
+   "i": 53,
+   "text": "o",
+   "norm": "o",
+   "start": 14.93,
+   "end": 14.98,
+   "p": 0.762
+  },
+  {
+   "i": 54,
+   "text": "se",
+   "norm": "se",
+   "start": 14.98,
+   "end": 15.11,
+   "p": 0.981
+  },
+  {
+   "i": 55,
+   "text": "acelera",
+   "norm": "acelera",
+   "start": 15.11,
+   "end": 15.56,
+   "p": 0.999
+  },
+  {
+   "i": 56,
+   "text": "con",
+   "norm": "con",
+   "start": 15.56,
+   "end": 15.93,
+   "p": 0.85
+  },
+  {
+   "i": 57,
+   "text": "calor,",
+   "norm": "calor",
+   "start": 15.93,
+   "end": 16.24,
+   "p": 0.944
+  },
+  {
+   "i": 58,
+   "text": "con",
+   "norm": "con",
+   "start": 16.24,
+   "end": 16.44,
+   "p": 0.892
+  },
+  {
+   "i": 59,
+   "text": "luz",
+   "norm": "luz",
+   "start": 16.44,
+   "end": 16.67,
+   "p": 0.997
+  },
+  {
+   "i": 60,
+   "text": "o",
+   "norm": "o",
+   "start": 16.67,
+   "end": 16.72,
+   "p": 0.968
+  },
+  {
+   "i": 61,
+   "text": "con",
+   "norm": "con",
+   "start": 16.71,
+   "end": 16.91,
+   "p": 0.934
+  },
+  {
+   "i": 62,
+   "text": "corriente",
+   "norm": "corriente",
+   "start": 16.91,
+   "end": 17.52,
+   "p": 0.998
+  },
+  {
+   "i": 63,
+   "text": "eléctrica.",
+   "norm": "electrica",
+   "start": 17.52,
+   "end": 18.5,
+   "p": 0.992
+  },
+  {
+   "i": 64,
+   "text": "Ahora",
+   "norm": "ahora",
+   "start": 18.5,
+   "end": 18.82,
+   "p": 0.985
+  },
+  {
+   "i": 65,
+   "text": "lo",
+   "norm": "lo",
+   "start": 18.82,
+   "end": 18.94,
+   "p": 0.897
+  },
+  {
+   "i": 66,
+   "text": "importante,",
+   "norm": "importante",
+   "start": 18.94,
+   "end": 19.73,
+   "p": 0.858
+  },
+  {
+   "i": 67,
+   "text": "una",
+   "norm": "una",
+   "start": 19.73,
+   "end": 19.92,
+   "p": 0.971
+  },
+  {
+   "i": 68,
+   "text": "patente",
+   "norm": "patente",
+   "start": 19.92,
+   "end": 20.37,
+   "p": 0.998
+  },
+  {
+   "i": 69,
+   "text": "no",
+   "norm": "no",
+   "start": 20.37,
+   "end": 20.53,
+   "p": 0.973
+  },
+  {
+   "i": 70,
+   "text": "es",
+   "norm": "es",
+   "start": 20.53,
+   "end": 20.73,
+   "p": 0.999
+  },
+  {
+   "i": 71,
+   "text": "un",
+   "norm": "un",
+   "start": 20.73,
+   "end": 20.78,
+   "p": 0.994
+  },
+  {
+   "i": 72,
+   "text": "producto.",
+   "norm": "producto",
+   "start": 20.76,
+   "end": 21.5,
+   "p": 0.773
+  },
+  {
+   "i": 73,
+   "text": "Apple",
+   "norm": "apple",
+   "start": 21.5,
+   "end": 21.81,
+   "p": 0.605
+  },
+  {
+   "i": 74,
+   "text": "registra",
+   "norm": "registra",
+   "start": 21.81,
+   "end": 22.31,
+   "p": 0.995
+  },
+  {
+   "i": 75,
+   "text": "muchas",
+   "norm": "muchas",
+   "start": 22.31,
+   "end": 22.69,
+   "p": 0.993
+  },
+  {
+   "i": 76,
+   "text": "ideas",
+   "norm": "ideas",
+   "start": 22.69,
+   "end": 23.19,
+   "p": 0.996
+  },
+  {
+   "i": 77,
+   "text": "que",
+   "norm": "que",
+   "start": 23.19,
+   "end": 23.24,
+   "p": 0.995
+  },
+  {
+   "i": 78,
+   "text": "nunca",
+   "norm": "nunca",
+   "start": 23.21,
+   "end": 23.5,
+   "p": 0.99
+  },
+  {
+   "i": 79,
+   "text": "llegan",
+   "norm": "llegan",
+   "start": 23.5,
+   "end": 23.87,
+   "p": 0.994
+  },
+  {
+   "i": 80,
+   "text": "a",
+   "norm": "a",
+   "start": 23.87,
+   "end": 23.93,
+   "p": 0.993
+  },
+  {
+   "i": 81,
+   "text": "la",
+   "norm": "la",
+   "start": 23.93,
+   "end": 24.05,
+   "p": 0.993
+  },
+  {
+   "i": 82,
+   "text": "tienda.",
+   "norm": "tienda",
+   "start": 24.05,
+   "end": 24.56,
+   "p": 0.848
+  },
+  {
+   "i": 83,
+   "text": "Pero",
+   "norm": "pero",
+   "start": 24.56,
+   "end": 24.79,
+   "p": 0.982
+  },
+  {
+   "i": 84,
+   "text": "eso",
+   "norm": "eso",
+   "start": 24.79,
+   "end": 24.96,
+   "p": 0.629
+  },
+  {
+   "i": 85,
+   "text": "dice",
+   "norm": "dice",
+   "start": 24.96,
+   "end": 25.19,
+   "p": 0.984
+  },
+  {
+   "i": 86,
+   "text": "mucho",
+   "norm": "mucho",
+   "start": 25.19,
+   "end": 25.47,
+   "p": 0.996
+  },
+  {
+   "i": 87,
+   "text": "sobre",
+   "norm": "sobre",
+   "start": 25.47,
+   "end": 25.79,
+   "p": 0.993
+  },
+  {
+   "i": 88,
+   "text": "el",
+   "norm": "el",
+   "start": 25.79,
+   "end": 25.86,
+   "p": 0.97
+  },
+  {
+   "i": 89,
+   "text": "problema",
+   "norm": "problema",
+   "start": 25.86,
+   "end": 26.32,
+   "p": 0.991
+  },
+  {
+   "i": 90,
+   "text": "que",
+   "norm": "que",
+   "start": 26.32,
+   "end": 26.72,
+   "p": 0.995
+  },
+  {
+   "i": 91,
+   "text": "está",
+   "norm": "esta",
+   "start": 26.72,
+   "end": 26.79,
+   "p": 0.901
+  },
+  {
+   "i": 92,
+   "text": "intentando",
+   "norm": "intentando",
+   "start": 26.79,
+   "end": 27.29,
+   "p": 0.994
+  },
+  {
+   "i": 93,
+   "text": "resolver.",
+   "norm": "resolver",
+   "start": 27.29,
+   "end": 27.8,
+   "p": 0.977
+  }
+ ],
+ "segments": [
+  {
+   "i": 0,
+   "start": 0.08,
+   "end": 2.23,
+   "text": "Y si tu pantalla se repara sola,",
+   "first": 0,
+   "last": 6
+  },
+  {
+   "i": 1,
+   "start": 2.23,
+   "end": 4.09,
+   "text": "Apple tiene una patente para pantallas",
+   "first": 7,
+   "last": 12
+  },
+  {
+   "i": 2,
+   "start": 4.09,
+   "end": 6.26,
+   "text": "pregables con una capa que se autorrepara.",
+   "first": 13,
+   "last": 19
+  },
+  {
+   "i": 3,
+   "start": 6.26,
+   "end": 6.8,
+   "text": "La idea,",
+   "first": 20,
+   "last": 21
+  },
+  {
+   "i": 4,
+   "start": 6.8,
+   "end": 8.96,
+   "text": "en la cubierta va un polímero especial",
+   "first": 22,
+   "last": 28
+  },
+  {
+   "i": 5,
+   "start": 8.96,
+   "end": 10.97,
+   "text": "que si se raya o se marca un poco,",
+   "first": 29,
+   "last": 37
+  },
+  {
+   "i": 6,
+   "start": 10.97,
+   "end": 12.42,
+   "text": "ese material puede volver a",
+   "first": 38,
+   "last": 42
+  },
+  {
+   "i": 7,
+   "start": 12.42,
+   "end": 13.7,
+   "text": "fluir y cerrar la marca.",
+   "first": 43,
+   "last": 47
+  },
+  {
+   "i": 8,
+   "start": 13.7,
+   "end": 14.98,
+   "text": "Y el proceso se activa o",
+   "first": 48,
+   "last": 53
+  },
+  {
+   "i": 9,
+   "start": 14.98,
+   "end": 16.24,
+   "text": "se acelera con calor,",
+   "first": 54,
+   "last": 57
+  },
+  {
+   "i": 10,
+   "start": 16.24,
+   "end": 18.5,
+   "text": "con luz o con corriente eléctrica.",
+   "first": 58,
+   "last": 63
+  },
+  {
+   "i": 11,
+   "start": 18.5,
+   "end": 19.73,
+   "text": "Ahora lo importante,",
+   "first": 64,
+   "last": 66
+  },
+  {
+   "i": 12,
+   "start": 19.73,
+   "end": 21.5,
+   "text": "una patente no es un producto.",
+   "first": 67,
+   "last": 72
+  },
+  {
+   "i": 13,
+   "start": 21.5,
+   "end": 23.21,
+   "text": "Apple registra muchas ideas que",
+   "first": 73,
+   "last": 77
+  },
+  {
+   "i": 14,
+   "start": 23.21,
+   "end": 24.56,
+   "text": "nunca llegan a la tienda.",
+   "first": 78,
+   "last": 82
+  },
+  {
+   "i": 15,
+   "start": 24.56,
+   "end": 26.32,
+   "text": "Pero eso dice mucho sobre el problema",
+   "first": 83,
+   "last": 89
+  },
+  {
+   "i": 16,
+   "start": 26.32,
+   "end": 27.8,
+   "text": "que está intentando resolver.",
+   "first": 90,
+   "last": 93
+  }
+ ]
+}
