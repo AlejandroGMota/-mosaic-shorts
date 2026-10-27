@@ -23,6 +23,56 @@ Guion: `guiones/shorts-hardware-2026-10-27.md` · Tomas: `audios/shorts-hardware
 | C4 | ¿Qué es un SoC? | ✅ 27 oct | ✗ 27 oct | — | — | — | — | descartado: débil / demasiado centrado en Apple |
 | C5 | Rosetta 2: apps de Intel en Mac ARM | ✅ 27 oct | ✗ 27 oct | — | — | — | — | descartado: débil / demasiado centrado en Apple |
 
+## Lote 02
+
+Guion: `guiones/shorts-lote-02-2026-10-27.md` · Tomas: `audios/shorts-lote-02-2026-10-27/` (solo en la Mac). Series M (memoria, chips y SO), I (IA por dentro), T (celular por dentro), R (internet y redes). 43 Shorts; 15 ⭐. Lo pendiente de verificar está al final del guion.
+
+| ID | Short | Guion | Grabado | Audio | Animación | Render | Publicado | Notas |
+|---|---|---|---|---|---|---|---|---|
+| M1 ⭐ | ¿Por qué tu disco de 1 TB solo muestra 931 GB? | ✅ 27 oct | — | — | — | — | — |  |
+| M2 ⭐ | ¿Borrar un archivo lo borra de verdad? | ✅ 27 oct | — | — | — | — | — |  |
+| M3 ⭐ | ¿Por qué apagar y prender arregla casi todo? | ✅ 27 oct | — | — | — | — | — |  |
+| M4 | ¿Qué es la memoria caché del procesador? | ✅ 27 oct | — | — | — | — | — |  |
+| M5 | ¿Por qué un SSD es mucho más rápido que un disco duro? | ✅ 27 oct | — | — | — | — | — |  |
+| M6 | ¿Cómo guarda datos una memoria USB sin pila? | ✅ 27 oct | — | — | — | — | — |  |
+| M7 | ¿Por qué un SSD se desgasta con el uso? | ✅ 27 oct | — | — | — | — | — | revisar TBW en 2–3 fichas técnicas |
+| M8 | ¿Qué es un transistor y por qué hay miles de millones? | ✅ 27 oct | — | — | — | — | — |  |
+| M9 | ¿Qué significan los «3 nanómetros» de un chip? | ✅ 27 oct | — | — | — | — | — |  |
+| M10 | ¿Cómo hace tu compu muchas cosas a la vez? | ✅ 27 oct | — | — | — | — | — | 6 ms es de CFS; Linux 6.6+ usa EEVDF |
+| M11 | ¿Qué pasa en tu compu desde que la prendes? | ✅ 27 oct | — | — | — | — | — |  |
+| I1 ⭐ | ¿Por qué una IA de 7B apenas cabe en una Mac de 8 GB? | ✅ 27 oct | — | — | — | — | — | probar en la Mac un 7B Q4 antes de grabar |
+| I2 ⭐ | ¿Cómo escribe una IA como ChatGPT? | ✅ 27 oct | — | — | — | — | — |  |
+| I3 ⭐ | ¿Por qué la IA no sabe contar letras? | ✅ 27 oct | — | — | — | — | — | confirmar en un tokenizer cómo se corta «ferrocarril» |
+| I4 ⭐ | ¿Por qué la IA inventa cosas con tanta seguridad? | ✅ 27 oct | — | — | — | — | — |  |
+| I5 | ¿Cómo aprende una IA a reconocer un gato? | ✅ 27 oct | — | — | — | — | — |  |
+| I6 | ¿Por qué la IA necesita tarjetas de video? | ✅ 27 oct | — | — | — | — | — |  |
+| I7 | ¿Cómo convierte una IA tu voz en texto? | ✅ 27 oct | — | — | — | — | — |  |
+| I8 | ¿Cómo dibuja una IA una imagen a partir de ruido? | ✅ 27 oct | — | — | — | — | — |  |
+| I9 | ¿Por qué la IA olvida lo que le dijiste antes? | ✅ 27 oct | — | — | — | — | — |  |
+| I10 | ¿Cómo sabe la IA que «rey» y «reina» se parecen? | ✅ 27 oct | — | — | — | — | — |  |
+| I11 | ¿Cuánta energía gasta una pregunta a la IA? | ✅ 27 oct | — | — | — | — | — | cifra de Google (may 2025); revisar si hay una más nueva |
+| T1 ⭐ | ¿Cómo sabe tu pantalla dónde la tocas? | ✅ 27 oct | — | — | — | — | — |  |
+| T2 | ¿Cómo sabe tu celular si lo volteas? | ✅ 27 oct | — | — | — | — | — |  |
+| T3 ⭐ | ¿Cómo sabe tu celular dónde estás sin internet? | ✅ 27 oct | — | — | — | — | — |  |
+| T4 ⭐ | ¿Por qué el último 20 % de carga tarda tanto? | ✅ 27 oct | — | — | — | — | — |  |
+| T5 | ¿Por qué la batería de tu celular dura menos cada año? | ✅ 27 oct | — | — | — | — | — |  |
+| T6 | ¿Cómo carga tu celular sin cables? | ✅ 27 oct | — | — | — | — | — |  |
+| T7 ⭐ | ¿Por qué tu celular toma varias fotos con un clic? | ✅ 27 oct | — | — | — | — | — |  |
+| T8 | ¿Por qué una foto de 12 megapíxeles pesa solo 3 MB? | ✅ 27 oct | — | — | — | — | — |  |
+| T9 | ¿Por qué tu celular se pone lento cuando se calienta? | ✅ 27 oct | — | — | — | — | — |  |
+| T10 | ¿Cómo sabe tu celular que lo pegaste a la oreja? | ✅ 27 oct | — | — | — | — | — |  |
+| T11 | ¿Cómo vibra tu celular? | ✅ 27 oct | — | — | — | — | — |  |
+| R1 ⭐ | ¿Cómo llega tu mensaje de WhatsApp a otro país? | ✅ 27 oct | — | — | — | — | — |  |
+| R2 ⭐ | ¿Internet viaja por satélite o por el fondo del mar? | ✅ 27 oct | — | — | — | — | — | conteo de cables cambia rápido |
+| R3 | ¿Por qué toda tu casa comparte una sola IP? | ✅ 27 oct | — | — | — | — | — |  |
+| R4 | ¿Cómo encuentra tu celular una página web? | ✅ 27 oct | — | — | — | — | — | revisar conteo de copias raíz |
+| R5 | ¿Por qué el wifi de 5 GHz llega menos lejos? | ✅ 27 oct | — | — | — | — | — |  |
+| R6 | ¿Qué protege el candado de tu navegador? | ✅ 27 oct | — | — | — | — | — |  |
+| R7 ⭐ | ¿Por qué tus «100 megas» nunca bajan a 100? | ✅ 27 oct | — | — | — | — | — |  |
+| R8 | ¿Qué es el ping y por qué arruina tus partidas? | ✅ 27 oct | — | — | — | — | — |  |
+| R9 | ¿Cómo viaja la luz dentro de la fibra óptica? | ✅ 27 oct | — | — | — | — | — |  |
+| R10 ⭐ | ¿Cómo sabe YouTube bajar la calidad del video? | ✅ 27 oct | — | — | — | — | — |  |
+
 ## Notas
 
 - **Pipeline (27 oct, nube):** `pipeline/` listo: `shorts audio|video|estado|doctor|prueba`, plantilla `animaciones/_base/` y `animaciones/A2/`. Probado en la nube con un WAV sintético y Chromium; falta probar en la Mac con whisper.cpp, Edge y el audio real.
