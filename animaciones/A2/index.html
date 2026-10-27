@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>A2 · Apertura variable del iPhone 18 Pro</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  /* Layout zones (stage px): iris centered at y 820, readout/steps 1215-1420, caption 1440-1560. */
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+
+  .readout { position: absolute; left: 80px; width: 920px; top: 1215px; text-align: center; }
+  .readout .fval { font-size: 120px; line-height: 1; }
+  .readout .fval .f { font-weight: 450; color: var(--ink-2); }
+  .meter { position: relative; margin: 26px auto 0; width: 640px; height: 16px; border-radius: 8px; background: var(--paper-2); }
+  .meter .bar { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 8px; background: var(--amber); }
+  .meter-legend { display: flex; justify-content: space-between; width: 640px; margin: 10px auto 0; font-size: 30px; color: var(--muted); }
+  .meter-legend b { color: var(--ink); font-weight: 620; }
+
+  .steps { position: absolute; left: 80px; width: 920px; top: 1250px; display: flex; justify-content: center; gap: 22px; }
+  .step { position: relative; width: 198px; text-align: center; }
+  .step .pill { height: 92px; line-height: 88px; border-radius: 46px; border: 2px solid var(--line); font-size: 46px; font-weight: 600; color: var(--ink-2); background: var(--paper); }
+  .step .luz { margin-top: 12px; font-size: 28px; color: var(--muted); }
+  .step .tag { position: absolute; left: 50%; top: -50px; transform: translateX(-50%); font-size: 26px; font-weight: 700; letter-spacing: 0.1em; color: var(--mint); opacity: 0; }
+
+  #cap-hair svg { display: block; margin: 0 auto 6px; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-phone" viewBox="0 0 1080 1920"></svg>
+    <svg class="full scene" id="sc-iris" viewBox="0 0 1080 1920"></svg>
+    <svg class="full scene" id="sc-dslr" viewBox="0 0 1080 1920"></svg>
+
+    <div class="m-caption scene" id="cap-phone" style="top:1420px">Apertura variable<small>por primera vez en un iPhone</small></div>
+    <div class="m-caption scene" id="cap-blades" style="top:1270px"><span class="m-num" id="blade-count">6</span> hojas<small>dentro de la cámara principal</small></div>
+    <div class="m-caption scene" id="cap-hair" style="top:1240px"></div>
+    <div class="m-caption scene" id="cap-laser" style="top:1270px">Cortadas con láser<small>de un compuesto de polímero</small></div>
+    <div class="m-caption scene" id="cap-rotor" style="top:1270px">Un rotor las gira a la vez<small>todas se mueven juntas</small></div>
+    <div class="m-caption scene" id="cap-hex" style="top:1270px">Forman un hexágono<small>que se abre o se cierra</small></div>
+
+    <div class="readout scene" id="readout">
+      <div class="fval m-num"><span class="f">f/</span><span id="fval">1.48</span></div>
+      <div class="meter"><div class="bar" id="meter-bar"></div></div>
+      <div class="meter-legend"><span>luz que entra</span><span><b id="meter-x">×7.3</b> vs. f/4</span></div>
+    </div>
+    <div class="m-caption scene" id="cap-max" style="top:1440px">Abierto: máxima luz</div>
+    <div class="m-caption scene" id="cap-min" style="top:1440px">Cerrado: menos luz<small>pero más cosas quedan enfocadas</small></div>
+
+    <div class="steps scene" id="steps"></div>
+    <div class="m-caption scene" id="cap-steps" style="top:1440px">Cuatro pasos en la app de Cámara</div>
+    <div class="m-caption scene" id="cap-auto" style="top:1440px">Por defecto f/1.8<small>y el iPhone decide solo</small></div>
+
+    <div class="m-caption scene" id="cap-cmp" style="top:1300px">El mismo mecanismo<small>que una cámara profesional</small></div>
+    <div class="m-caption scene" id="cap-mm" style="top:1300px">…en unos cuantos milímetros<small>(dibujo no a escala)</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, clamp, lerp, ease, ramp, fnum } = Mosaic;
+
+  // ---------------------------------------------------------------- optics
+  // f-number N = focal length / aperture diameter. With the focal length fixed, diameter ∝ 1/N,
+  // and the light that gets in ∝ area ∝ 1/N². f/1.48 vs f/4: (4 / 1.48)² ≈ 7.3×.
+  const STEPS = [1.48, 1.8, 2.8, 4];
+  const lightVsF4 = (N) => Math.pow(4 / N, 2);
+  const fmtLight = (N) => (N === 4 ? "×1" : "×" + lightVsF4(N).toFixed(1));
+
+  // ---------------------------------------------------------------- iris geometry
+  // N blades whose inner edges form a regular polygon of circumradius r. Blade k is bounded by
+  // side k (V_k → V_k+1), the extension of that side beyond V_k+1 up to the housing, the housing
+  // arc, and the extension of side k-1 beyond V_k. The blades tile the housing without overlap.
+  function rayToCircle(p, u, R) {
+    const b = p[0] * u[0] + p[1] * u[1];
+    const c = p[0] * p[0] + p[1] * p[1] - R * R;
+    const s = -b + Math.sqrt(Math.max(0, b * b - c));
+    return [p[0] + u[0] * s, p[1] + u[1] * s];
+  }
+  function irisPaths(n, r, rot, R) {
+    const V = [];
+    for (let k = 0; k < n; k++) {
+      const a = rot + (k * 2 * Math.PI) / n;
+      V.push([r * Math.cos(a), r * Math.sin(a)]);
+    }
+    const U = V.map((v, k) => {
+      const w = V[(k + 1) % n];
+      const dx = w[0] - v[0], dy = w[1] - v[1], l = Math.hypot(dx, dy);
+      return [dx / l, dy / l];
+    });
+    const blades = [];
+    for (let k = 0; k < n; k++) {
+      const v0 = V[k], v1 = V[(k + 1) % n];
+      const front = rayToCircle(v1, U[k], R);
+      const back = rayToCircle(v0, U[(k - 1 + n) % n], R);
+      let a1 = Math.atan2(front[1], front[0]);
+      let a0 = Math.atan2(back[1], back[0]);
+      let d = a0 - a1;
+      while (d > 0) d -= 2 * Math.PI;
+      while (d <= -2 * Math.PI) d += 2 * Math.PI;
+      const pts = [v0, v1, front];
+      const steps = Math.max(2, Math.ceil(Math.abs(d) / 0.08));
+      for (let i = 1; i < steps; i++) {
+        const a = a1 + (d * i) / steps;
+        pts.push([R * Math.cos(a), R * Math.sin(a)]);
+      }
+      pts.push(back);
+      blades.push("M" + pts.map((p) => p[0].toFixed(2) + " " + p[1].toFixed(2)).join(" L") + " Z");
+    }
+    const poly = V.map((p) => p[0].toFixed(2) + "," + p[1].toFixed(2)).join(" ");
+    return { blades, poly, V };
+  }
+
+  /** A lens front view: barrel, rotor ring with ticks, n blades and the light behind them. */
+  function makeIris(svg, { n, R, ring, rotorW, ticks }) {
+    const g = el("g", {}, svg);
+    const inner = el("g", {}, g);
+    el("circle", { r: R + ring + rotorW + 2, fill: "#d9d5cc" }, inner);
+    const rotor = el("circle", { r: R + ring + rotorW / 2, fill: "none", stroke: "#8f8a7f", "stroke-width": rotorW }, inner);
+    const tickG = el("g", {}, inner);
+    for (let i = 0; i < ticks; i++) {
+      const a = (i * 2 * Math.PI) / ticks;
+      const r0 = R + ring + 4, r1 = R + ring + rotorW - 4;
+      el("line", { x1: r0 * Math.cos(a), y1: r0 * Math.sin(a), x2: r1 * Math.cos(a), y2: r1 * Math.sin(a),
+        stroke: "#5c584f", "stroke-width": 3, "stroke-linecap": "round" }, tickG);
+    }
+    el("circle", { r: R + ring / 2, fill: "none", stroke: "#2e2d2a", "stroke-width": ring }, inner);
+    el("circle", { r: R + 1, fill: "#f4dc93" }, inner);
+    const clipId = "iris-clip-" + n + "-" + R;
+    el("circle", { r: R + 1 }, el("clipPath", { id: clipId }, el("defs", {}, inner)));
+    const bladeG = el("g", { "clip-path": `url(#${clipId})` }, inner);
+    const blades = [];
+    for (let k = 0; k < n; k++) {
+      blades.push(el("path", { fill: k % 2 ? "#3f3d38" : "#4a4842", stroke: "#77736a", "stroke-width": 2, "stroke-linejoin": "round" }, bladeG));
+    }
+    el("circle", { r: R + 1, fill: "none", stroke: "#2e2d2a", "stroke-width": 4 }, inner);
+    const hex = el("polygon", { fill: "none", stroke: "#3a9a80", "stroke-width": 6, "stroke-dasharray": "18 12", "stroke-linejoin": "round", opacity: 0 }, inner);
+    return {
+      g, rotor, tickG, blades, hex, n, R,
+      /** r = polygon circumradius, rot = polygon rotation (rad), rotorDeg = ring rotation. */
+      draw(r, rot, rotorDeg) {
+        const p = irisPaths(n, r, rot, R + 2);
+        p.blades.forEach((d, k) => blades[k].setAttribute("d", d));
+        hex.setAttribute("points", p.poly);
+        tickG.setAttribute("transform", `rotate(${rotorDeg.toFixed(3)})`);
+        return p;
+      },
+    };
+  }
+
+  // ---------------------------------------------------------------- scene objects
+  const IRIS = { cx: 540, cy: 820, R: 300 };
+  const R_MAX = 0.86 * IRIS.R; // f/1.48: blades almost fully retracted
+  const rOf = (N) => (R_MAX * 1.48) / N;
+  const rotOf = (r) => -Math.PI / 2 + (1 - r / R_MAX) * 0.9; // the polygon turns as it closes
+  const rotorOf = (r) => (1 - r / R_MAX) * -38;
+
+  let iris, dslr, phone, laser, laserDot, rotorArrow, stepEls = [];
+  const PHONE = { lens: [418, 558], lensR: 46 };
+
+  function buildPhone() {
+    const svg = $("#sc-phone");
+    phone = el("g", {}, svg);
+    el("rect", { x: 330, y: 470, width: 420, height: 860, rx: 66, fill: "#dedad2", stroke: "#b8b2a6", "stroke-width": 3 }, phone);
+    el("rect", { x: 352, y: 492, width: 228, height: 228, rx: 54, fill: "#d2cdc3", stroke: "#b8b2a6", "stroke-width": 2 }, phone);
+    const lens = (cx, cy, main) => {
+      el("circle", { cx, cy, r: 46, fill: "#2e2d2a", stroke: "#a39e93", "stroke-width": 4 }, phone);
+      el("circle", { cx, cy, r: 29, fill: "#1d1d1b" }, phone);
+      el("circle", { cx: cx - 9, cy: cy - 9, r: 6, fill: "#5d5b56" }, phone);
+      if (main) return el("circle", { cx, cy, r: 56, fill: "none", stroke: "var(--amber)", "stroke-width": 6, opacity: 0 }, phone);
+    };
+    PHONE.ring = lens(418, 558, true);
+    lens(418, 654);
+    lens(514, 606);
+    el("circle", { cx: 514, cy: 532, r: 13, fill: "#f1ede4", stroke: "#b8b2a6", "stroke-width": 2 }, phone);
+    el("circle", { cx: 514, cy: 680, r: 14, fill: "#3a3935" }, phone);
+  }
+
+  function buildIris() {
+    const svg = $("#sc-iris");
+    const root = el("g", { transform: `translate(${IRIS.cx} ${IRIS.cy})` }, svg);
+    iris = makeIris(root, { n: 6, R: IRIS.R, ring: 40, rotorW: 30, ticks: 36 });
+    iris.root = root;
+    // laser trace around blade 0 (path updated per frame)
+    laser = el("path", { fill: "none", stroke: "var(--amber)", "stroke-width": 7, "stroke-linejoin": "round", "stroke-linecap": "round", pathLength: 100, opacity: 0 }, iris.g);
+    laserDot = el("circle", { r: 11, fill: "#fff6d8", stroke: "var(--amber)", "stroke-width": 5, opacity: 0 }, iris.g);
+    // rotation arrow around the rotor ring
+    const Ra = IRIS.R + 40 + 30 + 26;
+    const a0 = -2.4, a1 = -0.75;
+    const p = (a) => `${(Ra * Math.cos(a)).toFixed(1)} ${(Ra * Math.sin(a)).toFixed(1)}`;
+    rotorArrow = el("g", { opacity: 0 }, iris.g);
+    el("path", { d: `M${p(a0)} A${Ra} ${Ra} 0 0 1 ${p(a1)}`, fill: "none", stroke: "var(--blue)", "stroke-width": 7, "stroke-linecap": "round" }, rotorArrow);
+    const tip = [Ra * Math.cos(a1), Ra * Math.sin(a1)];
+    const tan = [-Math.sin(a1), Math.cos(a1)], nrm = [Math.cos(a1), Math.sin(a1)];
+    const q = (s, t) => `${(tip[0] + tan[0] * s + nrm[0] * t).toFixed(1)},${(tip[1] + tan[1] * s + nrm[1] * t).toFixed(1)}`;
+    el("polygon", { points: `${q(26, 0)} ${q(-6, 18)} ${q(-6, -18)}`, fill: "var(--blue)" }, rotorArrow);
+  }
+
+  function buildDslr() {
+    const svg = $("#sc-dslr");
+    const root = el("g", { transform: "translate(660 820)" }, svg);
+    dslr = makeIris(root, { n: 9, R: 210, ring: 46, rotorW: 30, ticks: 60 });
+    el("text", { x: 0, y: 360, "text-anchor": "middle", class: "m-label", text: "Lente de réflex" }, root);
+    const lab = el("g", { id: "iphone-label" }, svg);
+    el("text", { x: 210, y: 1180, "text-anchor": "middle", class: "m-label", text: "iPhone 18 Pro" }, lab);
+  }
+
+  function buildHair() {
+    const cap = $("#cap-hair");
+    const svg = el("svg", { width: 760, height: 190, viewBox: "0 0 760 190" }, cap);
+    // cross-sections: a hair (circle) and a blade (thinner strip). Not to a measured scale.
+    el("circle", { cx: 150, cy: 80, r: 70, fill: "#5b4a3a" }, svg);
+    el("text", { x: 150, y: 184, "text-anchor": "middle", class: "m-label", text: "cabello" }, svg);
+    el("rect", { x: 330, y: 62, width: 400, height: 36, rx: 4, fill: "#45433e" }, svg);
+    el("text", { x: 530, y: 184, "text-anchor": "middle", class: "m-label", text: "hoja (corte)" }, svg);
+    el("div", { text: "Más delgadas que un cabello" }, cap);
+  }
+
+  function buildSteps() {
+    const box = $("#steps");
+    stepEls = STEPS.map((N) => {
+      const s = el("div", { class: "step" }, box);
+      const tag = el("div", { class: "tag", text: "AUTO" }, s);
+      const pill = el("div", { class: "pill m-num", text: "f/" + N }, s);
+      el("div", { class: "luz", text: "luz " + fmtLight(N) }, s);
+      return { N, s, tag, pill };
+    });
+  }
+
+  // ---------------------------------------------------------------- timeline
+  /** Value that moves to list[i][1] starting at list[i][0] over `dur` seconds. Pure in t. */
+  function stepTo(t, list, dur, v0) {
+    let v = v0;
+    for (const [ti, vi] of list) {
+      if (t < ti) break;
+      v = lerp(v, vi, ramp(t, ti, ti + dur, ease.inOut));
+    }
+    return v;
+  }
+
+  function fAt(t, A) {
+    // Aperture radius over the whole Short, as f-number targets anchored to the narration.
+    const r = stepTo(t, [
+      [A.rotor.start, rOf(4)],
+      [A.mismo.end, rOf(2.8)],
+      [A.abre.start, rOf(1.8)],
+      [A.cierra.start, rOf(4)],
+      [A.abierto.start, rOf(1.48)],
+      [A.cerrado.start, rOf(4)],
+      [A.s148.start - 0.1, rOf(1.48)],
+      [A.s18.start - 0.1, rOf(1.8)],
+      [A.s28.start - 0.1, rOf(2.8)],
+      [A.s4.start - 0.1, rOf(4)],
+      [A.auto18.start - 0.1, rOf(1.8)],
+      [A.milimetros.start, rOf(4)],
+      [A.milimetros.end + 0.9, rOf(1.8)],
+    ], 0.75, rOf(2.8));
+    return r;
+  }
+
+  const SCRIPT = "Por primera vez, un iPhone tiene apertura variable. ¿Cómo cabe eso en un teléfono? " +
+    "Dentro de la cámara principal hay seis hojas, más delgadas que un cabello, cortadas con láser de un compuesto de polímero. " +
+    "Un pequeño rotor las gira al mismo tiempo, y al moverse forman un hexágono que se abre o se cierra. " +
+    "Abierto, efe uno punto cuatro ocho: entra la máxima luz. Cerrado, efe cuatro: entra mucho menos, pero más cosas quedan enfocadas. " +
+    "En la app de Cámara puedes elegir cuatro pasos: uno punto cuatro ocho, uno punto ocho, dos punto ocho y cuatro. " +
+    "Por defecto el iPhone usa efe uno punto ocho y decide solo. " +
+    "Es lo mismo que hace una cámara profesional… pero en unos cuantos milímetros.";
+
+  Mosaic.short({
+    kicker: "Cámara · iPhone 18 Pro",
+    title: "¿Cómo cabe una apertura variable en un iPhone?",
+    script: SCRIPT,
+    anchors: {
+      variable: "apertura variable",
+      cabe: "como cabe",
+      dentro: "dentro",
+      seis: ["seis hojas", "6 hojas"],
+      cabello: "cabello",
+      laser: "laser",
+      polimero: "polimero",
+      rotor: "rotor",
+      mismo: "mismo tiempo",
+      hexagono: "hexagono",
+      abre: "abre",
+      cierra: "cierra",
+      abierto: "abierto",
+      cerrado: "cerrado",
+      enfocadas: "enfocadas",
+      pasos: ["cuatro pasos", "4 pasos"],
+      s148: fnum("1.48"),
+      s18: fnum("1.8"),
+      s28: fnum("2.8"),
+      s4: fnum("4"),
+      defecto: "defecto",
+      auto18: fnum("1.8"),
+      profesional: "profesional",
+      milimetros: "milimetros",
+    },
+    build() {
+      buildPhone();
+      buildIris();
+      buildDslr();
+      buildHair();
+      buildSteps();
+    },
+    scenes: [
+      { el: "#sc-phone", from: 0, to: "dentro+0.35", fadeIn: 0.6, fadeOut: 0.45, rise: 0, update: phoneUpdate },
+      { el: "#cap-phone", from: "variable", to: "cabe", fade: 0.35 },
+      { el: "#sc-iris", from: "dentro-0.2", to: "end", fadeIn: 0.55, rise: 0, update: irisUpdate },
+      { el: "#cap-blades", from: "seis", to: "cabello-0.1", fade: 0.3, update: bladesCaption },
+      { el: "#cap-hair", from: "cabello-0.1", to: "laser-0.1", fade: 0.3 },
+      { el: "#cap-laser", from: "laser-0.1", to: "rotor-0.1", fade: 0.3 },
+      { el: "#cap-rotor", from: "rotor-0.1", to: "hexagono-0.1", fade: 0.3 },
+      { el: "#cap-hex", from: "hexagono-0.1", to: "abierto-0.1", fade: 0.3 },
+      { el: "#readout", from: "abierto-0.1", to: "pasos-0.2", fade: 0.3, update: readoutUpdate },
+      { el: "#cap-max", from: "abierto", to: "cerrado-0.1", fade: 0.3 },
+      { el: "#cap-min", from: "cerrado", to: "pasos-0.2", fade: 0.3 },
+      { el: "#steps", from: "pasos-0.1", to: "profesional-0.2", fade: 0.35, update: stepsUpdate },
+      { el: "#cap-steps", from: "pasos-0.1", to: "defecto-0.1", fade: 0.3 },
+      { el: "#cap-auto", from: "defecto-0.1", to: "profesional-0.2", fade: 0.3 },
+      { el: "#sc-dslr", from: "profesional-0.2", to: "end", fade: 0.6, rise: 0, update: dslrUpdate },
+      { el: "#cap-cmp", from: "profesional", to: "milimetros-0.2", fade: 0.3 },
+      { el: "#cap-mm", from: "milimetros-0.2", to: "end", fade: 0.3 },
+    ],
+  });
+
+  function phoneUpdate(t, s, A) {
+    PHONE.ring.setAttribute("opacity", String(ramp(t, A.variable.start, A.variable.start + 0.4) * (1 - ramp(t, A.cabe.start, A.cabe.start + 0.4))));
+    // zoom into the main lens: the lens barrel grows into the iris housing of the next scene
+    const p = ramp(t, A.cabe.start + 0.2, A.dentro.start + 0.2, ease.inOut);
+    const target = (IRIS.R + 40 + 30) / PHONE.lensR;
+    const sc = Math.pow(target, p);
+    const cx = lerp(PHONE.lens[0], IRIS.cx, p), cy = lerp(PHONE.lens[1], IRIS.cy, p);
+    phone.setAttribute("transform", `translate(${cx} ${cy}) scale(${sc}) translate(${-PHONE.lens[0]} ${-PHONE.lens[1]})`);
+  }
+
+  function irisUpdate(t, s, A) {
+    const r = fAt(t, A);
+    const p = iris.draw(r, rotOf(r), rotorOf(r));
+    // blades slide in one by one on "seis hojas"
+    iris.blades.forEach((b, k) => {
+      const q = ramp(t, A.seis.start + k * 0.2, A.seis.start + k * 0.2 + 0.45, ease.out);
+      const a = rotOf(r) + ((k + 0.5) * 2 * Math.PI) / 6;
+      b.setAttribute("transform", `translate(${(Math.cos(a) * (1 - q) * 160).toFixed(2)} ${(Math.sin(a) * (1 - q) * 160).toFixed(2)})`);
+      b.dataset.q = String(q);
+    });
+    // laser cut: one blade in focus, the trace runs around its outline
+    const lz = ramp(t, A.laser.start - 0.1, A.laser.start + 0.3) * (1 - ramp(t, A.rotor.start - 0.4, A.rotor.start));
+    const lp = ramp(t, A.laser.start, A.polimero.end + 0.2, ease.inOutSine);
+    iris.blades.forEach((b, k) => b.setAttribute("opacity", String(Number(b.dataset.q) * (k ? 1 - 0.6 * lz : 1))));
+    laser.setAttribute("d", iris.blades[0].getAttribute("d"));
+    laser.setAttribute("transform", iris.blades[0].getAttribute("transform") || "");
+    laser.setAttribute("opacity", String(lz));
+    laser.setAttribute("stroke-dasharray", "100 100");
+    laser.setAttribute("stroke-dashoffset", String(100 * (1 - lp)));
+    if (lz > 0) {
+      const L = laser.getTotalLength();
+      const pt = laser.getPointAtLength(L * lp);
+      laserDot.setAttribute("cx", pt.x.toFixed(2));
+      laserDot.setAttribute("cy", pt.y.toFixed(2));
+    }
+    laserDot.setAttribute("opacity", String(lz * (lp < 1 ? 1 : 0)));
+    // rotor: ring highlighted and an arrow showing the turn
+    const ro = ramp(t, A.rotor.start - 0.1, A.rotor.start + 0.3) * (1 - ramp(t, A.hexagono.start + 0.2, A.hexagono.start + 0.6));
+    iris.rotor.setAttribute("stroke", ro > 0 ? mix("#8f8a7f", "#2f5e8e", ro) : "#8f8a7f");
+    rotorArrow.setAttribute("opacity", String(ro));
+    // hexagon outline
+    const hx = ramp(t, A.hexagono.start, A.hexagono.start + 0.4) * (1 - ramp(t, A.abierto.start - 0.3, A.abierto.start + 0.1));
+    iris.hex.setAttribute("opacity", String(hx));
+    // final comparison: the iPhone iris shrinks to the left
+    const c = ramp(t, A.profesional.start - 0.2, A.profesional.start + 0.8, ease.inOut);
+    const x = lerp(IRIS.cx, 210, c), y = lerp(IRIS.cy, 960, c), sc = lerp(1, 0.36, c);
+    iris.root.setAttribute("transform", `translate(${x} ${y}) scale(${sc})`);
+    return p;
+  }
+
+  function bladesCaption(t, s, A) {
+    let n = 0;
+    for (let k = 0; k < 6; k++) if (t >= A.seis.start + k * 0.2 + 0.1) n = k + 1;
+    $("#blade-count").textContent = String(Math.max(1, n));
+  }
+
+  function readoutUpdate(t, s, A) {
+    const closed = t >= A.cerrado.start;
+    const N = closed ? 4 : 1.48;
+    $("#fval").textContent = String(N);
+    $("#meter-x").textContent = fmtLight(N);
+    // bar follows the real opening: light ∝ r², full bar = f/1.48
+    const r = fAt(t, A);
+    $("#meter-bar").style.width = (100 * Math.pow(r / R_MAX, 2)).toFixed(2) + "%";
+  }
+
+  function stepsUpdate(t, s, A) {
+    const at = [A.s148.start, A.s18.start, A.s28.start, A.s4.start];
+    let active = -1;
+    at.forEach((ta, i) => { if (t >= ta - 0.1) active = i; });
+    if (t >= A.auto18.start - 0.1) active = 1;
+    stepEls.forEach((st, i) => {
+      const on = i === active;
+      st.pill.style.background = on ? "var(--ink)" : "var(--paper)";
+      st.pill.style.color = on ? "var(--paper)" : "var(--ink-2)";
+      st.pill.style.borderColor = on ? "var(--ink)" : "var(--line)";
+    });
+    stepEls[1].tag.style.opacity = String(ramp(t, A.defecto.start, A.defecto.start + 0.4));
+  }
+
+  function dslrUpdate(t, s, A) {
+    // same f-number as the iPhone iris: same mechanism, bigger lens
+    const r = fAt(t, A) / R_MAX;
+    const rr = r * 0.86 * dslr.R;
+    dslr.draw(rr, -Math.PI / 2 + (1 - r) * 0.7, (1 - r) * -30);
+  }
+
+  function mix(a, b, p) {
+    const h = (c) => [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16));
+    const x = h(a), y = h(b);
+    return "rgb(" + x.map((v, i) => Math.round(lerp(v, y[i], p))).join(",") + ")";
+  }
+})();
+</script>
+</body>
+</html>

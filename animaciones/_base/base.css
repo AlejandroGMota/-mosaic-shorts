@@ -1,0 +1,188 @@
+/* Mosaic Shorts base style. 1080x1920 stage, light paper background, sober type.
+   Rules: no dark neon backgrounds, no blurred color blobs, no identical cards, no bounce.
+   One protagonist per scene. All motion comes from window.seek(t): CSS transitions and
+   animations are disabled so every frame depends only on t. */
+
+:root {
+  --paper: #f3f0e9;
+  --paper-2: #e9e5dc;
+  --ink: #1d1d1b;
+  --ink-2: #4a4843;
+  --muted: #827e74;
+  --line: #d6d1c5;
+
+  /* Channel colors, used sparingly on paper (never glowing). */
+  --blue: #2f5e8e;     /* the system / what is normal */
+  --fuchsia: #b3386b;  /* the problem / what is new */
+  --mint: #3a9a80;     /* the key idea */
+  --amber: #c98a1b;    /* warning, light */
+
+  --font: -apple-system, "SF Pro Display", "Helvetica Neue", "Inter", "Segoe UI", Arial, sans-serif;
+  --mono: "SF Mono", ui-monospace, Menlo, "Cascadia Mono", Consolas, monospace;
+
+  /* Safe area for Shorts: YouTube covers the top ~150 px, the bottom ~380 px and the right ~140 px. */
+  --safe-top: 170px;
+  --safe-bottom: 1540px;
+  --safe-left: 80px;
+  --safe-right: 940px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  transition: none !important;
+  animation: none !important;
+}
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--paper);
+}
+
+#stage {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1080px;
+  height: 1920px;
+  transform-origin: 0 0;
+  overflow: hidden;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font);
+  font-feature-settings: "tnum" 1;
+  -webkit-font-smoothing: antialiased;
+}
+
+#content {
+  position: absolute;
+  inset: 0;
+}
+
+/* Scenes are absolutely positioned layers; base.js controls opacity/visibility/transform. */
+.scene {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  visibility: hidden;
+  will-change: opacity, transform;
+}
+
+/* Title: the Short's question, small and editorial, top left. */
+.m-header {
+  position: absolute;
+  left: var(--safe-left);
+  top: var(--safe-top);
+  width: 860px;
+}
+.m-kicker {
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 18px;
+}
+.m-title {
+  font-size: 64px;
+  line-height: 1.08;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+  margin: 0;
+}
+
+/* Text helpers for scenes. */
+.m-caption {
+  position: absolute;
+  left: var(--safe-left);
+  width: 860px;
+  text-align: center;
+  font-size: 50px;
+  line-height: 1.2;
+  font-weight: 560;
+  color: var(--ink);
+}
+.m-caption small {
+  display: block;
+  margin-top: 10px;
+  font-size: 34px;
+  font-weight: 450;
+  color: var(--muted);
+}
+.m-num {
+  font-variant-numeric: tabular-nums;
+  font-weight: 640;
+  letter-spacing: -0.02em;
+}
+.m-label {
+  font-size: 32px;
+  font-weight: 560;
+  fill: var(--ink-2);
+  color: var(--ink-2);
+}
+.m-note {
+  font-size: 26px;
+  color: var(--muted);
+}
+
+/* Outro (last 2 s), added by base.js. */
+.mosaic-outro {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 34px;
+  opacity: 0;
+  visibility: hidden;
+  background: var(--paper);
+}
+.mosaic-outro .mark {
+  display: grid;
+  grid-template-columns: repeat(3, 34px);
+  gap: 6px;
+}
+.mosaic-outro .mark i {
+  display: block;
+  width: 34px;
+  height: 34px;
+  border-radius: 4px;
+  background: var(--ink);
+}
+.mosaic-outro .mark i:nth-child(2) { background: var(--blue); }
+.mosaic-outro .mark i:nth-child(4) { background: var(--mint); }
+.mosaic-outro .mark i:nth-child(6) { background: var(--fuchsia); }
+.mosaic-outro .mark i:nth-child(8) { background: var(--amber); }
+.mosaic-outro .name {
+  font-size: 46px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.mosaic-outro .cta {
+  font-size: 62px;
+  font-weight: 620;
+  letter-spacing: -0.01em;
+}
+
+/* Dev controls: only when the page is opened by hand (no window.RENDER). */
+#mosaic-dev {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 12px;
+  font: 13px/1.3 var(--mono);
+  color: #222;
+  background: rgba(255, 255, 255, 0.92);
+  border-top: 1px solid #ccc;
+  z-index: 10;
+}
+#mosaic-dev input[type="range"] { flex: 1; }
+#mosaic-dev .warn { color: #a3401b; max-width: 40%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

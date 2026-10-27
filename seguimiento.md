@@ -8,7 +8,7 @@ Guion: `guiones/shorts-hardware-2026-10-27.md` · Tomas: `audios/shorts-hardware
 | ID | Short | Guion | Grabado | Audio | Animación | Render | Publicado | Notas |
 |---|---|---|---|---|---|---|---|---|
 | A1 ⭐ | ¿Qué es la apertura de una cámara? | ✅ 27 oct | ✅ 27 oct | — | — | — | — | toma 01 |
-| A2 ⭐ | Apertura variable del iPhone 18 Pro | ✅ 27 oct | ✅ 27 oct | — | — | — | — | toma 01 · prueba de la plantilla (1.ª sesión en la nube) |
+| A2 ⭐ | Apertura variable del iPhone 18 Pro | ✅ 27 oct | ✅ 27 oct | — | ⏳ 27 oct | — | — | toma 01 · animación lista con tiempos de prueba; falta sincronizar con el audio real (ver nota) |
 | A3 ⭐ | ¿Por qué el fondo sale borroso? | ✅ 27 oct | ✅ 27 oct | — | — | — | — | toma 01 |
 | A4 | ¿Por qué no usar siempre la apertura más abierta? | ✅ 27 oct | ✅ 27 oct | — | — | — | — | toma 02 |
 | A5 | ¿Por qué las luces salen como estrellas? | ✅ 27 oct | ✅ 27 oct | — | — | — | — | toma 01 |
@@ -22,3 +22,8 @@ Guion: `guiones/shorts-hardware-2026-10-27.md` · Tomas: `audios/shorts-hardware
 | C3 | Núcleos de rendimiento y de eficiencia | ✅ 27 oct | ⏳ | — | — | — | — | |
 | C4 | ¿Qué es un SoC? | ✅ 27 oct | ⏳ | — | — | — | — | |
 | C5 | Rosetta 2: apps de Intel en Mac ARM | ✅ 27 oct | ⏳ | — | — | — | — | |
+
+## Notas
+
+- **Pipeline (27 oct, nube):** `pipeline/` listo: `shorts audio|video|estado|doctor|prueba`, plantilla `animaciones/_base/` y `animaciones/A2/`. Probado en la nube con un WAV sintético y Chromium; falta probar en la Mac con whisper.cpp, Edge y el audio real.
+- **A2 · lo que falta (27 oct):** en la Mac: `shorts doctor` → `shorts audio A2` → push de `shorts/A2/` → `shorts video A2 --preview` y revisar si alguna ancla sale con aviso ⚠ (palabra que whisper escribió distinto). Luego render final y revisión de Enrique.

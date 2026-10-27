@@ -1,0 +1,206 @@
+#!/usr/bin/env bash
+# Mosaic Shorts pipeline. Written for macOS bash 3.2: no associative arrays, no mapfile, no ${var,,}.
+# Alias: shorts='bash ~/proyectos/proyectosPersonales/socialmedia/pipeline/shorts'
+set -eu
+
+PIPELINE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_DIR="$(dirname "$PIPELINE_DIR")"
+PYTHON="${PYTHON:-python3}"
+
+usage() {
+  cat <<'EOF'
+Uso: shorts <comando> [opciones]
+
+  audio <ID> [<ID>...]     limpia, normaliza a -14 LUFS y transcribe la toma más reciente
+  audio --todo             lo mismo para cada Short con una toma nueva sin procesar
+        --engine guion|whisper.cpp|faster-whisper   (por defecto: config.toml)
+        --force            con --todo: rehace también lo ya procesado
+  video <ID>               render 1080x1920 25 fps con el audio.wav final
+        --preview          540x960 a 12 fps (rápido, para revisar)
+        --capturas 2,10,20 además guarda esos segundos como PNG
+  estado                   tabla de avance por Short
+  doctor                   revisa ffmpeg, node/playwright, Edge y whisper
+  prueba [ID]              prueba todo con un WAV sintético en una carpeta temporal
+
+Configuración: pipeline/config.toml
+EOF
+}
+
+to_upper() { printf '%s' "$1" | tr '[:lower:]' '[:upper:]'; }
+
+need_node_deps() {
+  if [ ! -d "$PIPELINE_DIR/node_modules/playwright" ]; then
+    echo "Falta Playwright. Corre una vez:" >&2
+    echo "  cd \"$PIPELINE_DIR\" && npm install" >&2
+    exit 1
+  fi
+}
+
+cmd_audio() {
+  if [ $# -eq 0 ]; then
+    echo "Indica un ID (shorts audio A2) o --todo" >&2
+    exit 1
+  fi
+  exec "$PYTHON" "$PIPELINE_DIR/audio.py" procesar "$@"
+}
+
+cmd_video() {
+  if [ $# -eq 0 ]; then
+    echo "Indica un ID: shorts video A2 [--preview]" >&2
+    exit 1
+  fi
+  need_node_deps
+  exec node "$PIPELINE_DIR/render.mjs" "$@"
+}
+
+ok()   { printf '  \033[32mok\033[0m     %s\n' "$1"; }
+warn() {
+  printf '  \033[33mfalta\033[0m  %s\n' "$1"
+  if [ -n "${2:-}" ]; then printf '         → %s\n' "$2"; fi
+  MISSING=$((MISSING + 1))
+}
+
+cmd_doctor() {
+  MISSING=0
+  echo "Mosaic Shorts · doctor"
+  echo "Repo: $REPO_DIR"
+  echo
+
+  echo "Audio"
+  if command -v ffmpeg >/dev/null 2>&1; then
+    ffver="$(ffmpeg -version 2>/dev/null | head -1 | awk '{print $3}')"
+    ok "ffmpeg $ffver"
+    if ! printf '%s\n' "$ffver" | awk -F. '{ exit !($1 > 6 || ($1 == 6 && $2 >= 1)) }'; then
+      warn "ffmpeg 6.1 o más nuevo (silenceremove cambió en 6.1)" "brew upgrade ffmpeg"
+    fi
+    filters="$(ffmpeg -hide_banner -filters 2>/dev/null)"
+    for f in loudnorm afftdn silenceremove highpass; do
+      if printf '%s' "$filters" | grep -q " $f "; then ok "filtro $f"; else warn "filtro $f" "brew reinstall ffmpeg"; fi
+    done
+    if ffmpeg -hide_banner -encoders 2>/dev/null | grep -q libx264; then ok "encoder libx264"; else warn "encoder libx264" "brew reinstall ffmpeg"; fi
+  else
+    warn "ffmpeg" "brew install ffmpeg"
+  fi
+  if command -v ffprobe >/dev/null 2>&1; then ok "ffprobe"; else warn "ffprobe" "brew install ffmpeg"; fi
+  if command -v "$PYTHON" >/dev/null 2>&1; then
+    ok "$("$PYTHON" -V 2>&1)"
+    if ! "$PYTHON" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 9) else 1)'; then
+      warn "Python 3.9 o más nuevo" "brew install python"
+    fi
+  else
+    warn "python3" "xcode-select --install"
+  fi
+  echo
+
+  echo "Transcripción (basta con una)"
+  engines="$("$PYTHON" "$PIPELINE_DIR/audio.py" motores 2>&1 || true)"
+  have_engine=0
+  printf '%s\n' "$engines" | while IFS="$(printf '\t')" read -r state name detail; do
+    if [ "$state" = "ok" ]; then
+      printf '  \033[32mok\033[0m     %s (%s)\n' "$name" "$detail"
+    else
+      printf '  \033[33m--\033[0m     %s: %s\n' "$name" "$detail"
+    fi
+  done
+  if printf '%s\n' "$engines" | grep -q '^ok'; then have_engine=1; fi
+  if [ "$have_engine" -eq 0 ]; then
+    warn "ningún motor de transcripción" "brew install whisper-cpp y baja el modelo (ver pipeline/README.md)"
+  fi
+  echo
+
+  echo "Video"
+  if command -v node >/dev/null 2>&1; then
+    major="$(node -p 'process.versions.node.split(".")[0]')"
+    if [ "$major" -ge 18 ]; then ok "node $(node -v)"; else warn "node 18+ (tienes $(node -v))" "brew install node"; fi
+  else
+    warn "node" "brew install node"
+  fi
+  if [ -d "$PIPELINE_DIR/node_modules/playwright" ]; then
+    ok "playwright $(node -p "require('$PIPELINE_DIR/node_modules/playwright/package.json').version" 2>/dev/null)"
+  else
+    warn "playwright en pipeline/node_modules" "cd \"$PIPELINE_DIR\" && npm install"
+  fi
+  if [ -d "/Applications/Microsoft Edge.app" ]; then
+    ok "Microsoft Edge"
+  else
+    warn "Microsoft Edge en /Applications" "brew install --cask microsoft-edge"
+  fi
+  echo
+
+  if [ "$MISSING" -eq 0 ]; then
+    echo "Todo listo."
+  else
+    echo "Faltan $MISSING cosa(s). Instálalas y vuelve a correr: shorts doctor"
+    exit 1
+  fi
+}
+
+# Synthetic "voice": a harmonic tone with syllable-like modulation, one burst per guion line,
+# plus a low noise floor so the denoise and silence steps have something to do.
+make_test_wav() {
+  out="$1"
+  sid="$2"
+  expr=""
+  t=0.8
+  lines="$("$PYTHON" "$PIPELINE_DIR/audio.py" narracion "$sid" | tr '.?' '\n\n' | awk 'NF>0 {print NF}')"
+  for n in $lines; do
+    dur="$(awk -v n="$n" 'BEGIN { printf "%.2f", n / 2.7 }')"
+    end="$(awk -v a="$t" -v d="$dur" 'BEGIN { printf "%.2f", a + d }')"
+    if [ -n "$expr" ]; then expr="$expr+"; fi
+    expr="${expr}between(t,$t,$end)"
+    t="$(awk -v e="$end" 'BEGIN { printf "%.2f", e + 1.0 }')"
+  done
+  total="$(awk -v e="$t" 'BEGIN { printf "%.2f", e + 0.5 }')"
+  ffmpeg -hide_banner -loglevel error -y \
+    -f lavfi -i "aevalsrc='($expr)*0.2*(sin(2*PI*170*t)+0.5*sin(2*PI*340*t)+0.25*sin(2*PI*510*t))*(0.55+0.45*sin(2*PI*4.3*t))':s=48000:d=$total" \
+    -f lavfi -i "anoisesrc=c=pink:a=0.004:r=48000:d=$total" \
+    -filter_complex "[0:a][1:a]amix=inputs=2:normalize=0[a]" -map "[a]" -c:a pcm_s24le "$out"
+}
+
+cmd_prueba() {
+  sid="$(to_upper "${1:-A2}")"
+  shift || true
+  need_node_deps
+  ids="$("$PYTHON" "$PIPELINE_DIR/audio.py" slug "$sid")"
+  guion="$(printf '%s' "$ids" | cut -f1)"
+  short="$(printf '%s' "$ids" | cut -f2)"
+  if [ -z "$short" ]; then
+    echo "$sid no está en el guion $guion" >&2
+    exit 1
+  fi
+  work="$(mktemp -d "${TMPDIR:-/tmp}/mosaic-prueba.XXXXXX")"
+  mkdir -p "$work/audios/$guion/_descartadas" "$work/shorts"
+  ln -s "$REPO_DIR/guiones" "$work/guiones"
+  ln -s "$REPO_DIR/animaciones" "$work/animaciones"
+  echo "Carpeta de prueba: $work"
+  make_test_wav "$work/audios/$guion/${short}_toma-01.wav" "$sid"
+  make_test_wav "$work/audios/$guion/${short}_toma-02.wav" "$sid"
+  cp "$work/audios/$guion/${short}_toma-02.wav" "$work/audios/$guion/_descartadas/${short}_toma-03.wav"
+  SOCIALMEDIA_DIR="$work" "$PYTHON" "$PIPELINE_DIR/audio.py" procesar "$sid" --engine guion
+  SOCIALMEDIA_DIR="$work" node "$PIPELINE_DIR/render.mjs" "$sid" --preview --capturas 1,8,16,24,32 "$@"
+  echo
+  echo "Revisa (debe usar la toma 02, no la 03 descartada):"
+  echo "  $work/audios/$guion/final/$short/info.json"
+  echo "  $work/audios/$guion/final/$short/$sid-preview.mp4"
+  echo "  $work/audios/$guion/final/$short/capturas-preview/"
+}
+
+main() {
+  if [ $# -eq 0 ]; then
+    usage
+    exit 0
+  fi
+  cmd="$1"
+  shift
+  case "$cmd" in
+    audio)  cmd_audio "$@" ;;
+    video)  cmd_video "$@" ;;
+    estado) exec "$PYTHON" "$PIPELINE_DIR/audio.py" estado "$@" ;;
+    doctor) cmd_doctor ;;
+    prueba) cmd_prueba "$@" ;;
+    -h|--help|help) usage ;;
+    *) echo "Comando desconocido: $cmd" >&2; usage >&2; exit 1 ;;
+  esac
+}
+
+main "$@"

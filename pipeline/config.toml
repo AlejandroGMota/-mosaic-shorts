@@ -1,0 +1,43 @@
+# Mosaic Shorts pipeline configuration. No secrets here.
+# Every path may start with "~". Relative paths are relative to socialmedia_dir.
+# The SOCIALMEDIA_DIR environment variable overrides socialmedia_dir.
+
+[paths]
+socialmedia_dir = ""                      # empty = the repo root (parent of pipeline/)
+audios_dir = "audios"                     # takes: audios/<guion>/<short>_toma-NN.wav
+guion = "shorts-hardware-2026-10-27"      # default guion (file name in guiones/ without .md)
+
+[audio]
+lufs = -14.0               # integrated loudness target (loudnorm, 2 passes)
+true_peak = -1.5           # dBTP
+lra = 11.0
+sample_rate = 48000
+highpass_hz = 80           # removes rumble below this frequency
+denoise_nr = 12            # afftdn noise reduction in dB (higher = stronger, more artifacts)
+denoise_nf = -50           # afftdn starting noise floor in dB (it then tracks the real noise)
+silence_threshold_db = -40 # below this level counts as silence
+max_pause = 0.45           # pauses longer than this (s) are shortened to this length
+edge_pause = 0.15          # silence kept before the first word (s)
+
+[whisper]
+engine = "auto"            # auto | whisper.cpp | faster-whisper | guion
+language = "es"
+prompt = "Mosaic. iPhone 18 Pro, Apple, f/1.48, f/1.8, f/2.8, f/4."
+cpp_bin = "whisper-cli"    # Homebrew: brew install whisper-cpp
+cpp_model = "~/models/whisper/ggml-large-v3-turbo-q5_0.bin"
+cpp_dtw = ""               # optional, e.g. "large.v3.turbo" for DTW token timestamps
+fw_python = "~/.venvs/fw/bin/python"
+fw_model = "medium"        # faster-whisper model (CPU int8 on the M1)
+
+[video]
+width = 1080
+height = 1920
+fps = 25
+outro_seconds = 2
+crf = 18
+x264_preset = "medium"
+audio_bitrate = "192k"
+browser = "msedge"         # Playwright channel. Always Microsoft Edge on the Mac.
+preview_width = 540
+preview_height = 960
+preview_fps = 12

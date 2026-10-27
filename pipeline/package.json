@@ -1,0 +1,16 @@
+{
+  "name": "mosaic-shorts-pipeline",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Render Mosaic Shorts animations with Playwright (Microsoft Edge) and ffmpeg",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "render": "node render.mjs"
+  },
+  "dependencies": {
+    "playwright": "1.63.0"
+  }
+}
