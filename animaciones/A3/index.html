@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>A3 · ¿Por qué el fondo sale borroso?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-photos" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-photos" style="top:1300px">Fondo borroso… o todo enfocado</div>
+
+    <svg class="full scene" id="sc-optics" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-dof" style="top:1300px">Profundidad de campo<small>la franja de distancia que queda nítida</small></div>
+    <div class="m-caption scene" id="cap-open" style="top:1300px">Agujero muy abierto<small>lo que no está a esa distancia se vuelve un círculo borroso</small></div>
+    <div class="m-caption scene" id="cap-close" style="top:1300px">Agujero cerrado<small>círculos pequeños: casi todo queda nítido</small></div>
+
+    <svg class="full scene" id="sc-portrait" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-soft" style="top:1300px">Antes: desenfoque simulado<small>con software, en modo Retrato</small></div>
+    <div class="m-caption scene" id="cap-real" style="top:1300px">Con apertura variable<small>una parte del desenfoque ya es óptica, real</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp } = Mosaic;
+
+  // ---------------------------------------------------------------- photo panels (subject + background)
+  let filterCount = 0;
+  function blurFilter(svg, sd) {
+    const id = "blur-" + ++filterCount;
+    const NS = "http://www.w3.org/2000/svg";
+    const f = document.createElementNS(NS, "filter"); // not in Mosaic.el's SVG tag list
+    for (const [k, v] of Object.entries({ id, x: "-20%", y: "-20%", width: "140%", height: "140%" })) f.setAttribute(k, v);
+    f.appendChild(document.createElementNS(NS, "feGaussianBlur")).setAttribute("stdDeviation", sd);
+    el("defs", {}, svg).appendChild(f);
+    return `url(#${id})`;
+  }
+  function photo(svg, x, y, w, h, blur, opts = {}) {
+    const g = el("g", {}, svg);
+    const clipId = "clip-" + ++filterCount;
+    el("rect", { x, y, width: w, height: h }, el("clipPath", { id: clipId }, el("defs", {}, svg)));
+    const inner = el("g", { "clip-path": `url(#${clipId})` }, g);
+    el("rect", { x, y, width: w, height: h, fill: "#cfd8dc" }, inner);
+    const bg = el("g", blur ? { filter: blurFilter(svg, blur) } : {}, inner);
+    // background: buildings and trees far away
+    [[0.05, 0.25, 0.18, 0.55, "#8a96a3"], [0.28, 0.12, 0.16, 0.68, "#6f7c8a"], [0.48, 0.3, 0.2, 0.5, "#9aa5b0"],
+     [0.74, 0.18, 0.2, 0.62, "#7d8996"]].forEach(([bx, by, bw, bh, c]) =>
+      el("rect", { x: x + bx * w, y: y + by * h, width: bw * w, height: bh * h, fill: c }, bg));
+    [[0.16, 0.66, 0.1], [0.62, 0.7, 0.12], [0.9, 0.64, 0.09]].forEach(([tx, ty, tr]) =>
+      el("circle", { cx: x + tx * w, cy: y + ty * h, r: tr * w, fill: "#5f8a6a" }, bg));
+    el("rect", { x, y: y + 0.8 * h, width: w, height: 0.2 * h, fill: "#a9a08f" }, bg);
+    // subject: a person, always sharp
+    const cx = x + w * 0.5;
+    const person = el("g", {}, inner);
+    el("path", { d: `M${cx - 0.3 * w} ${y + h} C${cx - 0.28 * w} ${y + 0.7 * h}, ${cx + 0.28 * w} ${y + 0.7 * h}, ${cx + 0.3 * w} ${y + h} Z`, fill: "#33475b" }, person);
+    el("circle", { cx, cy: y + 0.55 * h, r: 0.13 * w, fill: "#c99a7a" }, person);
+    el("path", { d: `M${cx - 0.14 * w} ${y + 0.53 * h} C${cx - 0.14 * w} ${y + 0.36 * h}, ${cx + 0.14 * w} ${y + 0.36 * h}, ${cx + 0.14 * w} ${y + 0.53 * h} C${cx + 0.08 * w} ${y + 0.46 * h}, ${cx - 0.08 * w} ${y + 0.46 * h}, ${cx - 0.14 * w} ${y + 0.53 * h} Z`, fill: "#2b2420" }, person);
+    if (opts.halo) {
+      // software cut-out: a hard light rim and a sharp patch the mask missed
+      el("circle", { cx, cy: y + 0.55 * h, r: 0.13 * w + 5, fill: "none", stroke: "#eef2f4", "stroke-width": 6 }, inner);
+      el("rect", { x: cx + 0.16 * w, y: y + 0.6 * h, width: 0.12 * w, height: 0.14 * h, fill: "#6f7c8a" }, inner);
+    }
+    el("rect", { x, y, width: w, height: h, fill: "none", stroke: "#2e2d2a", "stroke-width": 4, rx: 4 }, g);
+    if (opts.label) el("text", { x: x + w / 2, y: y + h + 56, "text-anchor": "middle", class: "m-label", text: opts.label }, g);
+    return g;
+  }
+
+  // ---------------------------------------------------------------- optics (thin lens, side view)
+  // Lens at x=LX, focal length F. Subject in focus at distance DO_A; the sensor sits at its image.
+  const LX = 600, AXIS = 760, F = 200, DO_A = 500;
+  const DI_A = (F * DO_A) / (DO_A - F);            // 333 px: sensor position behind the lens
+  const SX = LX + DI_A;
+  const DO_B = 2200;                               // background point, far away (off screen)
+  const D_OPEN = 260, D_CLOSED = 80;               // aperture diameters (px)
+  const Y_A = -70, Y_B = -900;                      // heights of the two object points
+  let op = {};
+  function buildOptics() {
+    const svg = $("#sc-optics");
+    const g = el("g", {}, svg);
+    op.band = el("rect", { y: AXIS - 230, height: 460, fill: "var(--mint)", opacity: 0.16 }, g);
+    op.bandLabel = el("text", { y: AXIS - 245, "text-anchor": "middle", class: "m-label", fill: "var(--mint)", text: "franja nítida" }, g);
+    el("line", { x1: 60, y1: AXIS, x2: 1020, y2: AXIS, stroke: "var(--line)", "stroke-width": 2, "stroke-dasharray": "10 10" }, g);
+    op.coneB = el("polygon", { fill: "var(--fuchsia)", opacity: 0.22 }, g);
+    op.tailB = el("polygon", { fill: "var(--fuchsia)", opacity: 0.22 }, g);
+    op.coneA = el("polygon", { fill: "var(--blue)", opacity: 0.25 }, g);
+    op.lens = el("ellipse", { cx: LX, cy: AXIS, rx: 20, ry: 190, fill: "#cfe0ea", stroke: "#8fb0c4", "stroke-width": 3 }, g);
+    op.platesT = el("rect", { x: LX - 34, width: 14, fill: "#3f3d38" }, g);
+    op.platesB = el("rect", { x: LX - 34, width: 14, fill: "#3f3d38" }, g);
+    el("rect", { x: SX, y: AXIS - 220, width: 22, height: 440, rx: 4, fill: "#2e2d2a" }, g);
+    el("text", { x: SX + 11, y: AXIS + 270, "text-anchor": "middle", class: "m-label", text: "sensor" }, g);
+    op.blurB = el("rect", { x: SX - 4, width: 30, rx: 6, fill: "var(--fuchsia)" }, g);
+    op.dotA = el("circle", { cx: SX + 11, r: 9, fill: "var(--blue)" }, g);
+    // subject (A) and the background arrow (B comes from far left)
+    el("circle", { cx: LX - DO_A, cy: AXIS + Y_A, r: 14, fill: "var(--blue)" }, g);
+    el("text", { x: LX - DO_A, y: AXIS + Y_A - 34, "text-anchor": "middle", class: "m-label", fill: "var(--blue)", text: "sujeto" }, g);
+    op.farLabel = el("text", { x: 80, y: AXIS - 340, class: "m-label", fill: "var(--fuchsia)", text: "← fondo (lejos)" }, g);
+    // what the sensor sees (front view)
+    op.inset = el("g", {}, g);
+    el("rect", { x: 330, y: 1080, width: 420, height: 150, rx: 10, fill: "#faf8f3", stroke: "var(--line)", "stroke-width": 2 }, op.inset);
+    el("circle", { cx: 450, cy: 1155, r: 9, fill: "var(--blue)" }, op.inset);
+    op.insetB = el("circle", { cx: 630, cy: 1155, fill: "var(--fuchsia)", opacity: 0.55 }, op.inset);
+    el("text", { x: 540, y: 1066, "text-anchor": "middle", class: "m-note", text: "lo que llega al sensor" }, op.inset);
+  }
+  function imageOf(doo, yo) {
+    const di = (F * doo) / (doo - F);
+    return [LX + di, AXIS - (yo * di) / doo];
+  }
+  function cone(src, D, img, clipX) {
+    // rays from src through the aperture edges meet at the image point and continue to the sensor
+    const top = [LX, AXIS - D / 2], bot = [LX, AXIS + D / 2];
+    const at = (p, q, x) => [x, p[1] + ((q[1] - p[1]) * (x - p[0])) / (q[0] - p[0])];
+    const s0 = clipX === undefined ? [src, src] : [at(src, top, clipX), at(src, bot, clipX)];
+    const a = at(top, img, SX), b = at(bot, img, SX);
+    const pts = [s0[0], top, img, bot, s0[1]].map((p) => p.join(",")).join(" ");
+    const tail = [img, a, b].map((p) => p.join(",")).join(" ");
+    return { pts, tail, hit: [a[1], b[1]] };
+  }
+  function drawOptics(t, s, A) {
+    const D = lerp(D_OPEN, D_CLOSED, ramp(t, A.cierras.start, A.rectos.end, ease.inOut));
+    op.platesT.setAttribute("y", AXIS - 200); op.platesT.setAttribute("height", 200 - D / 2);
+    op.platesB.setAttribute("y", AXIS + D / 2); op.platesB.setAttribute("height", 200 - D / 2);
+    const imgA = imageOf(DO_A, -Y_A);
+    const cA = cone([LX - DO_A, AXIS + Y_A], D, imgA);
+    op.coneA.setAttribute("points", cA.pts);
+    op.dotA.setAttribute("cy", imgA[1].toFixed(1));
+    // B: a far background point (off screen, up-left). It focuses before the sensor, so on the
+    // sensor it is a disc whose size grows with the aperture diameter.
+    const imgB = imageOf(DO_B, -Y_B);
+    const cB = cone([LX - DO_B, AXIS + Y_B], D, imgB, 60);
+    op.coneB.setAttribute("points", cB.pts);
+    op.tailB.setAttribute("points", cB.tail);
+    const h = Math.abs(cB.hit[1] - cB.hit[0]);
+    op.blurB.setAttribute("y", Math.min(cB.hit[0], cB.hit[1]).toFixed(1));
+    op.blurB.setAttribute("height", Math.max(10, h).toFixed(1));
+    op.insetB.setAttribute("r", Math.max(9, h / 2).toFixed(1));
+    // depth of field band around the subject: wider when the aperture closes (∝ 1/D)
+    const half = 9000 / D;
+    op.band.setAttribute("x", (LX - DO_A - half).toFixed(1));
+    op.band.setAttribute("width", (2 * half).toFixed(1));
+    op.bandLabel.setAttribute("x", LX - DO_A);
+    const bandOn = ramp(t, A.franja.start, A.franja.start + 0.4);
+    op.band.setAttribute("opacity", String(0.16 * bandOn));
+    op.bandLabel.setAttribute("opacity", String(bandOn));
+    // the background cone shows up when the narration talks about the rest of the points
+    const bc = 0.22 * ramp(t, A.angulos.start - 0.3, A.angulos.start + 0.3);
+    op.coneB.setAttribute("opacity", String(bc));
+    op.tailB.setAttribute("opacity", String(bc));
+    op.farLabel.setAttribute("opacity", String(bc / 0.22));
+    const bOn = ramp(t, A.circulo.start - 0.2, A.circulo.start + 0.3);
+    op.blurB.setAttribute("opacity", String(bOn));
+    op.inset.setAttribute("opacity", String(ramp(t, A.coinciden.start, A.coinciden.start + 0.4)));
+    op.insetB.setAttribute("opacity", String(0.55 * bOn));
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "Porque en algunas fotos el fondo sale borroso y en otras todo se está enfocando, se llama profundidad de campo, la franja de distancia que queda nítida, con el agujero muy abierto los rayos de luz llegan desde ángulos muy distintos, solo los que vienen de cierta distancia coinciden en un punto, todos los demás se vuelven un círculo borroso. Si cierras la apertura, los rayos llegan más rectos, los círculos se hacen más pequeños y casi todo queda nítido. Ahora, el iPhone fingía ese desenfoque usando software o en modo retrato. Con apertura variable, una parte del desenfoque es óptica, o sea, real.";
+
+  Mosaic.short({
+    kicker: "Cámara · lo básico",
+    title: "¿Por qué el fondo sale borroso?",
+    script: SCRIPT,
+    anchors: {
+      borroso: "borroso",
+      profundidad: "profundidad de campo",
+      franja: "franja",
+      abierto: "muy abierto",
+      angulos: "angulos",
+      coinciden: "coinciden",
+      circulo: "circulo borroso",
+      cierras: "cierras",
+      rectos: "rectos",
+      pequenos: "pequenos",
+      ahora: "ahora el iphone",
+      retrato: "retrato",
+      variable: "apertura variable",
+      optica: "optica",
+    },
+    build() {
+      const ph = $("#sc-photos");
+      photo(ph, 90, 540, 420, 600, 9, { label: "fondo borroso" });
+      photo(ph, 570, 540, 420, 600, 0, { label: "todo enfocado" });
+      buildOptics();
+      const pr = $("#sc-portrait");
+      photo(pr, 90, 540, 420, 600, 7, { halo: true, label: "software" });
+      photo(pr, 570, 540, 420, 600, 7, { label: "óptico" });
+    },
+    scenes: [
+      { el: "#sc-photos", from: 0, to: "profundidad-0.1", fadeIn: 0.4 },
+      { el: "#cap-photos", from: 0.3, to: "profundidad-0.1", fade: 0.3 },
+      { el: "#sc-optics", from: "profundidad-0.2", to: "ahora-0.2", rise: 0, update: drawOptics },
+      { el: "#cap-dof", from: "profundidad", to: "abierto-0.1", fade: 0.3 },
+      { el: "#cap-open", from: "abierto-0.1", to: "cierras-0.1", fade: 0.3 },
+      { el: "#cap-close", from: "cierras-0.1", to: "ahora-0.2", fade: 0.3 },
+      { el: "#sc-portrait", from: "ahora-0.2", to: "end", rise: 0, update: portrait },
+      { el: "#cap-soft", from: "ahora", to: "variable-0.6", fade: 0.3 },
+      { el: "#cap-real", from: "variable-0.6", to: "end", fade: 0.3 },
+    ],
+  });
+
+  function portrait(t, s, A) {
+    // left panel (software) first, the optical one joins on "apertura variable"
+    const kids = $("#sc-portrait").children;
+    const left = kids[kids.length - 2], right = kids[kids.length - 1];
+    left.setAttribute("opacity", String(1 - 0.55 * ramp(t, A.variable.start - 0.6, A.variable.start)));
+    right.setAttribute("opacity", String(ramp(t, A.variable.start - 0.6, A.variable.start)));
+  }
+})();
+</script>
+</body>
+</html>
