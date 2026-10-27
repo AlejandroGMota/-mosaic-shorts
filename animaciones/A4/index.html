@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>A4 · ¿Por qué no usar siempre la apertura más abierta?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+  .big { position: absolute; left: 80px; width: 920px; text-align: center; }
+  .trade { position: absolute; left: 80px; width: 920px; top: 640px; display: flex; justify-content: center; gap: 40px; font-size: 66px; font-weight: 650; }
+  .trade span { color: var(--line); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-iris" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-why" style="top:1300px">f/1.48 deja entrar más luz<small>¿por qué no usarla siempre?</small></div>
+    <div class="m-caption scene" id="cap-cost" style="top:1300px">Toda apertura tiene un costo</div>
+
+    <svg class="full scene" id="sc-aber" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-aber" style="top:1300px">Muy abierta: aberración<small>la luz de las orillas no cae en el mismo punto</small></div>
+
+    <svg class="full scene" id="sc-diff" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-diff" style="top:1300px">Muy cerrada: difracción<small>la luz se dobla en los bordes del agujero</small></div>
+
+    <svg class="full scene" id="sc-sweet" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-sweet" style="top:1300px">Entre los dos extremos, un punto dulce</div>
+    <div class="m-caption scene" id="cap-apple" style="top:1300px">Para Apple es f/1.8<small>por eso es la apertura por defecto</small></div>
+
+    <div class="trade scene" id="sc-trade"><span id="w-luz">luz</span><span id="w-nit">nitidez</span><span id="w-pro">profundidad</span></div>
+    <div class="m-caption scene" id="cap-trade" style="top:1000px">La física siempre cobra</div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script src="../_base/iris.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp, fnum } = Mosaic;
+
+  const AXIS = 820, LX = 440, SX = 860;
+
+  // ---------------------------------------------------------------- iris at f/1.48
+  let iris;
+  function buildIris() {
+    iris = Mosaic.iris.make(el("g", { transform: "translate(540 830)" }, $("#sc-iris")), { n: 6, R: 270, ring: 36, rotorW: 28 });
+    iris.draw(iris.rOf(1.48));
+  }
+
+  // ---------------------------------------------------------------- spherical aberration (side view)
+  // Paraxial rays focus on the sensor; rays through the edge of the lens focus a bit closer to it.
+  let ab = {};
+  function buildAber() {
+    const g = el("g", {}, $("#sc-aber"));
+    el("line", { x1: 80, y1: AXIS, x2: 1000, y2: AXIS, stroke: "var(--line)", "stroke-width": 2, "stroke-dasharray": "10 10" }, g);
+    el("ellipse", { cx: LX, cy: AXIS, rx: 26, ry: 260, fill: "#cfe0ea", stroke: "#8fb0c4", "stroke-width": 3 }, g);
+    el("rect", { x: SX, y: AXIS - 230, width: 22, height: 460, rx: 4, fill: "#2e2d2a" }, g);
+    el("text", { x: SX + 11, y: AXIS + 290, "text-anchor": "middle", class: "m-label", text: "sensor" }, g);
+    ab.rays = [];
+    const hs = [-230, -190, -150, -90, -40, 40, 90, 150, 190, 230];
+    for (const h of hs) {
+      const edge = Math.abs(h) >= 150;
+      // focus distance shrinks with the ray height squared (third-order spherical aberration)
+      const fx = SX - 0.00227 * h * h; // edge rays (h = 230) focus ~120 px before the sensor
+      const slope = -h / (fx - LX);
+      const yEnd = AXIS + h + slope * (SX - LX);
+      ab.rays.push({ edge, node: el("polyline", { points: `80,${AXIS + h} ${LX},${AXIS + h} ${SX},${yEnd.toFixed(1)}`, fill: "none",
+        stroke: edge ? "var(--fuchsia)" : "var(--amber)", "stroke-width": 4, "stroke-linecap": "round", pathLength: 100, "stroke-dasharray": "100 100" }, g) });
+    }
+    ab.edgeLabel = el("text", { x: LX - 50, y: AXIS - 290, "text-anchor": "middle", class: "m-label", fill: "var(--fuchsia)", text: "orillas del lente" }, g);
+    // what lands on the sensor
+    ab.spot = el("g", {}, g);
+    el("rect", { x: 380, y: 1120, width: 320, height: 130, rx: 10, fill: "#faf8f3", stroke: "var(--line)", "stroke-width": 2 }, ab.spot);
+    el("circle", { cx: 540, cy: 1185, r: 46, fill: "var(--fuchsia)", opacity: 0.25 }, ab.spot);
+    el("circle", { cx: 540, cy: 1185, r: 10, fill: "var(--amber)" }, ab.spot);
+  }
+  function drawAber(t, s, A) {
+    const p = ramp(t, A.abierta.start, A.abierta.start + 1.2, ease.out);
+    const pe = ramp(t, A.orillas.start - 0.2, A.orillas.start + 1.0, ease.out);
+    ab.rays.forEach((r) => r.node.setAttribute("stroke-dashoffset", String(100 * (1 - (r.edge ? pe : p)))));
+    ab.edgeLabel.setAttribute("opacity", String(pe));
+    ab.spot.setAttribute("opacity", String(ramp(t, A.aberracion.start, A.aberracion.start + 0.4)));
+  }
+
+  // ---------------------------------------------------------------- diffraction (side view, waves)
+  let df = {};
+  const HOLE = 50; // half gap
+  function buildDiff() {
+    const g = el("g", {}, $("#sc-diff"));
+    df.plane = [];
+    for (let i = 0; i < 6; i++) df.plane.push(el("line", { y1: AXIS - 300, y2: AXIS + 300, stroke: "var(--blue)", "stroke-width": 4, opacity: 0.8 }, g));
+    el("rect", { x: LX - 10, y: AXIS - 320, width: 20, height: 320 - HOLE, fill: "#3f3d38" }, g);
+    el("rect", { x: LX - 10, y: AXIS + HOLE, width: 20, height: 320 - HOLE, fill: "#3f3d38" }, g);
+    df.arcs = [];
+    for (let i = 0; i < 6; i++) df.arcs.push(el("path", { fill: "none", stroke: "var(--blue)", "stroke-width": 4 }, g));
+    el("text", { x: LX, y: AXIS - 345, "text-anchor": "middle", class: "m-label m-num", text: "f/4" }, g);
+    df.spot = el("g", {}, g);
+    el("rect", { x: 380, y: 1120, width: 320, height: 130, rx: 10, fill: "#faf8f3", stroke: "var(--line)", "stroke-width": 2 }, df.spot);
+    [44, 30].forEach((r, i) => el("circle", { cx: 540, cy: 1185, r, fill: "none", stroke: "var(--blue)", "stroke-width": 4, opacity: 0.35 + 0.2 * i }, df.spot));
+    el("circle", { cx: 540, cy: 1185, r: 16, fill: "var(--blue)" }, df.spot);
+  }
+  function drawDiff(t, s, A) {
+    // plane waves move right; past the small hole they spread out as circular waves
+    const spacing = 70, phase = ((t * 60) % spacing);
+    df.plane.forEach((ln, i) => {
+      const x = 90 + i * spacing + phase;
+      ln.setAttribute("x1", x); ln.setAttribute("x2", x);
+      ln.setAttribute("opacity", x < LX - 14 ? "0.8" : "0");
+    });
+    const spread = ramp(t, A.dobla.start - 0.3, A.dobla.start + 0.6);
+    df.arcs.forEach((arc, i) => {
+      const r = 20 + i * spacing + phase;
+      const ang = lerp(0.25, 1.25, spread); // half opening of the wave front (rad)
+      const x0 = LX + r * Math.cos(ang), y0 = AXIS - r * Math.sin(ang), y1 = AXIS + r * Math.sin(ang);
+      arc.setAttribute("d", `M${x0.toFixed(1)} ${y0.toFixed(1)} A${r} ${r} 0 0 1 ${x0.toFixed(1)} ${y1.toFixed(1)}`);
+      arc.setAttribute("opacity", String(Math.max(0, 0.85 - r / 700)));
+    });
+    df.spot.setAttribute("opacity", String(ramp(t, A.difraccion.start, A.difraccion.start + 0.4)));
+  }
+
+  // ---------------------------------------------------------------- sweet spot chart
+  let sw = {};
+  const STOPS = [1.48, 1.8, 2.8, 4];
+  const X0 = 150, X1 = 930, Y0 = 1100, Y1 = 600;
+  const xOf = (N) => X0 + ((Math.log(N) - Math.log(1.4)) / (Math.log(4.2) - Math.log(1.4))) * (X1 - X0);
+  // illustrative sharpness: aberration falls as the aperture closes, diffraction grows with N
+  const sharp = (N) => 1 - 0.55 * Math.pow(1.48 / N, 12) - 0.16 * Math.pow(N / 1.8, 2);
+  function buildSweet() {
+    const g = el("g", {}, $("#sc-sweet"));
+    sw.zoneL = el("rect", { x: X0, y: Y1 - 40, width: xOf(1.65) - X0, height: Y0 - Y1 + 40, fill: "var(--fuchsia)", opacity: 0.1 }, g);
+    sw.zoneR = el("rect", { x: xOf(2.6), y: Y1 - 40, width: X1 - xOf(2.6), height: Y0 - Y1 + 40, fill: "var(--blue)", opacity: 0.1 }, g);
+    el("text", { x: (X0 + xOf(1.65)) / 2, y: Y1 - 60, "text-anchor": "middle", class: "m-label", fill: "var(--fuchsia)", text: "aberración" }, g);
+    el("text", { x: (xOf(2.6) + X1) / 2, y: Y1 - 60, "text-anchor": "middle", class: "m-label", fill: "var(--blue)", text: "difracción" }, g);
+    el("line", { x1: X0, y1: Y0, x2: X1, y2: Y0, stroke: "var(--ink-2)", "stroke-width": 3 }, g);
+    for (const N of STOPS) {
+      el("line", { x1: xOf(N), y1: Y0, x2: xOf(N), y2: Y0 + 16, stroke: "var(--ink-2)", "stroke-width": 3 }, g);
+      el("text", { x: xOf(N), y: Y0 + 62, "text-anchor": "middle", class: "m-label m-num", text: "f/" + N }, g);
+    }
+    el("text", { x: X0, y: Y1 - 110, class: "m-note", text: "nitidez (ilustrativo)" }, g);
+    const pts = [];
+    for (let i = 0; i <= 80; i++) {
+      const N = 1.45 * Math.pow(4.1 / 1.45, i / 80);
+      pts.push(`${xOf(N).toFixed(1)},${(Y0 - sharp(N) * (Y0 - Y1)).toFixed(1)}`);
+    }
+    sw.curve = el("polyline", { points: pts.join(" "), fill: "none", stroke: "var(--ink)", "stroke-width": 6, "stroke-linejoin": "round", pathLength: 100, "stroke-dasharray": "100 100" }, g);
+    sw.dot = el("circle", { cx: xOf(1.8), cy: Y0 - sharp(1.8) * (Y0 - Y1), r: 20, fill: "var(--mint)" }, g);
+    sw.label = el("text", { x: xOf(1.8), y: Y0 - sharp(1.8) * (Y0 - Y1) - 40, "text-anchor": "middle", class: "m-label", fill: "var(--mint)", text: "f/1.8 según Apple" }, g);
+  }
+  function drawSweet(t, s, A) {
+    sw.curve.setAttribute("stroke-dashoffset", String(100 * (1 - ramp(t, A.extremos.start - 0.3, A.extremos.start + 1.2, ease.inOut))));
+    const d = ramp(t, A.f18.start - 0.2, A.f18.start + 0.3, ease.out);
+    sw.dot.setAttribute("opacity", String(d));
+    sw.label.setAttribute("opacity", String(d));
+  }
+
+  function drawTrade(t, s, A) {
+    const on = (id, a) => { $(id).style.color = t >= a.start - 0.05 ? "var(--ink)" : "var(--line)"; };
+    on("#w-luz", A.luz); on("#w-nit", A.nitidez); on("#w-pro", A.profundidad);
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "Si f/1.48 deja entrar más luz, ¿por qué los teléfonos no la usan siempre? Porque toda apertura tiene un costo. Muy abierta, la luz pasa por las orillas del lente, no converge perfecto, se llama aberración, y la foto pierde un poco de nitidez. Muy cerrada, en f/4 el agujero es tan pequeño que la luz se dobla en los bordes, se llama difracción y también resta nitidez. Entre los dos extremos hay un punto que muchos teléfonos utilizan. Apple dice que el suyo es f/1.8 y por eso es la apertura por defecto. La física siempre cobra o luz o nitidez o profundidad.";
+
+  Mosaic.short({
+    kicker: "Cámara · apertura",
+    title: "¿Por qué no usar siempre la apertura más abierta?",
+    script: SCRIPT,
+    anchors: {
+      siempre: "siempre",
+      costo: "costo",
+      abierta: "muy abierta",
+      orillas: "orillas",
+      aberracion: "aberracion",
+      cerrada: "muy cerrada",
+      dobla: "dobla",
+      difraccion: "difraccion",
+      extremos: "extremos",
+      f18: fnum("1.8"),
+      defecto: "defecto",
+      fisica: "fisica",
+      luz: "luz",
+      nitidez: "nitidez",
+      profundidad: "profundidad",
+    },
+    build() { buildIris(); buildAber(); buildDiff(); buildSweet(); },
+    scenes: [
+      { el: "#sc-iris", from: 0, to: "abierta-0.2", fadeIn: 0.4, rise: 0 },
+      { el: "#cap-why", from: 0.2, to: "costo-0.4", fade: 0.3 },
+      { el: "#cap-cost", from: "costo-0.4", to: "abierta-0.2", fade: 0.3 },
+      { el: "#sc-aber", from: "abierta-0.2", to: "cerrada-0.2", rise: 0, update: drawAber },
+      { el: "#cap-aber", from: "abierta", to: "cerrada-0.2", fade: 0.3 },
+      { el: "#sc-diff", from: "cerrada-0.2", to: "extremos-0.3", rise: 0, update: drawDiff },
+      { el: "#cap-diff", from: "cerrada", to: "extremos-0.3", fade: 0.3 },
+      { el: "#sc-sweet", from: "extremos-0.3", to: "fisica-0.2", rise: 0, update: drawSweet },
+      { el: "#cap-sweet", from: "extremos-0.2", to: "f18-0.6", fade: 0.3 },
+      { el: "#cap-apple", from: "f18-0.6", to: "fisica-0.2", fade: 0.3 },
+      { el: "#sc-trade", from: "fisica-0.2", to: "end", update: drawTrade },
+      { el: "#cap-trade", from: "fisica-0.2", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
