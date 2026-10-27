@@ -7,7 +7,7 @@ Guion: `guiones/shorts-hardware-2026-10-27.md` · Tomas: `audios/shorts-hardware
 
 | ID | Short | Guion | Grabado | Audio | Animación | Render | Publicado | Notas |
 |---|---|---|---|---|---|---|---|---|
-| A1 ⭐ | ¿Qué es la apertura de una cámara? | ✅ 27 oct | ✅ 27 oct | — | — | — | — | toma 01 |
+| A1 ⭐ | ¿Qué es la apertura de una cámara? | ✅ 27 oct | ✅ 27 oct | — | ✅ 27 oct | — | — | toma 01 |
 | A2 ⭐ | Apertura variable del iPhone 18 Pro | ✅ 27 oct | ✅ 27 oct | ✅ 27 oct | ⏳ 27 oct | — | — | toma 01 · animación lista con tiempos de prueba; falta sincronizar con el audio real (ver nota) |
 | A3 ⭐ | ¿Por qué el fondo sale borroso? | ✅ 27 oct | ✅ 27 oct | — | — | — | — | toma 01 |
 | A4 | ¿Por qué no usar siempre la apertura más abierta? | ✅ 27 oct | ✅ 27 oct | — | — | — | — | toma 02 |

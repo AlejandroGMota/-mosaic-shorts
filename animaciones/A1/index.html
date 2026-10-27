@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>A1 · ¿Qué es la apertura de una cámara?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  /* Zones (stage px): visual 470-1220, readout/caption 1240-1540. */
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+  .big { position: absolute; left: 80px; width: 920px; text-align: center; }
+  .fval { font-size: 120px; line-height: 1; }
+  .fval .f { font-weight: 450; color: var(--ink-2); }
+  .spec { position: absolute; left: 190px; top: 560px; width: 700px; padding: 54px 60px; border: 2px solid var(--line); border-radius: 18px; background: #faf8f3; }
+  .spec .row { height: 26px; border-radius: 13px; background: var(--paper-2); margin: 0 0 30px; }
+  .spec .hit { display: flex; align-items: baseline; gap: 26px; margin: 10px 0 40px; }
+  .spec .hit span { font-size: 40px; color: var(--muted); }
+  .spec .hit b { font-size: 110px; font-weight: 650; padding: 0 22px; border: 6px solid var(--amber); border-radius: 16px; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <div class="scene" id="sc-spec">
+      <div class="spec">
+        <div class="row" style="width:60%"></div>
+        <div class="row" style="width:85%"></div>
+        <div class="hit"><span>Cámara</span><b class="m-num">f/1.8</b></div>
+        <div class="row" style="width:70%"></div>
+        <div class="row" style="width:45%;margin:0"></div>
+      </div>
+    </div>
+    <div class="m-caption scene" id="cap-spec" style="top:1300px">¿Qué significa este número?</div>
+
+    <svg class="full scene" id="sc-side" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-hole" style="top:1300px">Apertura<small>el tamaño del agujero por donde entra la luz</small></div>
+
+    <svg class="full scene" id="sc-formula" viewBox="0 0 1080 1920"></svg>
+    <div class="big scene" id="cap-formula" style="top:1260px">
+      <div class="fval m-num"><span class="f">f/</span><span id="nval">4</span></div>
+      <div class="m-caption" style="position:static;width:auto;margin-top:26px">número chico = agujero grande</div>
+    </div>
+
+    <svg class="full scene" id="sc-iris" viewBox="0 0 1080 1920"></svg>
+    <div class="big scene" id="cap-iris" style="top:1260px">
+      <div class="fval m-num"><span class="f">f/</span><span id="irisval">1.48</span></div>
+      <div class="m-caption" style="position:static;width:auto;margin-top:26px">de f/1.48 a f/4</div>
+    </div>
+
+    <svg class="full scene" id="sc-area" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-diam" style="top:1300px">El diámetro crece ×2.7…</div>
+    <div class="m-caption scene" id="cap-area" style="top:1300px">…pero la luz depende del área<small>(4 ÷ 1.48)² ≈ 7.3</small></div>
+
+    <svg class="full scene" id="sc-night" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-night" style="top:1300px">Más luz = fotos más limpias de noche</div>
+    <div class="m-caption scene" id="cap-portrait" style="top:1300px">…y también cambia cada retrato</div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script src="../_base/iris.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp, fnum } = Mosaic;
+
+  // Deterministic "random" in [0, 1) so every frame is reproducible.
+  const rnd = (i) => { const x = Math.sin(i * 12.9898 + 78.233) * 43758.5453; return x - Math.floor(x); };
+
+  // ---------------------------------------------------------------- side view: light → hole → sensor
+  let side = {};
+  function buildSide() {
+    const svg = $("#sc-side");
+    const g = el("g", {}, svg);
+    side.rays = [];
+    for (let i = 0; i < 7; i++) {
+      side.rays.push(el("path", { fill: "none", stroke: "var(--amber)", "stroke-width": 5, "stroke-linecap": "round" }, g));
+    }
+    // diaphragm plates with a gap, a lens and the sensor
+    side.top = el("rect", { x: 470, y: 520, width: 26, height: 0, fill: "#3f3d38" }, g);
+    side.bot = el("rect", { x: 470, y: 0, width: 26, height: 0, fill: "#3f3d38" }, g);
+    el("ellipse", { cx: 560, cy: 860, rx: 22, ry: 190, fill: "#cfe0ea", stroke: "#8fb0c4", "stroke-width": 3 }, g);
+    el("rect", { x: 900, y: 700, width: 28, height: 320, rx: 4, fill: "#2f5e8e" }, g);
+    side.holeLabel = el("g", { opacity: 0 }, g);
+    el("rect", { x: 470, y: 736, width: 26, height: 14, fill: "var(--fuchsia)" }, side.holeLabel);
+    el("rect", { x: 470, y: 970, width: 26, height: 14, fill: "var(--fuchsia)" }, side.holeLabel);
+    el("text", { x: 483, y: 495, "text-anchor": "middle", class: "m-label", fill: "var(--fuchsia)", text: "agujero" }, side.holeLabel);
+    side.sensorLabel = el("text", { x: 914, y: 1080, "text-anchor": "middle", class: "m-label", text: "sensor", opacity: 0 }, g);
+    el("text", { x: 120, y: 725, class: "m-label", text: "luz", fill: "var(--amber)" }, g);
+  }
+  function drawSide(t, s, A) {
+    const half = 110; // half the gap height
+    const cy = 860;
+    side.top.setAttribute("y", 520); side.top.setAttribute("height", cy - half - 520);
+    side.bot.setAttribute("y", cy + half); side.bot.setAttribute("height", 1200 - cy - half);
+    const p = ramp(t, A.apertura.start, A.apertura.start + 1.6, ease.out);
+    side.rays.forEach((r, i) => {
+      const y = cy - half + 10 + (i * (2 * half - 20)) / 6;
+      // parallel rays come from the left, pass the gap, bend at the lens and meet at the sensor
+      const d = `M120 ${y} L560 ${y} L914 ${cy}`;
+      r.setAttribute("d", d);
+      r.setAttribute("pathLength", 100);
+      r.setAttribute("stroke-dasharray", "100 100");
+      r.setAttribute("stroke-dashoffset", String(100 * (1 - p)));
+    });
+    side.holeLabel.setAttribute("opacity", String(ramp(t, A.agujero.start, A.agujero.start + 0.4)));
+    side.sensorLabel.setAttribute("opacity", String(ramp(t, A.sensor.start, A.sensor.start + 0.4)));
+  }
+
+  // ---------------------------------------------------------------- formula: N = focal / diameter
+  let fm = {};
+  const FOCAL = 400; // px, fixed
+  function buildFormula() {
+    const svg = $("#sc-formula");
+    const g = el("g", {}, svg);
+    fm.title = el("text", { x: 540, y: 560, "text-anchor": "middle", "font-size": 70, "font-weight": 650, fill: "var(--ink)" }, g);
+    fm.title.innerHTML = '<tspan fill="var(--ink-2)">f/</tspan> = distancia focal ÷ diámetro';
+    // lens (front edge) at x=340, sensor at x=340+FOCAL
+    fm.lens = el("ellipse", { cx: 340, cy: 900, rx: 18, ry: 100, fill: "#cfe0ea", stroke: "#8fb0c4", "stroke-width": 3 }, g);
+    el("rect", { x: 340 + FOCAL - 12, y: 760, width: 24, height: 280, rx: 4, fill: "#2f5e8e" }, g);
+    el("line", { x1: 340, y1: 1110, x2: 340 + FOCAL, y2: 1110, stroke: "var(--ink-2)", "stroke-width": 4 }, g);
+    el("line", { x1: 340, y1: 1095, x2: 340, y2: 1125, stroke: "var(--ink-2)", "stroke-width": 4 }, g);
+    el("line", { x1: 340 + FOCAL, y1: 1095, x2: 340 + FOCAL, y2: 1125, stroke: "var(--ink-2)", "stroke-width": 4 }, g);
+    fm.focalLabel = el("text", { x: 340 + FOCAL / 2, y: 1165, "text-anchor": "middle", class: "m-label", text: "distancia focal (fija)" }, g);
+    fm.diam = el("line", { x1: 305, x2: 305, stroke: "var(--fuchsia)", "stroke-width": 6, "stroke-linecap": "round" }, g);
+    fm.diamLabel = el("text", { x: 285, y: 900, "text-anchor": "end", class: "m-label", fill: "var(--fuchsia)", text: "diámetro" }, g);
+    fm.cone = el("polygon", { fill: "var(--amber)", opacity: 0.35 }, g);
+  }
+  function drawFormula(t, s, A) {
+    // the diameter grows from f/4 to f/1.48 while the narration says "más chico… más grande"
+    const p = ramp(t, A.chico.start - 0.2, A.grande.end + 0.4, ease.inOut);
+    const d = lerp(FOCAL / 4, FOCAL / 1.48, p);
+    const cy = 900;
+    fm.lens.setAttribute("ry", (d / 2 + 12).toFixed(1));
+    fm.diam.setAttribute("y1", (cy - d / 2).toFixed(1));
+    fm.diam.setAttribute("y2", (cy + d / 2).toFixed(1));
+    fm.cone.setAttribute("points", `340,${cy - d / 2} ${340 + FOCAL},${cy} 340,${cy + d / 2}`);
+    $("#nval").textContent = (FOCAL / d).toFixed(p > 0.999 ? 2 : 1);
+    if (p > 0.999) $("#nval").textContent = "1.48";
+    if (p < 0.001) $("#nval").textContent = "4";
+    fm.focalLabel.setAttribute("opacity", String(ramp(t, A.focal.start, A.focal.start + 0.4)));
+    fm.diamLabel.setAttribute("opacity", String(ramp(t, A.diametro.start, A.diametro.start + 0.4)));
+  }
+
+  // ---------------------------------------------------------------- iris f/1.48 ↔ f/4
+  let iris;
+  function buildIris() {
+    const root = el("g", { transform: "translate(540 830)" }, $("#sc-iris"));
+    iris = Mosaic.iris.make(root, { n: 6, R: 270, ring: 36, rotorW: 28 });
+  }
+  function nAt(t, A) {
+    // opening radius: f/2.8 → f/1.48 (on "f/1.48") → f/4 (on "f/4")
+    let r = iris.rOf(2.8);
+    r = lerp(r, iris.rOf(1.48), ramp(t, A.f148.start - 0.2, A.f148.start + 0.6));
+    r = lerp(r, iris.rOf(4), ramp(t, A.f4.start - 0.1, A.f4.start + 0.7));
+    return r;
+  }
+  function drawIris(t, s, A) {
+    const r = nAt(t, A);
+    iris.draw(r);
+    $("#irisval").textContent = t < A.f4.start ? "1.48" : "4";
+  }
+
+  // ---------------------------------------------------------------- area vs diameter
+  let ar = {};
+  const D_SMALL = 120, D_BIG = D_SMALL * 4 / 1.48; // diameters ∝ 1/N
+  function buildArea() {
+    const svg = $("#sc-area");
+    const g = el("g", {}, svg);
+    const cx1 = 270, cx2 = 690, cy = 820;
+    el("circle", { cx: cx1, cy, r: D_SMALL / 2, fill: "#f4dc93", stroke: "#2e2d2a", "stroke-width": 6 }, g);
+    el("circle", { cx: cx2, cy, r: D_BIG / 2, fill: "#f4dc93", stroke: "#2e2d2a", "stroke-width": 6 }, g);
+    el("text", { x: cx1, y: cy + D_BIG / 2 + 70, "text-anchor": "middle", class: "m-label m-num", text: "f/4" }, g);
+    el("text", { x: cx2, y: cy + D_BIG / 2 + 70, "text-anchor": "middle", class: "m-label m-num", text: "f/1.48" }, g);
+    // diameter arrows
+    ar.dims = el("g", {}, g);
+    el("line", { x1: cx1 - D_SMALL / 2, y1: cy, x2: cx1 + D_SMALL / 2, y2: cy, stroke: "var(--fuchsia)", "stroke-width": 5 }, ar.dims);
+    el("line", { x1: cx2 - D_BIG / 2, y1: cy, x2: cx2 + D_BIG / 2, y2: cy, stroke: "var(--fuchsia)", "stroke-width": 5 }, ar.dims);
+    // light dots: same density in both holes, so the count follows the area
+    ar.dots = [];
+    const density = 1 / 260; // dots per px²
+    const place = (cx, d, seed) => {
+      const n = Math.round((Math.PI * d * d / 4) * density);
+      for (let i = 0; i < n; i++) {
+        const a = rnd(seed + i * 2) * 2 * Math.PI, rr = Math.sqrt(rnd(seed + i * 2 + 1)) * (d / 2 - 8);
+        ar.dots.push({ node: el("circle", { cx: cx + rr * Math.cos(a), cy: cy + rr * Math.sin(a), r: 5, fill: "#c98a1b", opacity: 0 }, g), k: i / n });
+      }
+      return n;
+    };
+    ar.nSmall = place(cx1, D_SMALL, 10);
+    ar.nBig = place(cx2, D_BIG, 500);
+    ar.counter = el("text", { x: 540, y: 520, "text-anchor": "middle", "font-size": 96, "font-weight": 650, class: "m-num", fill: "var(--ink)" }, g);
+  }
+  function drawArea(t, s, A) {
+    ar.dims.setAttribute("opacity", String(1 - ramp(t, A.area.start, A.area.start + 0.4)));
+    const p = ramp(t, A.area.start, A.siete.start + 0.3, ease.inOut);
+    ar.dots.forEach((d) => d.node.setAttribute("opacity", d.k <= p ? "0.9" : "0"));
+    const x = lerp(1, Math.pow(4 / 1.48, 2), ramp(t, A.masde.start, A.siete.end + 0.2, ease.out));
+    ar.counter.textContent = t < A.masde.start ? "" : "luz ×" + x.toFixed(1);
+  }
+
+  // ---------------------------------------------------------------- night photos
+  let nt = {};
+  function buildNight() {
+    const svg = $("#sc-night");
+    const g = el("g", {}, svg);
+    const panel = (x, bright, label, seed) => {
+      const gg = el("g", {}, g);
+      el("rect", { x, y: 600, width: 380, height: 500, rx: 12, fill: bright ? "#4a5468" : "#262a33" }, gg);
+      // simple night scene: ground, a lamp and a window
+      el("rect", { x, y: 980, width: 380, height: 120, fill: bright ? "#3a3f4a" : "#1d2027" }, gg);
+      el("rect", { x: x + 60, y: 780, width: 110, height: 200, fill: bright ? "#6b7385" : "#343944" }, gg);
+      el("rect", { x: x + 90, y: 820, width: 50, height: 50, fill: bright ? "#f4dc93" : "#7a6c45" }, gg);
+      el("circle", { cx: x + 290, cy: 760, r: 18, fill: bright ? "#fff1c4" : "#b9a874" }, gg);
+      el("rect", { x: x + 286, y: 776, width: 8, height: 204, fill: bright ? "#7d8596" : "#3d424d" }, gg);
+      // sensor noise: many more speckles with little light
+      const n = bright ? 60 : 420;
+      for (let i = 0; i < n; i++) {
+        el("rect", { x: x + rnd(seed + i) * 372, y: 600 + rnd(seed + i + 999) * 492, width: 6, height: 6,
+          fill: ["#c0504d", "#4f9d69", "#4a78c2", "#d8d8d8"][i % 4], opacity: 0.55 }, gg);
+      }
+      el("text", { x: x + 190, y: 1160, "text-anchor": "middle", class: "m-label m-num", text: label }, gg);
+      return gg;
+    };
+    nt.a = panel(110, false, "f/4", 1);
+    nt.b = panel(590, true, "f/1.48", 3000);
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "¿Qué significa ese número que ves en las fichas de las cámaras? Es la apertura, el tamaño del agujero por donde entra la luz al sensor, y aquí viene lo confuso, el número es una división, distancia focal entre el diámetro del agujero, por eso entre más chico el número, más grande el agujero, por ejemplo, en el iPhone 18 Pro ahora puede cambiar de f/1.48 a f/4, ¿y cuánta diferencia hay? La luz depende del área, no del diámetro, así que f/4 a f/1.48 entran unas 7 veces más de luz. Más luz significa más fotos limpias de noche, pero también cambia algo que vas a notar en cada retrato.";
+
+  Mosaic.short({
+    kicker: "Cámara · lo básico",
+    title: "¿Qué es la apertura de una cámara?",
+    script: SCRIPT,
+    anchors: {
+      fichas: "fichas",
+      apertura: "apertura",
+      agujero: "agujero",
+      sensor: "sensor",
+      division: "division",
+      focal: "distancia focal",
+      diametro: "diametro",
+      chico: "chico",
+      grande: "grande",
+      iphone: "iphone",
+      f148: fnum("1.48"),
+      f4: fnum("4"),
+      cuanta: "cuanta diferencia",
+      area: "area",
+      masde: ["entran", "entra"],
+      siete: ["7 veces", "siete veces"],
+      masluz: "mas luz significa",
+      noche: "noche",
+      cambia: "cambia algo",
+    },
+    build() { buildSide(); buildFormula(); buildIris(); buildArea(); buildNight(); },
+    scenes: [
+      { el: "#sc-spec", from: 0, to: "apertura-0.1", fadeIn: 0.4 },
+      { el: "#cap-spec", from: 0.2, to: "apertura-0.1", fade: 0.3 },
+      { el: "#sc-side", from: "apertura-0.2", to: "division-0.1", rise: 0, update: drawSide },
+      { el: "#cap-hole", from: "apertura", to: "division-0.1", fade: 0.3 },
+      { el: "#sc-formula", from: "division-0.2", to: "iphone-0.2", rise: 0, update: drawFormula },
+      { el: "#cap-formula", from: "chico-0.3", to: "iphone-0.2", fade: 0.3 },
+      { el: "#sc-iris", from: "iphone-0.2", to: "cuanta-0.2", rise: 0, update: drawIris },
+      { el: "#cap-iris", from: "f148-0.2", to: "cuanta-0.2", fade: 0.3 },
+      { el: "#sc-area", from: "cuanta-0.2", to: "masluz-0.2", rise: 0, update: drawArea },
+      { el: "#cap-diam", from: "cuanta", to: "area-0.1", fade: 0.3 },
+      { el: "#cap-area", from: "area-0.1", to: "masluz-0.2", fade: 0.3 },
+      { el: "#sc-night", from: "masluz-0.2", to: "end", rise: 0 },
+      { el: "#cap-night", from: "masluz", to: "cambia-0.1", fade: 0.3 },
+      { el: "#cap-portrait", from: "cambia-0.1", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
