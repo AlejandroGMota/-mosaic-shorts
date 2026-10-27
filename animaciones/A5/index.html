@@ -72,7 +72,7 @@
     m.p7 = m.i7.draw(m.i7.rOf(4) * 1.6);
     const edges = (g, p, n) => p.V.map((v, k) => {
       const w = p.V[(k + 1) % n];
-      return { node: el("line", { x1: v[0], y1: v[1], x2: w[0], y2: w[1], stroke: n === 7 ? "#c98a1b" : COLORS[k % 3], // 7 blades: no parallel pairs, one color "stroke-width": 9, "stroke-linecap": "round", opacity: 0 }, g),
+      return { node: el("line", { x1: v[0], y1: v[1], x2: w[0], y2: w[1], stroke: n === 7 ? "#c98a1b" : COLORS[k % 3] /* 7 blades: no parallel pairs */, "stroke-width": 9, "stroke-linecap": "round", opacity: 0 }, g),
         ang: Math.atan2(w[1] - v[1], w[0] - v[0]) + Math.PI / 2 };
     });
     m.e6 = edges(m.g6, m.p6, 6);
