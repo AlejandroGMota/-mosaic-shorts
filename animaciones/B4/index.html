@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>B4 · ¿El metal que regresa a su forma?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+  .tag { position: absolute; inset: auto; left: 80px; width: 920px; text-align: center; font-size: 44px; font-weight: 750; letter-spacing: 0.04em; }
+  .tag span { display: inline-block; padding: 16px 34px; border: 7px solid currentColor; border-radius: 14px; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-rumor" viewBox="0 0 1080 1920"></svg>
+    <div class="tag scene" id="tag-rumor" style="top:1050px;color:var(--amber)"><span>RUMOR: «metal líquido»</span></div>
+
+    <svg class="full scene" id="sc-atoms" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-melt" style="top:1300px">No es metal derretido<small>es un vidrio metálico</small></div>
+    <div class="m-caption scene" id="cap-cool" style="top:1300px">Enfriado tan rápido<small>que sus átomos no alcanzan a ordenarse en cristales</small></div>
+
+    <svg class="full scene" id="sc-bend" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-perm" style="top:1300px">Un metal normal se deforma para siempre<small>sus capas de átomos se deslizan entre fronteras</small></div>
+    <div class="m-caption scene" id="cap-back" style="top:1300px">Sin cristales, se dobla más<small>y regresa a su forma</small></div>
+
+    <div class="tag scene" id="tag-ok" style="top:640px;color:var(--mint)"><span>CONFIRMADO: cubierta de titanio</span></div>
+    <div class="tag scene" id="tag-rumor2" style="top:860px;color:var(--amber)"><span>RUMOR: metal líquido</span></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp } = Mosaic;
+  const rnd = (i) => { const x = Math.sin(i * 12.9898 + 78.233) * 43758.5453; return x - Math.floor(x); };
+
+  // ---------------------------------------------------------------- rumor: a hinge
+  function buildRumor() {
+    const g = el("g", {}, $("#sc-rumor"));
+    el("rect", { x: 200, y: 640, width: 680, height: 90, rx: 45, fill: "#b9b4aa", stroke: "#8a8478", "stroke-width": 5 }, g);
+    [300, 420, 660, 780].forEach((cx) => el("circle", { cx, cy: 685, r: 24, fill: "#d9d5cc", stroke: "#5c584f", "stroke-width": 4 }, g));
+    el("rect", { x: 160, y: 760, width: 360, height: 50, rx: 10, fill: "#3a414c" }, g);
+    el("rect", { x: 560, y: 760, width: 360, height: 50, rx: 10, fill: "#3a414c" }, g);
+    el("text", { x: 540, y: 880, "text-anchor": "middle", class: "m-label", text: "bisagra" }, g);
+  }
+
+  // ---------------------------------------------------------------- atoms: slow cooling vs very fast cooling
+  const N = 9, STEP = 38, PANEL = 380;
+  let at = {};
+  function buildAtoms() {
+    const g = el("g", {}, $("#sc-atoms"));
+    const panel = (x0, label, color) => {
+      el("rect", { x: x0, y: 560, width: PANEL, height: PANEL, rx: 10, fill: "#faf8f3", stroke: "var(--line)", "stroke-width": 3 }, g);
+      el("text", { x: x0 + PANEL / 2, y: 1000, "text-anchor": "middle", class: "m-label", text: label }, g);
+      const atoms = [];
+      const clipId = "panel-" + x0;
+      el("rect", { x: x0 + 4, y: 564, width: PANEL - 8, height: PANEL - 8, rx: 8 }, el("clipPath", { id: clipId }, el("defs", {}, g)));
+      const ag = el("g", { "clip-path": `url(#${clipId})` }, g);
+      for (let i = 0; i < N * N; i++) atoms.push(el("circle", { r: 13, fill: color }, ag));
+      return atoms;
+    };
+    at.cx = [100, 600];
+    at.cryst = panel(100, "enfriado lento: cristales", "#b3386b");
+    at.glass = panel(600, "enfriado muy rápido: vidrio", "#2f5e8e");
+    at.boundary = el("line", { x1: 100 + 40, y1: 560 + PANEL - 40, x2: 100 + PANEL - 40, y2: 560 + 40, stroke: "#b3386b", "stroke-width": 4, "stroke-dasharray": "10 8", opacity: 0 }, g);
+    at.therm = el("rect", { x: 515, y: 600, width: 50, height: 300, rx: 25, fill: "#e9e5dc" }, g);
+    at.mercury = el("rect", { x: 527, width: 26, rx: 13, fill: "#c98a1b" }, g);
+  }
+  function latticePos(i, x0) {
+    const gi = i % N, gj = Math.floor(i / N);
+    // two grains with different orientations, split by the diagonal
+    // grain B is turned about its own centre, so the two grains meet along a messy boundary
+    const inB = gi + gj >= N;
+    const ang = inB ? 0.3 : 0;
+    const cx = x0 + (inB ? PANEL * 0.66 : PANEL / 2), cy = 560 + (inB ? PANEL * 0.66 : PANEL / 2);
+    const bx = x0 + 38 + gi * STEP - cx, by = 560 + 38 + gj * STEP - cy;
+    return [cx + bx * Math.cos(ang) - by * Math.sin(ang), cy + bx * Math.sin(ang) + by * Math.cos(ang)];
+  }
+  function randomPos(i, x0, seed) {
+    return [x0 + 30 + rnd(seed + i * 2) * (PANEL - 60), 560 + 30 + rnd(seed + i * 2 + 1) * (PANEL - 60)];
+  }
+  function drawAtoms(t, s, A) {
+    const cool = ramp(t, A.enfriado.start, A.cristales.end, ease.inOut);    // slow cooling, left
+    const quench = ramp(t, A.enfriado.start, A.enfriado.start + 0.5, ease.out); // very fast, right
+    const jitter = (amp, i, k) => amp * Math.sin(t * 9 + i * 1.7 + k * 2.3);
+    at.cryst.forEach((c, i) => {
+      const r = randomPos(i, 100, 11), l = latticePos(i, 100), amp = 9 * (1 - cool);
+      c.setAttribute("cx", (lerp(r[0], l[0], cool) + jitter(amp, i, 0)).toFixed(1));
+      c.setAttribute("cy", (lerp(r[1], l[1], cool) + jitter(amp, i, 1)).toFixed(1));
+    });
+    at.glass.forEach((c, i) => {
+      const r = randomPos(i, 600, 777), amp = 9 * (1 - quench);
+      c.setAttribute("cx", (r[0] + jitter(amp, i, 0)).toFixed(1));
+      c.setAttribute("cy", (r[1] + jitter(amp, i, 1)).toFixed(1));
+    });
+    at.boundary.setAttribute("opacity", String(ramp(t, A.cristales.end, A.cristales.end + 0.4)));
+    const temp = 1 - cool;
+    at.mercury.setAttribute("y", (890 - 270 * temp).toFixed(1));
+    at.mercury.setAttribute("height", (270 * temp + 10).toFixed(1));
+  }
+
+  // ---------------------------------------------------------------- bending two bars
+  let bb = {};
+  function bar(g, x, color, grains) {
+    const gg = el("g", {}, g);
+    const shape = el("path", { fill: color }, gg);
+    const lines = [];
+    if (grains) for (let i = 0; i < 6; i++) lines.push(el("path", { fill: "none", stroke: "#f3f0e9", "stroke-width": 3 }, gg));
+    return { gg, shape, lines, x };
+  }
+  function barPath(x, bend, offset = 0, w = 70, h = 440) {
+    // a vertical bar fixed at the bottom; the top bends sideways (quadratic in height)
+    const pts = [], back = [];
+    for (let k = 0; k <= 20; k++) {
+      const v = k / 20, y = 1120 - v * h, dx = bend * v * v;
+      pts.push([x - w / 2 + offset + dx, y]); back.unshift([x + w / 2 - offset + dx, y]);
+    }
+    return pts.concat(back);
+  }
+  function buildBend() {
+    const g = el("g", {}, $("#sc-bend"));
+    bb.a = bar(g, 330, "#b3386b", true);
+    bb.b = bar(g, 750, "#2f5e8e", false);
+    el("rect", { x: 180, y: 1120, width: 300, height: 30, fill: "#5c584f" }, g);
+    el("rect", { x: 600, y: 1120, width: 300, height: 30, fill: "#5c584f" }, g);
+    el("text", { x: 330, y: 1200, "text-anchor": "middle", class: "m-label", text: "metal normal" }, g);
+    el("text", { x: 750, y: 1200, "text-anchor": "middle", class: "m-label", text: "vidrio metálico" }, g);
+    bb.arrowA = el("text", { x: 330, y: 610, "text-anchor": "middle", "font-size": 64, fill: "var(--ink-2)", text: "→" }, g);
+    bb.arrowB = el("text", { x: 750, y: 610, "text-anchor": "middle", "font-size": 64, fill: "var(--ink-2)", text: "→" }, g);
+  }
+  function drawBar(b, bend) {
+    const p = barPath(b.x, bend);
+    b.shape.setAttribute("d", "M" + p.map((q) => q[0].toFixed(1) + " " + q[1].toFixed(1)).join(" L") + " Z");
+    b.lines.forEach((ln, i) => {
+      // grain boundaries drawn inside the bar, bent with it
+      const v0 = (i + 0.5) / 6, y = 1120 - v0 * 440, dx = bend * v0 * v0;
+      ln.setAttribute("d", `M${b.x - 35 + dx} ${y} L${b.x + 35 + dx} ${y - 22}`);
+    });
+  }
+  function drawBend(t, s, A) {
+    // crystalline bar: bent, and when released it keeps a permanent bend
+    const pushA = ramp(t, A.deforma.start - 0.4, A.deforma.start + 0.4, ease.inOut);
+    const relA = ramp(t, A.siempre.start, A.siempre.start + 0.6, ease.inOut);
+    drawBar(bb.a, 150 * pushA - 90 * relA);
+    // metallic glass: bends further and springs back fully
+    const pushB = ramp(t, A.doblarse.start - 0.2, A.doblarse.start + 0.6, ease.inOut);
+    const relB = ramp(t, A.regresar.start, A.regresar.start + 0.6, ease.inOut);
+    drawBar(bb.b, 190 * pushB * (1 - relB));
+    bb.arrowA.setAttribute("opacity", String(pushA * (1 - relA)));
+    bb.arrowB.setAttribute("opacity", String(pushB * (1 - relB)));
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "Antes del lanzamiento del iPhone Duo, se rumoró que la bisagra del iPhone plegable sería de metal líquido. No es un metal derretido, es un vidrio metálico, un metal enfriado tan rápido que sus átomos no alcanzan a ordenarse en cristales. Sin cristales no tienen esas fronteras internas donde un metal normal se deforma para siempre, por eso pueden doblarse bastante más y regresar a su forma. Lo que sí confirmó Apple, la bisagra con la cubierta de titanio, lo del metal líquido sigue siendo un rumor.";
+
+  Mosaic.short({
+    kicker: "Pantallas plegables",
+    title: "¿El metal que regresa a su forma?",
+    script: SCRIPT,
+    anchors: {
+      rumoro: "rumoro",
+      liquido: "metal liquido",
+      derretido: "derretido",
+      vidrio: "vidrio metalico",
+      enfriado: "enfriado",
+      atomos: "atomos",
+      cristales: "cristales",
+      fronteras: "fronteras",
+      deforma: "deforma",
+      siempre: "para siempre",
+      doblarse: "doblarse",
+      regresar: "regresar",
+      confirmo: "confirmo",
+      titanio: "titanio",
+      rumor: "rumor",
+    },
+    build() { buildRumor(); buildAtoms(); buildBend(); },
+    scenes: [
+      { el: "#sc-rumor", from: 0, to: "derretido-0.3", fadeIn: 0.4, rise: 0 },
+      { el: "#tag-rumor", from: "liquido-0.3", to: "derretido-0.3", fade: 0.3, rise: 0 },
+      { el: "#sc-atoms", from: "derretido-0.3", to: "fronteras-0.3", rise: 0, update: drawAtoms },
+      { el: "#cap-melt", from: "derretido-0.2", to: "enfriado-0.2", fade: 0.3 },
+      { el: "#cap-cool", from: "enfriado-0.2", to: "fronteras-0.3", fade: 0.3 },
+      { el: "#sc-bend", from: "fronteras-0.3", to: "confirmo-0.3", rise: 0, update: drawBend },
+      { el: "#cap-perm", from: "fronteras-0.2", to: "doblarse-0.4", fade: 0.3 },
+      { el: "#cap-back", from: "doblarse-0.4", to: "confirmo-0.3", fade: 0.3 },
+      { el: "#tag-ok", from: "confirmo-0.2", to: "end", fade: 0.3, rise: 0 },
+      { el: "#tag-rumor2", from: "rumor-1.0", to: "end", fade: 0.3, rise: 0 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>

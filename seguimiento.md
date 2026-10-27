@@ -15,7 +15,7 @@ Guion: `guiones/shorts-hardware-2026-10-27.md` · Tomas: `audios/shorts-hardware
 | B1 ⭐ | ¿Cómo se dobla una pantalla? | ✅ 27 oct | ✅ 27 oct | — | ✅ 27 oct | — | — | toma 01 |
 | B2 ⭐ | ¿Por qué las plegables tienen una marca en medio? | ✅ 27 oct | ✅ 27 oct | — | ✅ 27 oct | — | — | toma 04 · verificar en apple.com «nano-textura» y el aviso de pantalla interior |
 | B3 | ¿Una pantalla que se cura sola? | ✅ 27 oct | ✅ 27 oct | — | ✅ 27 oct | — | — | toma 01 |
-| B4 | ¿El metal que regresa a su forma? | ✅ 27 oct | ✅ 27 oct | — | — | — | — | toma 02 |
+| B4 | ¿El metal que regresa a su forma? | ✅ 27 oct | ✅ 27 oct | — | ✅ 27 oct | — | — | toma 02 |
 | B5 | ¿Cuántas veces se puede doblar una pantalla? | ✅ 27 oct | ✗ 27 oct | — | — | — | — | descartado: débil / demasiado centrado en Apple |
 | C1 ⭐ | ¿Qué es ARM y por qué Apple dejó a Intel? | ✅ 27 oct | ✅ 27 oct | — | — | — | — | toma 02 · «8 vs 4 instrucciones por ciclo» es de análisis independientes, no de Apple |
 | C2 | Memoria unificada | ✅ 27 oct | ✅ 27 oct | — | — | — | — | toma 02 |
