@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>B3 · ¿Una pantalla que se cura sola?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+  .stamp { position: absolute; inset: auto; left: 140px; width: 800px; top: 640px; padding: 40px 0; text-align: center; font-size: 84px; font-weight: 750; letter-spacing: 0.04em; color: var(--fuchsia); border: 10px solid var(--fuchsia); border-radius: 18px; transform: rotate(-4deg); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-intro" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-q" style="top:1300px">¿Y si tu pantalla se reparara sola?</div>
+    <div class="m-caption scene" id="cap-pat" style="top:1300px">Una patente de Apple<small>pantalla plegable con una capa que se autorrepara</small></div>
+
+    <svg class="full scene" id="sc-heal" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-poly" style="top:1300px">En la cubierta, un polímero especial</div>
+    <div class="m-caption scene" id="cap-flow" style="top:1300px">Vuelve a fluir y cierra la marca</div>
+    <div class="m-caption scene" id="cap-trig" style="top:1300px">Se activa o se acelera con<small>calor · luz · corriente eléctrica</small></div>
+
+    <div class="stamp scene" id="stamp">PATENTE ≠ PRODUCTO</div>
+    <svg class="full scene" id="sc-docs" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-docs" style="top:1300px">Muchas ideas patentadas<small>nunca llegan a la tienda</small></div>
+    <div class="m-caption scene" id="cap-prob" style="top:1300px">Pero dicen mucho del problema<small>que intentan resolver</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp } = Mosaic;
+
+  // ---------------------------------------------------------------- intro: a scratched screen and a patent
+  let it = {};
+  function buildIntro() {
+    const g = el("g", {}, $("#sc-intro"));
+    el("rect", { x: 200, y: 520, width: 680, height: 640, rx: 40, fill: "#3a414c", stroke: "#8a8478", "stroke-width": 8 }, g);
+    el("line", { x1: 540, y1: 530, x2: 540, y2: 1150, stroke: "#b8c2cf", "stroke-width": 3, opacity: 0.6 }, g);
+    it.scratch = el("path", { d: "M330 700 C420 760, 520 790, 690 860", fill: "none", stroke: "#e8edf2", "stroke-width": 6, "stroke-linecap": "round" }, g);
+    it.doc = el("g", {}, g);
+    el("rect", { x: 610, y: 820, width: 300, height: 380, rx: 10, fill: "#faf8f3", stroke: "var(--ink-2)", "stroke-width": 4 }, it.doc);
+    el("text", { x: 760, y: 880, "text-anchor": "middle", "font-size": 34, "font-weight": 700, fill: "var(--ink)", text: "PATENTE" }, it.doc);
+    for (let i = 0; i < 6; i++) el("rect", { x: 640, y: 920 + i * 40, width: i % 3 === 2 ? 160 : 240, height: 14, rx: 7, fill: "var(--paper-2)" }, it.doc);
+  }
+  function drawIntro(t, s, A) {
+    it.scratch.setAttribute("pathLength", 100);
+    it.scratch.setAttribute("stroke-dasharray", "100 100");
+    it.scratch.setAttribute("stroke-dashoffset", String(100 * (1 - ramp(t, 0.2, 1.2, ease.out))));
+    const d = ramp(t, A.patente.start - 0.2, A.patente.start + 0.4, ease.out);
+    it.doc.setAttribute("opacity", String(d));
+    it.doc.setAttribute("transform", `translate(0 ${(1 - d) * 40})`);
+  }
+
+  // ---------------------------------------------------------------- cross-section: the scratch closes
+  let hl = {};
+  const SURF = 760, X0 = 140, X1 = 940;
+  function surfaceY(x, depth) {
+    // V-shaped scratch centred at 540, 90 px wide, depth in px
+    const u = Math.abs(x - 540) / 45;
+    return SURF + (u < 1 ? depth * (1 - u) : 0);
+  }
+  function buildHeal() {
+    const g = el("g", {}, $("#sc-heal"));
+    hl.layer = el("polygon", { fill: "#e7e1d3" }, g);
+    hl.chains = [];
+    for (let i = 0; i < 7; i++) hl.chains.push(el("polyline", { fill: "none", stroke: ["#2f5e8e", "#3a9a80", "#b3386b"][i % 3], "stroke-width": 4, opacity: 0.75 }, g));
+    hl.surf = el("polyline", { fill: "none", stroke: "#2e2d2a", "stroke-width": 5 }, g);
+    el("rect", { x: X0, y: SURF + 230, width: X1 - X0, height: 80, fill: "#3a414c" }, g);
+    el("text", { x: 540, y: SURF + 280, "text-anchor": "middle", class: "m-label", fill: "#e9e5dc", text: "pantalla" }, g);
+    el("text", { x: X0, y: SURF - 40, class: "m-label", text: "cubierta (polímero)" }, g);
+    hl.icons = ["calor", "luz", "corriente"].map((label, i) => {
+      const gg = el("g", { transform: `translate(${290 + i * 250} 560)` }, g);
+      el("circle", { r: 56, fill: "#faf8f3", stroke: "var(--line)", "stroke-width": 4 }, gg);
+      if (i === 0) el("path", { d: "M0 30 C-26 10, -10 -10, 0 -34 C10 -10, 26 10, 0 30 Z", fill: "#c98a1b" }, gg);
+      if (i === 1) { el("circle", { r: 16, fill: "#c98a1b" }, gg); for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4; el("line", { x1: 24 * Math.cos(a), y1: 24 * Math.sin(a), x2: 36 * Math.cos(a), y2: 36 * Math.sin(a), stroke: "#c98a1b", "stroke-width": 5, "stroke-linecap": "round" }, gg); } }
+      if (i === 2) el("polygon", { points: "6,-36 -16,4 0,4 -6,36 16,-6 0,-6", fill: "#c98a1b" }, gg);
+      el("text", { y: 96, "text-anchor": "middle", class: "m-label", text: label }, gg);
+      return gg;
+    });
+  }
+  function drawHeal(t, s, A) {
+    // scratch appears on "raya", partly closes on "fluir… cerrar la marca", closes fully with the triggers
+    let depth = 110 * ramp(t, A.raya.start - 0.2, A.raya.start + 0.3, ease.out);
+    depth *= 1 - 0.6 * ramp(t, A.fluir.start, A.marca.end, ease.inOut);
+    depth *= 1 - ramp(t, A.calor.start, A.corriente.end + 0.4, ease.inOut);
+    const pts = [];
+    for (let x = X0; x <= X1; x += 5) pts.push([x, surfaceY(x, depth)]);
+    hl.surf.setAttribute("points", pts.map((p) => p.join(",")).join(" "));
+    hl.layer.setAttribute("points", pts.concat([[X1, SURF + 230], [X0, SURF + 230]]).map((p) => p.join(",")).join(" "));
+    // polymer chains: wavy lines that follow the surface; they wiggle while the material flows
+    const flowing = ramp(t, A.fluir.start - 0.3, A.fluir.start + 0.3) * (1 - ramp(t, A.importante.start - 0.5, A.importante.start));
+    hl.chains.forEach((c, i) => {
+      const y0 = 40 + i * 26, cp = [];
+      for (let x = X0 + 10; x <= X1 - 10; x += 8) {
+        const sy = surfaceY(x, depth * Math.max(0, 1 - y0 / 200));
+        cp.push(`${x},${(sy + y0 + 8 * Math.sin(x / 26 + i * 1.7 + flowing * t * 3)).toFixed(1)}`);
+      }
+      c.setAttribute("points", cp.join(" "));
+    });
+    const on = (a) => ramp(t, a.start - 0.15, a.start + 0.25);
+    hl.icons[0].setAttribute("opacity", String(0.25 + 0.75 * on(A.calor)));
+    hl.icons[1].setAttribute("opacity", String(0.25 + 0.75 * on(A.luz)));
+    hl.icons[2].setAttribute("opacity", String(0.25 + 0.75 * on(A.corriente)));
+    hl.icons.forEach((ic) => ic.style.visibility = t >= A.calor.start - 0.6 ? "visible" : "hidden");
+  }
+
+  // ---------------------------------------------------------------- many patents, few products
+  let dc = {};
+  function buildDocs() {
+    const g = el("g", {}, $("#sc-docs"));
+    dc.docs = [];
+    for (let i = 0; i < 12; i++) {
+      const gg = el("g", { transform: `translate(${110 + (i % 4) * 128} ${560 + Math.floor(i / 4) * 170})` }, g);
+      el("rect", { width: 100, height: 130, rx: 6, fill: "#faf8f3", stroke: "var(--ink-2)", "stroke-width": 3 }, gg);
+      for (let k = 0; k < 4; k++) el("rect", { x: 14, y: 20 + k * 24, width: k === 3 ? 44 : 72, height: 9, rx: 4, fill: "var(--paper-2)" }, gg);
+      dc.docs.push(gg);
+    }
+    // a store, with only a dashed path that does not arrive
+    dc.store = el("g", { transform: "translate(830 700)" }, g);
+    el("rect", { x: -80, y: 0, width: 160, height: 140, rx: 6, fill: "#faf8f3", stroke: "var(--ink-2)", "stroke-width": 4 }, dc.store);
+    el("polygon", { points: "-100,0 0,-60 100,0", fill: "var(--ink-2)" }, dc.store);
+    el("text", { y: 200, "text-anchor": "middle", class: "m-label", text: "tienda" }, dc.store);
+    dc.path = el("line", { x1: 730, y1: 770, x2: 640, y2: 770, stroke: "var(--fuchsia)", "stroke-width": 6, "stroke-dasharray": "14 12" }, g);
+  }
+  function drawDocs(t, s, A) {
+    dc.docs.forEach((d, i) => d.setAttribute("opacity", String(ramp(t, A.registra.start - 0.3 + i * 0.08, A.registra.start + i * 0.08))));
+    dc.store.setAttribute("opacity", String(ramp(t, A.tienda.start - 0.6, A.tienda.start - 0.2)));
+    dc.path.setAttribute("opacity", String(ramp(t, A.tienda.start - 0.4, A.tienda.start)));
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "Y si tu pantalla se repara sola, Apple tiene una patente para pantallas plegables con una capa que se autorrepara. La idea, en la cubierta va un polímero especial que si se raya o se marca un poco, ese material puede volver a fluir y cerrar la marca. Y el proceso se activa o se acelera con calor, con luz o con corriente eléctrica. Ahora lo importante, una patente no es un producto. Apple registra muchas ideas que nunca llegan a la tienda. Pero eso dice mucho sobre el problema que está intentando resolver.";
+
+  Mosaic.short({
+    kicker: "Pantallas plegables",
+    title: "¿Una pantalla que se cura sola?",
+    script: SCRIPT,
+    anchors: {
+      patente: "patente",
+      cubierta: "cubierta",
+      raya: "raya",
+      fluir: "fluir",
+      marca: "cerrar la marca",
+      calor: "calor",
+      luz: "luz",
+      corriente: "corriente",
+      importante: "importante",
+      producto: "producto",
+      registra: "registra",
+      tienda: "tienda",
+      problema: "problema",
+    },
+    build() { buildIntro(); buildHeal(); buildDocs(); },
+    scenes: [
+      { el: "#sc-intro", from: 0, to: "cubierta-0.3", fadeIn: 0.3, rise: 0, update: drawIntro },
+      { el: "#cap-q", from: 0.1, to: "patente-0.3", fade: 0.3 },
+      { el: "#cap-pat", from: "patente-0.3", to: "cubierta-0.3", fade: 0.3 },
+      { el: "#sc-heal", from: "cubierta-0.3", to: "importante-0.2", rise: 0, update: drawHeal },
+      { el: "#cap-poly", from: "cubierta-0.2", to: "fluir-0.3", fade: 0.3 },
+      { el: "#cap-flow", from: "fluir-0.3", to: "calor-0.6", fade: 0.3 },
+      { el: "#cap-trig", from: "calor-0.6", to: "importante-0.2", fade: 0.3 },
+      { el: "#stamp", from: "importante-0.1", to: "registra-0.2", fade: 0.3, rise: 0 },
+      { el: "#sc-docs", from: "registra-0.3", to: "end", rise: 0, update: drawDocs },
+      { el: "#cap-docs", from: "registra-0.2", to: "problema-0.8", fade: 0.3 },
+      { el: "#cap-prob", from: "problema-0.8", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
