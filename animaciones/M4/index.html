@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>M4 · ¿Qué es la memoria caché del procesador?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-chip" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-far" style="top:1300px">La RAM le queda lejos<small>fuera del chip</small></div>
+    <div class="m-caption scene" id="cap-wait" style="top:1300px">Un dato de la RAM: unos 100 ns<small>y el núcleo se queda esperando</small></div>
+    <div class="m-caption scene" id="cap-cache" style="top:1300px">Caché: pequeña y dentro del chip<small>copia de lo reciente y de lo que está a un lado</small></div>
+
+    <svg class="full scene" id="sc-desk" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-desk" style="top:1300px">Lo que más usas, en el escritorio<small>en vez de ir a la bodega cada vez</small></div>
+
+    <svg class="full scene" id="sc-bars" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-bars" style="top:1300px">La más cercana: menos de 1&nbsp;ns<small>más de 100 veces más rápido que la RAM</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp } = Mosaic;
+  const op = (n, v) => n.setAttribute("opacity", String(v));
+  const on = (t, a, d = 0.3) => ramp(t, a - d, a + 0.15);
+
+  // ---------------------------------------------------------------- chip, caches and far-away RAM
+  let ch = {};
+  function packet(g, color) {
+    const p = el("g", {}, g);
+    el("rect", { x: -22, y: -16, width: 44, height: 32, rx: 6, fill: color }, p);
+    return p;
+  }
+  function buildChip() {
+    const g = el("g", {}, $("#sc-chip"));
+    el("rect", { x: 100, y: 520, width: 480, height: 480, rx: 22, fill: "#faf8f3", stroke: "var(--ink)", "stroke-width": 6 }, g);
+    el("text", { x: 120, y: 500, class: "m-label", text: "chip del procesador" }, g);
+    el("rect", { x: 140, y: 580, width: 170, height: 170, rx: 12, fill: "#2f5e8e" }, g);
+    el("text", { x: 225, y: 676, "text-anchor": "middle", "font-size": 34, "font-weight": 700, fill: "#faf8f3", text: "núcleo" }, g);
+    ch.caches = el("g", {}, g);
+    const c = (x, y, w, h, name, color) => {
+      const gg = el("g", {}, ch.caches);
+      el("rect", { x, y, width: w, height: h, rx: 10, fill: color, opacity: 0.18, stroke: color, "stroke-width": 4 }, gg);
+      el("text", { x: x + w / 2, y: y + h / 2 + 12, "text-anchor": "middle", "font-size": 32, "font-weight": 700, fill: color, text: name }, gg);
+      return gg;
+    };
+    ch.l1 = c(322, 580, 70, 170, "L1", "#3a9a80");
+    ch.l2 = c(404, 580, 136, 170, "L2", "#3a9a80");
+    ch.l3 = c(140, 780, 400, 180, "L3", "#3a9a80");
+    // RAM, outside the chip
+    ch.ram = el("g", {}, g);
+    el("rect", { x: 780, y: 560, width: 150, height: 400, rx: 10, fill: "#3a9a80", opacity: 0 }, ch.ram);
+    el("rect", { x: 790, y: 560, width: 130, height: 400, rx: 8, fill: "#faf8f3", stroke: "var(--ink-2)", "stroke-width": 5 }, ch.ram);
+    for (let i = 0; i < 5; i++) el("rect", { x: 815, y: 590 + i * 74, width: 80, height: 52, rx: 4, fill: "#2b2f36" }, ch.ram);
+    el("text", { x: 855, y: 1010, "text-anchor": "middle", class: "m-label", text: "RAM" }, ch.ram);
+    ch.bus = el("line", { x1: 580, y1: 665, x2: 790, y2: 665, stroke: "var(--ink-2)", "stroke-width": 6, "stroke-dasharray": "10 10" }, g);
+    ch.far = el("text", { x: 685, y: 640, "text-anchor": "middle", "font-size": 28, "font-weight": 600, fill: "var(--ink-2)", text: "lejos" }, g);
+    ch.slow = packet(g, "#b3386b");
+    ch.fast = packet(g, "#3a9a80");
+    // waiting clock + counter
+    ch.wait = el("g", {}, g);
+    el("circle", { cx: 160, cy: 1110, r: 44, fill: "#faf8f3", stroke: "#b3386b", "stroke-width": 6 }, ch.wait);
+    ch.hand = el("line", { x1: 160, y1: 1110, x2: 160, y2: 1078, stroke: "#b3386b", "stroke-width": 6, "stroke-linecap": "round" }, ch.wait);
+    ch.ns = el("text", { x: 230, y: 1104, "font-size": 44, "font-weight": 700, fill: "#b3386b", text: "" }, ch.wait);
+    ch.ops = el("text", { x: 230, y: 1150, "font-size": 30, fill: "var(--ink-2)", text: "" }, ch.wait);
+    ch.copyLbl = el("g", {}, g);
+    ch.lines = [];
+    for (let i = 0; i < 4; i++) ch.lines.push(el("rect", { width: 26, height: 26, rx: 4, fill: i === 1 ? "#c98a1b" : "#e6c88a" }, g));
+    el("text", { x: 880, y: 1110, "text-anchor": "end", "font-size": 30, "font-weight": 600, fill: "#c98a1b", text: "el dato que usaste" }, ch.copyLbl);
+    ch.sideLbl = el("text", { x: 880, y: 1150, "text-anchor": "end", "font-size": 30, fill: "#b07a18", text: "+ sus vecinos" }, g);
+    ch.l1ns = el("text", { x: 357, y: 560, "text-anchor": "middle", "font-size": 28, "font-weight": 700, fill: "#3a9a80", text: "≈1 ns" }, g);
+  }
+  function drawChip(t, s, A) {
+    op(ch.ram, on(t, A.ram.start));
+    op(ch.bus, on(t, A.lejos.start)); op(ch.far, on(t, A.lejos.start));
+    // slow trip from RAM: loops every 2.4 s while the narration talks about waiting (100 ns per trip)
+    const t0 = A.dato.start, t1 = A.solucion.start;
+    const P = 2.4;
+    const loop = t >= t0 && t < t1 ? ((t - t0) % P) / P : 0;
+    const k = ease.inOut(loop);
+    ch.slow.setAttribute("transform", `translate(${lerp(855, 225, k).toFixed(1)} 665)`);
+    op(ch.slow, t >= t0 && t < t1 ? Math.min(1, loop * 12, (1 - loop) * 12) : 0);
+    op(ch.wait, ramp(t, t0, t0 + 0.3) * (1 - ramp(t, t1 - 0.3, t1)));
+    ch.ns.textContent = `esperando… ${Math.round(100 * loop)} ns`;
+    const a = (t - t0) * 5;
+    ch.hand.setAttribute("x2", (160 + 32 * Math.sin(a)).toFixed(1));
+    ch.hand.setAttribute("y2", (1110 - 32 * Math.cos(a)).toFixed(1));
+    const opsOn = ramp(t, A.cientos.start - 0.3, A.cientos.start + 0.2);
+    ch.ops.textContent = opsOn > 0 ? "en 100 ns, a 4 GHz: 400 ciclos de reloj" : "";
+    op(ch.ops, opsOn);
+    // caches appear inside the chip
+    op(ch.caches, on(t, A.cache.start));
+    [ch.l1, ch.l2, ch.l3].forEach((n, i) => op(n, ramp(t, A.cache.start - 0.2 + i * 0.25, A.cache.start + 0.2 + i * 0.25)));
+    // a copy of the data used, plus its neighbours, travels from RAM to L1
+    const cp = ramp(t, A.copia.start, A.copia.start + 1.2, ease.inOut);
+    const side = ramp(t, A.lado.start - 0.2, A.lado.start + 0.3);
+    ch.lines.forEach((r, i) => {
+      const x = lerp(816 + i * 28, 344, cp), y = lerp(880, lerp(880, 600 + i * 36, cp), cp);
+      r.setAttribute("x", x.toFixed(1)); r.setAttribute("y", y.toFixed(1));
+      op(r, i === 1 ? on(t, A.copia.start) : side);
+    });
+    op(ch.copyLbl, on(t, A.poco.start) * (1 - cp * 0));
+    op(ch.sideLbl, side);
+    // after the copy, the core reads from L1 almost instantly
+    const f0 = A.lado.end + 0.6;
+    const fl = t >= f0 ? ((t - f0) % 0.6) / 0.6 : 0;
+    ch.fast.setAttribute("transform", `translate(${lerp(357, 260, fl).toFixed(1)} 665) scale(0.7)`);
+    op(ch.fast, t >= f0 ? 1 : 0);
+    op(ch.l1ns, ramp(t, f0, f0 + 0.3));
+  }
+
+  // ---------------------------------------------------------------- analogy: desk vs warehouse
+  let dk = {};
+  function buildDesk() {
+    const g = el("g", {}, $("#sc-desk"));
+    // desk with papers
+    el("rect", { x: 110, y: 820, width: 360, height: 26, rx: 6, fill: "#8a6a45" }, g);
+    el("rect", { x: 130, y: 846, width: 20, height: 180, fill: "#8a6a45" }, g);
+    el("rect", { x: 430, y: 846, width: 20, height: 180, fill: "#8a6a45" }, g);
+    [[170, 790, -6], [240, 794, 4], [320, 788, -2]].forEach(([x, y, r]) => el("rect", { x, y, width: 80, height: 30, rx: 3, fill: "#faf8f3", stroke: "var(--ink-2)", "stroke-width": 3, transform: `rotate(${r} ${x + 40} ${y + 15})` }, g));
+    el("text", { x: 290, y: 1090, "text-anchor": "middle", "font-size": 38, "font-weight": 700, fill: "#3a9a80", text: "escritorio = caché" }, g);
+    el("text", { x: 290, y: 1135, "text-anchor": "middle", class: "m-note", text: "a la mano" }, g);
+    // warehouse far away
+    dk.ware = el("g", {}, g);
+    el("polygon", { points: "650,700 800,610 950,700", fill: "#e9e5dc", stroke: "var(--ink)", "stroke-width": 6, "stroke-linejoin": "round" }, dk.ware);
+    el("rect", { x: 660, y: 700, width: 280, height: 320, fill: "#faf8f3", stroke: "var(--ink)", "stroke-width": 6 }, dk.ware);
+    el("rect", { x: 750, y: 880, width: 100, height: 140, fill: "var(--ink-2)" }, dk.ware);
+    for (let i = 0; i < 3; i++) el("rect", { x: 690 + i * 80, y: 730, width: 60, height: 50, fill: "#c98a1b", opacity: 0.6 }, dk.ware);
+    el("text", { x: 800, y: 1090, "text-anchor": "middle", "font-size": 38, "font-weight": 700, fill: "#b3386b", text: "bodega = RAM" }, dk.ware);
+    el("text", { x: 800, y: 1135, "text-anchor": "middle", class: "m-note", text: "cabe todo, pero está lejos" }, dk.ware);
+    dk.path = el("path", { d: "M470 980 C560 1020 580 960 660 980", fill: "none", stroke: "#b3386b", "stroke-width": 5, "stroke-dasharray": "12 10" }, dk.ware);
+  }
+  function drawDesk(t, s, A) {
+    op(dk.ware, on(t, A.bodega.start));
+    dk.path.setAttribute("stroke-dashoffset", (-(t * 30) % 22).toFixed(1));
+  }
+
+  // ---------------------------------------------------------------- access time bars (linear scale)
+  let bs = {};
+  const DATA = [["L1", 1, "≈ 1 ns", "#3a9a80"], ["L2", 4, "≈ 4 ns", "#3a9a80"], ["L3", 12, "≈ 12 ns", "#3a9a80"], ["RAM", 100, "≈ 100 ns", "#b3386b"]];
+  function buildBars() {
+    const g = el("g", {}, $("#sc-bars"));
+    el("text", { x: 100, y: 500, class: "m-label", text: "Tiempo para conseguir un dato" }, g);
+    bs.rows = DATA.map(([n, v, lbl, col], i) => {
+      const y = 580 + i * 150;
+      const gg = el("g", {}, g);
+      el("text", { x: 100, y: y + 46, "font-size": 40, "font-weight": 700, fill: col, text: n }, gg);
+      const r = el("rect", { x: 230, y, width: 0, height: 64, rx: 6, fill: col }, gg);
+      const tx = el("text", { y: y + 46, "font-size": 36, "font-weight": 650, fill: "var(--ink)", text: lbl }, gg);
+      return { gg, r, tx, v };
+    });
+    el("text", { x: 100, y: 1200, class: "m-note", text: "valores típicos de una PC actual; escala lineal" }, g);
+  }
+  function drawBars(t, s, A) {
+    bs.rows.forEach((b, i) => {
+      const a = s.from + 0.2 + i * 0.35;
+      const p = ramp(t, a, a + 0.8, ease.out);
+      const w = Math.max(3, (b.v / 100) * 520 * p);
+      b.r.setAttribute("width", w.toFixed(1));
+      b.tx.setAttribute("x", (230 + w + 20).toFixed(1));
+      op(b.gg, ramp(t, a - 0.2, a + 0.2));
+    });
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "Tu procesador puede hacer miles de millones de operaciones por segundo, pero tiene un problema: la memoria RAM le queda lejos. Pedirle un dato a la RAM tarda unos cien nanosegundos. Suena a nada, pero en ese tiempo el procesador podría haber hecho cientos de operaciones. Se quedaría esperando todo el tiempo. La solución es la caché: una memoria pequeñita y muy rápida dentro del mismo chip, donde se guarda una copia de lo que usaste hace poco y de lo que está a un lado. Es como tener sobre tu escritorio los papeles que más usas, en vez de ir a la bodega cada vez. La caché más cercana responde en menos de un nanosegundo: más de cien veces más rápido que la RAM.";
+
+  Mosaic.short({
+    kicker: "Memoria y chips",
+    title: "¿Qué es la memoria caché del procesador?",
+    script: SCRIPT,
+    anchors: {
+      procesador: "procesador",
+      problema: "problema",
+      ram: "ram",
+      lejos: "lejos",
+      dato: "dato",
+      cien: ["cien nanosegundos", "100 nanosegundos"],
+      cientos: "cientos",
+      esperando: "esperando",
+      solucion: "solucion",
+      cache: "cache",
+      chip: "mismo chip",
+      copia: "copia",
+      poco: "hace poco",
+      lado: "a un lado",
+      escritorio: "escritorio",
+      bodega: "bodega",
+      cercana: "cercana",
+      nanosegundo: ["un nanosegundo", "1 nanosegundo"],
+      veces: ["cien veces", "100 veces"],
+    },
+    build() { buildChip(); buildDesk(); buildBars(); },
+    scenes: [
+      { el: "#sc-chip", from: 0, to: "escritorio-0.4", fadeIn: 0.4, rise: 0, update: drawChip },
+      { el: "#cap-far", from: "ram-0.2", to: "dato-0.3", fade: 0.3 },
+      { el: "#cap-wait", from: "dato-0.3", to: "solucion-0.3", fade: 0.3 },
+      { el: "#cap-cache", from: "solucion-0.3", to: "escritorio-0.4", fade: 0.3 },
+      { el: "#sc-desk", from: "escritorio-0.4", to: "cercana-0.4", rise: 0, update: drawDesk },
+      { el: "#cap-desk", from: "escritorio-0.3", to: "cercana-0.4", fade: 0.3 },
+      { el: "#sc-bars", from: "cercana-0.4", to: "end", rise: 0, update: drawBars },
+      { el: "#cap-bars", from: "cercana-0.3", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
