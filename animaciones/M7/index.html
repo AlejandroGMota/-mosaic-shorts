@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>M7 · ¿Por qué un SSD se desgasta con el uso?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-ssd" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-ssd" style="top:1300px">Sin partes móviles…<small>pero sí se gastan</small></div>
+
+    <svg class="full scene" id="sc-cell" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-cell" style="top:1300px">Electrones atrapados en una celda<small>rodeada de un aislante muy delgado</small></div>
+    <div class="m-caption scene" id="cap-wear" style="top:1300px">Cada borrado y escritura<small>los electrones cruzan el aislante y lo van dañando</small></div>
+    <div class="m-caption scene" id="cap-cycles" style="top:1300px">Del orden de 1000 a 3000 ciclos<small>por celda, en los SSD comunes de hoy</small></div>
+
+    <svg class="full scene" id="sc-grid" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-grid" style="top:1300px">El disco reparte las escrituras<small>para que ninguna celda se gaste antes</small></div>
+
+    <svg class="full scene" id="sc-tbw" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-tb" style="top:1300px">1 TB → cientos de TB escritos<small>garantizados</small></div>
+    <div class="m-caption scene" id="cap-tbw" style="top:1300px">Con uso normal, muchos años<small>antes se te queda chico que gastado</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp } = Mosaic;
+  const op = (n, v) => n.setAttribute("opacity", String(v));
+  const on = (t, a, d = 0.3) => ramp(t, a - d, a + 0.15);
+  const rnd = (i) => { const x = Math.sin(i * 12.9898 + 78.233) * 43758.5453; return x - Math.floor(x); };
+  const mix = (a, b, p) => {
+    const h = (c) => [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16));
+    const x = h(a), y = h(b);
+    return "#" + x.map((v, i) => Math.round(lerp(v, y[i], p)).toString(16).padStart(2, "0")).join("");
+  };
+
+  // ---------------------------------------------------------------- intro: an M.2 SSD, no moving parts
+  function buildSsd() {
+    const g = el("g", {}, $("#sc-ssd"));
+    el("rect", { x: 120, y: 700, width: 820, height: 220, rx: 14, fill: "#2f5e5a" }, g);
+    for (let i = 0; i < 3; i++) el("rect", { x: 300 + i * 200, y: 740, width: 160, height: 140, rx: 8, fill: "#2b2f36" }, g);
+    el("rect", { x: 160, y: 760, width: 100, height: 100, rx: 6, fill: "#4a525e" }, g);
+    for (let i = 0; i < 22; i++) el("rect", { x: 900, y: 712 + i * 9, width: 28, height: 5, fill: "#c98a1b" }, g);
+    el("circle", { cx: 150, cy: 810, r: 16, fill: "#f3f0e9" }, g);
+    el("text", { x: 540, y: 1000, "text-anchor": "middle", class: "m-label", text: "SSD: solo chips, nada se mueve" }, g);
+  }
+
+  // ---------------------------------------------------------------- one cell: each program/erase cycle damages the oxide
+  const CX0 = 240, CX1 = 760;
+  const Y = { gate: [600, 690], ox1: [690, 720], trap: [720, 800], tun: [800, 850], sub: [850, 1000] };
+  const PERIOD = 0.9;
+  let ce = {};
+  function buildCell() {
+    const g = el("g", {}, $("#sc-cell"));
+    const lay = ([y0, y1], fill) => el("rect", { x: CX0, y: y0, width: CX1 - CX0, height: y1 - y0, fill }, g);
+    lay(Y.sub, "#e2dccd");
+    lay(Y.gate, "#4a4843");
+    lay(Y.ox1, "#cfe0ea");
+    lay(Y.trap, "#c98a1b");
+    ce.tun = lay(Y.tun, "#cfe0ea");
+    const lbl = (y, text, color) => el("text", { x: CX1 + 24, y: y + 10, "font-size": 30, "font-weight": 650, fill: color, text }, g);
+    lbl(645, "compuerta", "#4a4843");
+    lbl(760, "trampa", "#a06c10");
+    ce.tunLbl = lbl(825, "aislante", "#5d8aa8");
+    lbl(925, "canal", "var(--ink-2)");
+    ce.marks = [];
+    for (let i = 0; i < 40; i++) {
+      const x = CX0 + 20 + rnd(i) * (CX1 - CX0 - 40), y = Y.tun[0] + 8 + rnd(i + 99) * 34;
+      ce.marks.push(el("line", { x1: x, y1: y, x2: x + 14 + rnd(i + 7) * 18, y2: y + (rnd(i + 3) - 0.5) * 20, stroke: "#5b2a3a", "stroke-width": 5, "stroke-linecap": "round" }, g));
+    }
+    ce.es = [];
+    for (let i = 0; i < 7; i++) ce.es.push(el("circle", { r: 11, fill: "#2f5e8e", stroke: "#faf8f3", "stroke-width": 3 }, g));
+    ce.count = el("text", { x: 120, y: 1120, "font-size": 46, "font-weight": 750, fill: "var(--ink)", text: "" }, g);
+    ce.endur = el("text", { x: 120, y: 1120, "font-size": 44, "font-weight": 650, fill: "#b3386b", text: "aguanta ≈ 1000 – 3000 ciclos" }, g);
+  }
+  function drawCell(t, s, A) {
+    const t0 = A.borra.start;
+    const e = Math.max(0, t - t0);
+    const n = t >= t0 ? Math.floor(e / PERIOD) : 0;
+    const ph = t >= t0 ? (e % PERIOD) / PERIOD : 0;
+    // write: channel -> trap (first half); erase: trap -> channel (second half)
+    const up = t < t0 ? 1 : ph < 0.5 ? ramp(ph, 0.05, 0.4, ease.inOut) : 1 - ramp(ph, 0.55, 0.9, ease.inOut);
+    ce.es.forEach((c, i) => {
+      c.setAttribute("cx", (CX0 + 70 + i * 56).toFixed(1));
+      c.setAttribute("cy", lerp(Y.sub[0] + 50 + (i % 2) * 20, Y.trap[0] + 30 + (i % 2) * 20, up).toFixed(1));
+    });
+    ce.marks.forEach((m, i) => op(m, i < n ? 1 : 0));
+    // the oxide darkens a little with the damage (drawing only: real damage is atomic scale)
+    ce.tun.setAttribute("fill", mix("#cfe0ea", "#c9a8b4", Math.min(1, n / 40)));
+    ce.count.textContent = `ciclos: ${n}`;
+    op(ce.count, on(t, t0) * (1 - ramp(t, A.ciclos.start - 0.4, A.ciclos.start - 0.1)));
+    op(ce.endur, on(t, A.ciclos.start));
+  }
+
+  // ---------------------------------------------------------------- wear leveling: without vs with
+  const N = 6, CS = 64;
+  let gr = {};
+  function grid(g, x0, title) {
+    el("text", { x: x0 + (N * CS) / 2, y: 560, "text-anchor": "middle", "font-size": 34, "font-weight": 700, fill: "var(--ink)", text: title }, g);
+    const cells = [];
+    for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) cells.push(el("rect", { x: x0 + i * CS, y: 600 + j * CS, width: CS - 6, height: CS - 6, rx: 4, fill: "#e9e5dc" }, g));
+    return cells;
+  }
+  function buildGrid() {
+    const g = el("g", {}, $("#sc-grid"));
+    gr.a = grid(g, 110, "sin reparto");
+    gr.b = grid(g, 556, "con reparto");
+    gr.aLbl = el("text", { x: 302, y: 1050, "text-anchor": "middle", "font-size": 30, "font-weight": 650, fill: "#b3386b", text: "una celda gastada" }, g);
+    gr.bLbl = el("text", { x: 748, y: 1050, "text-anchor": "middle", "font-size": 30, "font-weight": 650, fill: "#3a9a80", text: "todas se gastan parejo" }, g);
+    el("text", { x: 110, y: 1130, class: "m-note", text: "mismas escrituras en las dos; color = desgaste" }, g);
+  }
+  function drawGrid(t, s, A) {
+    const w = ramp(t, s.from + 0.3, A.terabyte.start - 0.4, ease.linear); // total writes so far
+    const hot = 7;
+    gr.a.forEach((c, i) => c.setAttribute("fill", mix("#e9e5dc", "#b3386b", i === hot ? Math.min(1, w * 6) : 0)));
+    gr.b.forEach((c, i) => c.setAttribute("fill", mix("#e9e5dc", "#b3386b", Math.min(1, w * 6 / 36 * (0.85 + 0.3 * rnd(i))))));
+    op(gr.aLbl, ramp(t, s.from + 1.5, s.from + 1.9));
+    op(gr.bLbl, ramp(t, A.ninguna.start - 0.2, A.ninguna.start + 0.3));
+  }
+
+  // ---------------------------------------------------------------- endurance: hundreds of TB written
+  let tb = {};
+  function buildTbw() {
+    const g = el("g", {}, $("#sc-tbw"));
+    el("text", { x: 120, y: 540, "font-size": 40, "font-weight": 700, fill: "var(--ink)", text: "SSD de 1 TB" }, g);
+    el("text", { x: 120, y: 590, class: "m-note", text: "garantía típica: cientos de TB escritos (ejemplo: 600 TB)" }, g);
+    tb.bar = el("rect", { x: 120, y: 630, height: 70, rx: 8, fill: "#3a9a80" }, g);
+    el("rect", { x: 120, y: 630, width: 820, height: 70, rx: 8, fill: "none", stroke: "var(--line)", "stroke-width": 3 }, g);
+    tb.cap = el("text", { x: 930, y: 680, "text-anchor": "end", "font-size": 34, "font-weight": 700, fill: "#faf8f3", text: "600 TB escritos" }, g);
+    tb.one = el("rect", { x: 120, y: 630, width: 820 / 600, height: 70, fill: "#1d1d1b" }, g);
+    tb.oneL = el("text", { x: 120, y: 750, "font-size": 30, fill: "var(--ink-2)", text: "↑ llenar el disco una vez = 1 TB" }, g);
+    tb.home = el("g", {}, g);
+    el("text", { x: 120, y: 880, "font-size": 36, "font-weight": 650, fill: "var(--ink)", text: "Uso de casa: unos 30 GB al día" }, tb.home);
+    el("text", { x: 120, y: 930, "font-size": 36, "font-weight": 650, fill: "var(--ink)", text: "≈ 11 TB al año" }, tb.home);
+    tb.years = el("text", { x: 120, y: 1060, "font-size": 80, "font-weight": 750, fill: "#3a9a80", text: "" }, g);
+    el("text", { x: 120, y: 1110, class: "m-note", text: "600 TB ÷ 11 TB por año · ilustrativo" }, tb.home);
+  }
+  function drawTbw(t, s, A) {
+    tb.bar.setAttribute("width", (820 * ramp(t, s.from + 0.2, A.cientos.end + 0.3, ease.out)).toFixed(1));
+    op(tb.cap, ramp(t, A.cientos.start, A.cientos.end + 0.3));
+    op(tb.oneL, ramp(t, A.cientos.end + 0.3, A.cientos.end + 0.7));
+    op(tb.home, on(t, A.casa.start));
+    const y = Math.round(55 * ramp(t, A.casa.start + 0.3, A.anos.end + 0.3, ease.out));
+    tb.years.textContent = `≈ ${y} años`;
+    op(tb.years, on(t, A.casa.start + 0.3));
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "Los discos SSD no tienen partes móviles, pero sí se gastan. ¿Por qué? Guardan cada bit atrapando electrones dentro de una celda, rodeada de un aislante muy delgado. Cada vez que se borra y se vuelve a escribir, los electrones tienen que cruzar ese aislante, y lo van dañando poco a poco. En los SSD comunes de hoy, cada celda aguanta del orden de mil a tres mil ciclos de borrado y escritura. Parece poco, pero el disco reparte las escrituras entre todas sus celdas para que ninguna se gaste antes que las demás. Por eso un SSD de un terabyte suele estar garantizado para cientos de terabytes escritos. Con uso normal de casa, eso son muchos años. Antes se te va a quedar chico que gastado.";
+
+  Mosaic.short({
+    kicker: "Memoria y chips",
+    title: "¿Por qué un SSD se desgasta con el uso?",
+    script: SCRIPT,
+    anchors: {
+      moviles: "moviles",
+      gastan: "gastan",
+      guardan: "guardan",
+      aislante: "aislante",
+      borra: "se borra",
+      cruzar: "cruzar",
+      danando: "danando",
+      comunes: "comunes",
+      ciclos: ["mil a tres mil", "1000 a 3000", "1,000 a 3,000", "mil a 3000"],
+      reparte: "reparte",
+      ninguna: "ninguna",
+      terabyte: ["un terabyte", "1 terabyte", "1 tb"],
+      cientos: "cientos de terabytes",
+      casa: "casa",
+      anos: "anos",
+      chico: "chico",
+    },
+    build() { buildSsd(); buildCell(); buildGrid(); buildTbw(); },
+    scenes: [
+      { el: "#sc-ssd", from: 0, to: "guardan-0.4", fadeIn: 0.3, rise: 0 },
+      { el: "#cap-ssd", from: 0.2, to: "guardan-0.4", fade: 0.3 },
+      { el: "#sc-cell", from: "guardan-0.4", to: "reparte-0.6", rise: 0, update: drawCell },
+      { el: "#cap-cell", from: "guardan-0.3", to: "borra-0.3", fade: 0.3 },
+      { el: "#cap-wear", from: "borra-0.3", to: "comunes-0.3", fade: 0.3 },
+      { el: "#cap-cycles", from: "comunes-0.3", to: "reparte-0.6", fade: 0.3 },
+      { el: "#sc-grid", from: "reparte-0.6", to: "terabyte-0.6", rise: 0, update: drawGrid },
+      { el: "#cap-grid", from: "reparte-0.5", to: "terabyte-0.6", fade: 0.3 },
+      { el: "#sc-tbw", from: "terabyte-0.6", to: "end", rise: 0, update: drawTbw },
+      { el: "#cap-tb", from: "terabyte-0.5", to: "casa-0.4", fade: 0.3 },
+      { el: "#cap-tbw", from: "casa-0.4", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
