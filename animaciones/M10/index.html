@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>M10 · ¿Cómo hace tu compu muchas cosas a la vez?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-intro" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-intro" style="top:1300px">Pocos núcleos, muchos programas<small>cientos al mismo tiempo, ¿cómo le hace?</small></div>
+
+    <svg class="full scene" id="sc-turns" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-turns" style="top:1300px">El sistema operativo los turna</div>
+    <div class="m-caption scene" id="cap-save" style="top:1300px">Turnos de unos milisegundos<small>pausa y guarda exactamente dónde se quedó</small></div>
+
+    <svg class="full scene" id="sc-chess" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-chess" style="top:1300px">Como un maestro de ajedrez<small>contra cien personas: una jugada en cada tablero</small></div>
+
+    <svg class="full scene" id="sc-time" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-linux" style="top:1300px">Linux: un turno al menos cada 6 ms<small>para cada programa listo para correr</small></div>
+    <div class="m-caption scene" id="cap-switch" style="top:1300px">Cientos de cambios por segundo</div>
+    <div class="m-caption scene" id="cap-ill" style="top:1300px">Parece todo a la vez<small>son turnos tan rápidos que no los notas</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp } = Mosaic;
+  const op = (n, v) => n.setAttribute("opacity", String(v));
+  const on = (t, a, d = 0.3) => ramp(t, a - d, a + 0.15);
+  const PROGS = [["navegador", "#2f5e8e"], ["música", "#3a9a80"], ["chat", "#c98a1b"], ["antivirus", "#b3386b"]];
+
+  // ---------------------------------------------------------------- intro: few cores, many programs
+  let it = {};
+  function buildIntro() {
+    const g = el("g", {}, $("#sc-intro"));
+    el("rect", { x: 380, y: 640, width: 320, height: 320, rx: 20, fill: "#2b2f36" }, g);
+    it.cores = [];
+    for (let i = 0; i < 4; i++) it.cores.push(el("rect", { x: 405 + (i % 2) * 140, y: 665 + Math.floor(i / 2) * 140, width: 130, height: 130, rx: 10, fill: "#2f5e8e" }, g));
+    el("text", { x: 540, y: 1010, "text-anchor": "middle", class: "m-label", text: "4 núcleos" }, g);
+    it.progs = [];
+    for (let i = 0; i < 48; i++) {
+      const a = (i / 48) * Math.PI * 2, rr = 330 + (i % 3) * 40;
+      const x = 540 + Math.cos(a) * rr, y = 800 + Math.sin(a) * rr * 0.95;
+      if (y < 470 || y > 1180) continue;
+      it.progs.push(el("rect", { x: x - 22, y: y - 16, width: 44, height: 32, rx: 6, fill: "#faf8f3", stroke: PROGS[i % 4][1], "stroke-width": 4 }, g));
+    }
+    it.n = el("text", { x: 540, y: 1220, "text-anchor": "middle", "font-size": 40, "font-weight": 700, fill: "var(--ink)", text: "cientos de programas y procesos" }, g);
+  }
+  function drawIntro(t, s, A) {
+    op(it.n, on(t, A.cientos.start));
+    it.progs.forEach((p, i) => op(p, ramp(t, A.cientos.start - 0.4 + i * 0.03, A.cientos.start + i * 0.03)));
+  }
+
+  // ---------------------------------------------------------------- turns: one core, programs take turns
+  let tu = {};
+  const SLICE = 1.1; // on-screen seconds per turn (slow motion)
+  function buildTurns() {
+    const g = el("g", {}, $("#sc-turns"));
+    tu.core = el("rect", { x: 440, y: 560, width: 200, height: 160, rx: 16, fill: "#2b2f36" }, g);
+    el("text", { x: 540, y: 655, "text-anchor": "middle", "font-size": 36, "font-weight": 700, fill: "#faf8f3", text: "núcleo" }, g);
+    tu.items = PROGS.map(([n, c], i) => {
+      const x = 140 + i * 200;
+      const gg = el("g", {}, g);
+      const box = el("rect", { x, y: 900, width: 180, height: 90, rx: 12, fill: "#faf8f3", stroke: c, "stroke-width": 5 }, gg);
+      el("text", { x: x + 90, y: 955, "text-anchor": "middle", "font-size": 30, "font-weight": 650, fill: c, text: n }, gg);
+      const card = el("g", {}, gg);
+      el("rect", { x: x + 10, y: 1015, width: 160, height: 74, rx: 6, fill: "#e9e5dc", stroke: "var(--ink-2)", "stroke-width": 2 }, card);
+      el("text", { x: x + 90, y: 1045, "text-anchor": "middle", "font-size": 22, fill: "var(--ink-2)", text: "guardado:" }, card);
+      el("text", { x: x + 90, y: 1074, "text-anchor": "middle", "font-family": "var(--mono)", "font-size": 22, fill: "var(--ink)", text: `paso ${1200 + i * 731}` }, card);
+      return { gg, box, card, cx: x + 90, c };
+    });
+    tu.arrow = el("path", { fill: "none", stroke: "var(--ink)", "stroke-width": 6 }, g);
+    tu.head = el("polygon", { fill: "var(--ink)" }, g);
+  }
+  function drawTurns(t, s, A) {
+    const t0 = A.turna.start;
+    const k = t < t0 ? -1 : Math.floor((t - t0) / SLICE);
+    const cur = k < 0 ? -1 : k % 4;
+    tu.items.forEach((it, i) => {
+      const active = i === cur;
+      it.box.setAttribute("fill", active ? it.c : "#faf8f3");
+      it.gg.querySelector("text").setAttribute("fill", active ? "#faf8f3" : it.c);
+      // the saved-state card shows while the program waits, once it has had a turn
+      const hadTurn = k >= 0 && (k > i || (k >= i && !active));
+      op(it.card, !active && hadTurn && t >= A.guarda.start - 0.3 ? 1 : 0);
+    });
+    if (cur >= 0) {
+      const x = tu.items[cur].cx;
+      tu.arrow.setAttribute("d", `M540 720 C540 800 ${x} 800 ${x} 880`);
+      tu.head.setAttribute("points", `${x},898 ${x - 14},874 ${x + 14},874`);
+      tu.core.setAttribute("fill", "#2b2f36");
+    }
+    op(tu.arrow, cur >= 0 ? 1 : 0); op(tu.head, cur >= 0 ? 1 : 0);
+  }
+
+  // ---------------------------------------------------------------- simultaneous chess exhibition
+  let ch = {};
+  function board(g, x, y, s) {
+    const gg = el("g", {}, g);
+    for (let a = 0; a < 4; a++) for (let b = 0; b < 4; b++) el("rect", { x: x + a * s / 4, y: y + b * s / 4, width: s / 4, height: s / 4, fill: (a + b) % 2 ? "#8a6a45" : "#e9dcc4" }, gg);
+    el("rect", { x, y, width: s, height: s, fill: "none", stroke: "var(--ink-2)", "stroke-width": 3 }, gg);
+    return gg;
+  }
+  function buildChess() {
+    const g = el("g", {}, $("#sc-chess"));
+    ch.boards = [];
+    for (let i = 0; i < 10; i++) {
+      const x = 130 + (i % 5) * 165, y = 600 + Math.floor(i / 5) * 260;
+      ch.boards.push({ g: board(g, x, y, 140), x, y, mark: el("circle", { cx: x + 70, cy: y + 70, r: 18, fill: "#2f5e8e", opacity: 0 }, g) });
+    }
+    ch.master = el("circle", { r: 26, fill: "#b3386b" }, g);
+    el("text", { x: 540, y: 1180, "text-anchor": "middle", class: "m-note", text: "10 de los 100 tableros" }, g);
+  }
+  function drawChess(t, s, A) {
+    const e = Math.max(0, t - s.from - 0.3);
+    const step = 0.45;
+    const k = Math.floor(e / step), f = (e % step) / step;
+    const pos = (i) => { const b = ch.boards[i % 10]; return [b.x + 70, b.y + 175]; };
+    const [x0, y0] = pos(k), [x1, y1] = pos(k + 1);
+    const m = ease.inOut(Math.min(1, f * 1.6));
+    ch.master.setAttribute("cx", lerp(x0, x1, m).toFixed(1));
+    ch.master.setAttribute("cy", lerp(y0, y1, m).toFixed(1));
+    ch.boards.forEach((b, i) => op(b.mark, i < k + 1 || k >= 10 ? 1 : 0));
+  }
+
+  // ---------------------------------------------------------------- time line of one core, zooming out
+  const TX = 120, TW = 840, SL = 1.5, NSEG = 700; // 1.5 ms per turn (example)
+  let tl = {};
+  function buildTime() {
+    const g = el("g", {}, $("#sc-time"));
+    el("text", { x: TX, y: 540, class: "m-label", text: "Un núcleo, a lo largo del tiempo" }, g);
+    tl.segs = [];
+    const row = el("g", {}, g);
+    for (let i = 0; i < NSEG; i++) tl.segs.push(el("rect", { y: 580, height: 120, fill: PROGS[i % 4][1] }, row));
+    el("rect", { x: TX, y: 580, width: TW, height: 120, fill: "none", stroke: "var(--ink)", "stroke-width": 3 }, g);
+    tl.axisL = el("text", { x: TX, y: 750, "font-size": 28, fill: "var(--ink-2)", text: "0 ms" }, g);
+    tl.axisR = el("text", { x: TX + TW, y: 750, "text-anchor": "end", "font-size": 28, fill: "var(--ink-2)", text: "" }, g);
+    tl.brace = el("g", {}, g);
+    tl.braceL = el("path", { fill: "none", stroke: "var(--ink)", "stroke-width": 4 }, tl.brace);
+    tl.braceT = el("text", { y: 830, "text-anchor": "middle", "font-size": 36, "font-weight": 700, fill: "var(--ink)", text: "≤ 6 ms: todos tuvieron turno" }, tl.brace);
+    tl.legend = el("g", {}, g);
+    PROGS.forEach(([n, c], i) => {
+      el("rect", { x: TX + i * 210, y: 900, width: 28, height: 28, rx: 4, fill: c }, tl.legend);
+      el("text", { x: TX + 38 + i * 210, y: 924, "font-size": 28, fill: "var(--ink-2)", text: n }, tl.legend);
+    });
+    tl.count = el("text", { x: TX, y: 1050, "font-size": 44, "font-weight": 750, fill: "var(--ink)", text: "" }, g);
+    tl.note = el("g", {}, g);
+    el("text", { x: TX, y: 1100, class: "m-note", text: "ejemplo: 4 programas listos, turnos de 1.5 ms" }, tl.note);
+    el("text", { x: TX, y: 1138, class: "m-note", text: "1000 ms ÷ 1.5 ms ≈ 667 cambios por segundo" }, tl.note);
+  }
+  function drawTime(t, s, A) {
+    // window: 12 ms, zooming out to 1000 ms on "ilusion"
+    const z = ramp(t, A.ilusion.start - 0.2, A.ilusion.start + 2.2, ease.inOut);
+    const W = Math.exp(lerp(Math.log(12), Math.log(1000), z));
+    const reveal = 12 * ramp(t, s.from + 0.2, s.from + 2.0, ease.linear);
+    const limit = z > 0 ? W : Math.min(W, reveal);
+    tl.segs.forEach((r, i) => {
+      const a = i * SL;
+      if (a >= limit) { r.setAttribute("width", 0); return; }
+      const x = TX + (a / W) * TW, w = TX + (Math.min(a + SL, limit) / W) * TW - x;
+      r.setAttribute("x", x.toFixed(2)); r.setAttribute("width", Math.max(0, w).toFixed(2));
+    });
+    tl.axisR.textContent = `${Math.round(W)} ms`;
+    // brace over the first 6 ms
+    const bx1 = TX + (6 / W) * TW;
+    tl.braceL.setAttribute("d", `M${TX} 760 L${TX} 776 L${bx1} 776 L${bx1} 760`);
+    tl.braceT.setAttribute("x", Math.max(TX + 260, (TX + bx1) / 2).toFixed(1));
+    op(tl.brace, on(t, A.seis.start) * (1 - z));
+    const c = ramp(t, A.cambios.start - 0.3, A.cambios.start + 1.2, ease.out);
+    tl.count.textContent = `≈ ${Math.round(667 * c)} cambios por segundo`;
+    op(tl.count, on(t, A.cambios.start));
+    op(tl.note, on(t, A.cambios.start + 0.5));
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "Tu compu tiene unos pocos núcleos, que son los cerebros del procesador, pero corre cientos de programas al mismo tiempo. ¿Cómo le hace? En realidad no los corre todos a la vez. El sistema operativo los turna. Le da a un programa unos milisegundos, lo pausa, guarda exactamente dónde se quedó, y le pasa el núcleo al siguiente. Luego al siguiente, y al siguiente. Como un maestro de ajedrez jugando contra cien personas: una jugada en cada tablero. En Linux, por ejemplo, el sistema intenta que cada programa listo para correr reciba su turno al menos cada seis milisegundos. Eso son cientos de cambios por segundo. Tú ves todo funcionando al mismo tiempo, pero es una ilusión: son turnos tan rápidos que no los alcanzas a notar.";
+
+  Mosaic.short({
+    kicker: "Sistema operativo",
+    title: "¿Cómo hace tu compu muchas cosas a la vez?",
+    script: SCRIPT,
+    anchors: {
+      nucleos: "nucleos",
+      cientos: "cientos de programas",
+      realidad: "realidad",
+      turna: "turna",
+      milisegundos: "milisegundos",
+      pausa: "pausa",
+      guarda: "guarda",
+      siguiente: "siguiente",
+      ajedrez: "ajedrez",
+      cien: ["cien personas", "100 personas"],
+      linux: "linux",
+      seis: ["seis milisegundos", "6 milisegundos"],
+      cambios: "cambios",
+      ilusion: "ilusion",
+      notar: "notar",
+    },
+    build() { buildIntro(); buildTurns(); buildChess(); buildTime(); },
+    scenes: [
+      { el: "#sc-intro", from: 0, to: "realidad-0.4", fadeIn: 0.3, rise: 0, update: drawIntro },
+      { el: "#cap-intro", from: 0.2, to: "realidad-0.4", fade: 0.3 },
+      { el: "#sc-turns", from: "realidad-0.4", to: "ajedrez-0.5", rise: 0, update: drawTurns },
+      { el: "#cap-turns", from: "realidad-0.3", to: "milisegundos-0.4", fade: 0.3 },
+      { el: "#cap-save", from: "milisegundos-0.4", to: "ajedrez-0.5", fade: 0.3 },
+      { el: "#sc-chess", from: "ajedrez-0.5", to: "linux-0.4", rise: 0, update: drawChess },
+      { el: "#cap-chess", from: "ajedrez-0.4", to: "linux-0.4", fade: 0.3 },
+      { el: "#sc-time", from: "linux-0.4", to: "end", rise: 0, update: drawTime },
+      { el: "#cap-linux", from: "linux-0.3", to: "cambios-0.5", fade: 0.3 },
+      { el: "#cap-switch", from: "cambios-0.5", to: "ilusion-0.8", fade: 0.3 },
+      { el: "#cap-ill", from: "ilusion-0.8", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
