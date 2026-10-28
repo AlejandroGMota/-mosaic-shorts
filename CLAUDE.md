@@ -33,6 +33,7 @@ Shorts del canal de YouTube «Mosaic» (nicho: cómo funciona la tecnología). E
 
 ## Contenido (decidido 2026-10-27)
 Detalle completo (qué buscamos, qué funcionó, descartes, IDs, nombres de archivo): `ideas.md`.
+Cómo escribir para que suene a Enrique (su forma de hablar, palabras que se complican, temas afines a su carrera): `voz.md`. Desde el lote 2 Enrique lee el guion tal cual.
 - Audiencia: público general curioso (México y Latam) que usa celular y compu y quiere entender cómo funcionan. Lenguaje cotidiano, sin jerga; si un término técnico hace falta, se explica en la misma frase.
 - Series e IDs (letra + número; no reutilizar A, B, C): **M** memoria, chips y SO · **I** IA por dentro · **T** celular por dentro, sin marca · **R** internet y redes.
 - Ritmo: 3 Shorts al día durante 2 semanas; luego se decide con métricas.

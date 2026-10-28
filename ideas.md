@@ -11,6 +11,8 @@
 - Que se pueda **animar correctamente** en 2D (diagrama, comparación, contador, flujo, zoom a un componente) o 3D para objetos físicos.
 - Datos verificables, con fuente. Lo dudoso va en «Pendiente de verificar antes de publicar».
 
+Forma de escribir (voz de Enrique, palabras difíciles, temas afines): `voz.md`.
+
 ## Qué ha funcionado (vistas al 26–27 oct 2026)
 - «RAM, ROM y disco: ¿quién olvida todo al apagar?» — 791 (el mejor).
 - Planificación apropiativa — 288. Swapping — 257.
