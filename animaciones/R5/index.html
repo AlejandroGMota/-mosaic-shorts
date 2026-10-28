@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>R5 · ¿Por qué el wifi de 5 GHz llega menos lejos?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-list" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-list" style="top:1300px">Dos redes en el mismo módem<small>¿cuál conviene?</small></div>
+
+    <svg class="full scene" id="sc-wave" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-freq" style="top:1300px">El número es la frecuencia<small>cuántas veces por segundo oscila la señal</small></div>
+    <div class="m-caption scene" id="cap-fast" style="top:1300px">Más alta: más datos, más rápida</div>
+
+    <svg class="full scene" id="sc-plan" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-5" style="top:1300px">5 GHz pierde fuerza más rápido<small>y le cuesta atravesar paredes y pisos</small></div>
+    <div class="m-caption scene" id="cap-24" style="top:1300px">2.4 GHz llega más lejos<small>pero es más lenta</small></div>
+
+    <svg class="full scene" id="sc-chan" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-chan" style="top:1300px">2.4 GHz está saturada<small>solo 3 canales que no se estorban</small></div>
+
+    <svg class="full scene" id="sc-rule" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-rule" style="top:1300px">Cerca del módem: 5 GHz<small>en el cuarto del fondo: 2.4 GHz</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script src="../_base/redes.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp, clamp } = Mosaic;
+  const { C, op, place, thousands } = Redes;
+
+  function wifiIcon(parent, x, y, s, color) {
+    const g = el("g", { transform: `translate(${x} ${y}) scale(${s})` }, parent);
+    for (const r of [14, 30, 46]) el("path", { d: `M${-r * 0.75} ${-r * 0.66} A${r} ${r} 0 0 1 ${r * 0.75} ${-r * 0.66}`, fill: "none", stroke: color, "stroke-width": 7, "stroke-linecap": "round" }, g);
+    el("circle", { cx: 0, cy: 0, r: 6, fill: color }, g);
+    return g;
+  }
+  function modemIcon(parent, x, y, s) {
+    const g = el("g", { transform: `translate(${x} ${y}) scale(${s})` }, parent);
+    el("rect", { x: -60, y: -22, width: 120, height: 44, rx: 10, fill: C.card, stroke: C.ink, "stroke-width": 5 }, g);
+    el("line", { x1: -40, y1: -22, x2: -52, y2: -64, stroke: C.ink, "stroke-width": 5, "stroke-linecap": "round" }, g);
+    el("line", { x1: 40, y1: -22, x2: 52, y2: -64, stroke: C.ink, "stroke-width": 5, "stroke-linecap": "round" }, g);
+    for (let i = 0; i < 4; i++) el("circle", { cx: -30 + i * 20, cy: 0, r: 4, fill: C.mint }, g);
+    return g;
+  }
+
+  // ---------------------------------------------------------------- two networks
+  let ls = {};
+  function buildList() {
+    const g = el("g", {}, $("#sc-list"));
+    modemIcon(g, 540, 600, 1.6);
+    ls.rows = [["MiCasa", "2.4 GHz", C.amber], ["MiCasa-5G", "5 GHz", C.blue]].map(([n, f, c], i) => {
+      const r = el("g", {}, g);
+      const y = 780 + i * 170;
+      el("rect", { x: 170, y, width: 740, height: 130, rx: 18, fill: C.card, stroke: c, "stroke-width": 5 }, r);
+      wifiIcon(r, 250, y + 88, 1, c);
+      el("text", { x: 330, y: y + 78, "font-size": 44, "font-weight": 650, fill: C.ink, text: n }, r);
+      el("text", { x: 880, y: y + 78, "text-anchor": "end", "font-size": 44, "font-weight": 700, fill: c, text: f }, r);
+      return r;
+    });
+  }
+  function drawList(t, s, A) {
+    op(ls.rows[0], ramp(t, A.dospunto.start - 0.3, A.dospunto.start + 0.2));
+    op(ls.rows[1], ramp(t, A.cinco1.start - 0.3, A.cinco1.start + 0.2));
+  }
+
+  // ---------------------------------------------------------------- the waves, during one nanosecond
+  let wv = {};
+  const X0 = 140, X1 = 940;
+  function wavePts(f, phase, y0, amp) {
+    const pts = [];
+    for (let i = 0; i <= 200; i++) {
+      const u = i / 200;
+      pts.push(`${(X0 + u * (X1 - X0)).toFixed(1)},${(y0 - amp * Math.sin(2 * Math.PI * (f * u) - phase)).toFixed(1)}`);
+    }
+    return pts.join(" ");
+  }
+  function buildWave() {
+    const g = el("g", {}, $("#sc-wave"));
+    for (const [y, lbl, c] of [[640, "2.4 GHz", C.amber], [900, "5 GHz", C.blue]]) {
+      el("line", { x1: X0, y1: y, x2: X1, y2: y, stroke: C.line, "stroke-width": 3 }, g);
+      el("text", { x: X0, y: y - 110, class: "m-label", "font-size": 36, fill: c, text: lbl }, g);
+    }
+    wv.w24 = el("polyline", { fill: "none", stroke: C.amber, "stroke-width": 7, "stroke-linejoin": "round" }, g);
+    wv.w5 = el("polyline", { fill: "none", stroke: C.blue, "stroke-width": 7, "stroke-linejoin": "round" }, g);
+    wv.c24 = el("text", { x: X1, y: 530, "text-anchor": "end", class: "m-label", fill: C.amber, text: "2.4 vueltas" }, g);
+    wv.c5 = el("text", { x: X1, y: 790, "text-anchor": "end", class: "m-label", fill: C.blue, text: "5 vueltas" }, g);
+    wv.ruler = el("g", {}, g);
+    el("path", { d: `M${X0} 1040 L${X0} 1060 L${X1} 1060 L${X1} 1040`, fill: "none", stroke: C.ink2, "stroke-width": 3 }, wv.ruler);
+    el("text", { x: 540, y: 1100, "text-anchor": "middle", class: "m-label", text: "1 nanosegundo (una milmillonésima de segundo)" }, wv.ruler);
+    wv.big = el("text", { x: 540, y: 1215, "text-anchor": "middle", "font-size": 64, "font-weight": 700, fill: C.blue, class: "m-num", text: "" }, g);
+  }
+  function drawWave(t, s, A) {
+    const ph = t * 3;
+    const a24 = ramp(t, s.from, s.from + 0.6), a5 = ramp(t, A.oscila.start - 0.4, A.oscila.start + 0.2);
+    wv.w24.setAttribute("points", wavePts(2.4, ph, 640, 80 * a24));
+    wv.w5.setAttribute("points", wavePts(5, ph, 900, 80 * a5));
+    op(wv.c24, ramp(t, A.oscila.start, A.oscila.end + 0.3));
+    op(wv.c5, ramp(t, A.oscila.start, A.oscila.end + 0.3));
+    op(wv.ruler, ramp(t, A.oscila.start, A.oscila.end + 0.3));
+    const n = 5e9 * ramp(t, A.milmillones.start - 0.3, A.milmillones.end + 0.6, ease.out);
+    wv.big.textContent = "5 GHz = " + thousands(Math.round(n / 1e6) * 1e6) + " por segundo";
+    op(wv.big, ramp(t, A.cincogiga.start - 0.3, A.cincogiga.start + 0.1));
+    wv.big.setAttribute("font-size", "52");
+  }
+
+  // ---------------------------------------------------------------- floor plan with a simple signal model (illustrative)
+  // Log-distance path loss: L = L1m(f) + 35 log10(d) + walls x loss(f). Values chosen to look like a typical home.
+  const PX = 120, PY = 480, PW = 840, PH = 600, MPX = 56; // 56 px per metre (15 x 10.7 m)
+  const MOD = [PX + 110, PY + 110];
+  const WALLS = [ // [x1, y1, x2, y2] in px, with door gaps
+    [PX + 330, PY, PX + 330, PY + 230], [PX + 330, PY + 310, PX + 330, PY + PH],
+    [PX + 600, PY, PX + 600, PY + 380], [PX + 600, PY + 460, PX + 600, PY + PH],
+    [PX, PY + 330, PX + 130, PY + 330], [PX + 210, PY + 330, PX + 330, PY + 330],
+    [PX + 600, PY + 300, PX + 700, PY + 300], [PX + 780, PY + 300, PX + PW, PY + 300],
+  ];
+  function crosses(ax, ay, bx, by, w) {
+    const [cx, cy, dx, dy] = w;
+    const d = (bx - ax) * (dy - cy) - (by - ay) * (dx - cx);
+    if (Math.abs(d) < 1e-9) return false;
+    const u = ((cx - ax) * (dy - cy) - (cy - ay) * (dx - cx)) / d;
+    const v = ((cx - ax) * (by - ay) - (cy - ay) * (bx - ax)) / d;
+    return u > 0 && u < 1 && v > 0 && v < 1;
+  }
+  function signal(f, x, y) {
+    const d = Math.max(0.5, Math.hypot(x - MOD[0], y - MOD[1]) / MPX);
+    let n = 0;
+    for (const w of WALLS) if (crosses(MOD[0], MOD[1], x, y, w)) n++;
+    const L1 = f === 5 ? 46.4 : 40, wall = f === 5 ? 9 : 5;
+    return 20 - (L1 + 35 * Math.log10(d) + n * wall);
+  }
+  const level = (dbm) => (dbm > -60 ? 3 : dbm > -70 ? 2 : dbm > -80 ? 1 : 0);
+  const CELL = 30;
+  function buildPlan(svg, withLegend) {
+    const g = el("g", {}, svg);
+    el("rect", { x: PX, y: PY, width: PW, height: PH, fill: C.card }, g);
+    const cells = [];
+    for (let x = PX; x < PX + PW; x += CELL) for (let y = PY; y < PY + PH; y += CELL) {
+      const cx = x + CELL / 2, cy = y + CELL / 2;
+      cells.push({ r: el("rect", { x: x + 1, y: y + 1, width: CELL - 2, height: CELL - 2, rx: 3, fill: C.card }, g), l5: level(signal(5, cx, cy)), l24: level(signal(2.4, cx, cy)) });
+    }
+    for (const w of WALLS) el("line", { x1: w[0], y1: w[1], x2: w[2], y2: w[3], stroke: C.ink, "stroke-width": 9, "stroke-linecap": "round" }, g);
+    el("rect", { x: PX, y: PY, width: PW, height: PH, fill: "none", stroke: C.ink, "stroke-width": 10 }, g);
+    modemIcon(g, MOD[0], MOD[1] + 10, 0.7);
+    el("text", { x: PX + PW - 20, y: PY + 46, "text-anchor": "end", class: "m-label", "font-size": 28, text: "cuarto" }, g);
+    el("text", { x: PX + PW - 20, y: PY + 80, "text-anchor": "end", class: "m-label", "font-size": 28, text: "del fondo" }, g);
+    el("text", { x: PX, y: PY + PH + 40, class: "m-note", text: "simulación ilustrativa · vista desde arriba" }, g);
+    const leg = el("g", {}, g);
+    const sw = [[3, "fuerte"], [2, "buena"], [1, "débil"]];
+    sw.forEach(([lv, txt], i) => {
+      el("rect", { x: PX + 330 + i * 190, y: PY + PH + 76, width: 30, height: 30, rx: 4, fill: C.ink2, opacity: [0, 0.25, 0.5, 0.8][lv] }, leg);
+      el("text", { x: PX + 370 + i * 190, y: PY + PH + 100, class: "m-label", "font-size": 28, text: txt }, leg);
+    });
+    return { g, cells, leg };
+  }
+  const OPA = [0, 0.18, 0.42, 0.75];
+  function paint(cells, f, p) {
+    // p: 0..1 reveal radius growing from the modem
+    for (const c of cells) {
+      const x = +c.r.getAttribute("x") + CELL / 2, y = +c.r.getAttribute("y") + CELL / 2;
+      const reach = clamp((p * 1100 - Math.hypot(x - MOD[0], y - MOD[1])) / 120);
+      const lv = f === 5 ? c.l5 : c.l24;
+      c.r.setAttribute("fill", f === 5 ? C.blue : C.amber);
+      c.r.setAttribute("fill-opacity", String(OPA[lv] * reach));
+    }
+  }
+  let pl = {};
+  function buildPlanScene() {
+    pl = buildPlan($("#sc-plan"));
+    pl.tag = el("text", { x: PX, y: PY - 20, "font-size": 40, "font-weight": 700, fill: C.blue, text: "5 GHz" }, pl.g);
+  }
+  function drawPlan(t, s, A) {
+    const is24 = t >= A.lejos.start - 0.6;
+    if (!is24) {
+      paint(pl.cells, 5, ramp(t, A.pierden.start - 0.3, A.pisos.end, ease.inOut));
+      pl.tag.textContent = "5 GHz"; pl.tag.setAttribute("fill", C.blue);
+    } else {
+      paint(pl.cells, 2.4, ramp(t, A.lejos.start - 0.6, A.lenta.end, ease.inOut));
+      pl.tag.textContent = "2.4 GHz"; pl.tag.setAttribute("fill", C.amber);
+    }
+  }
+
+  // ---------------------------------------------------------------- 2.4 GHz channels
+  let ch = {};
+  const FX = (mhz) => 120 + ((mhz - 2400) / 85) * 820;
+  function arch(n) {
+    const c = 2412 + 5 * (n - 1), w = 11;
+    const x0 = FX(c - w), x1 = FX(c + w), xc = FX(c);
+    return `M${x0.toFixed(1)} 960 C${(x0 + 30).toFixed(1)} 700 ${(x1 - 30).toFixed(1)} 700 ${x1.toFixed(1)} 960`;
+  }
+  function buildChan() {
+    const g = el("g", {}, $("#sc-chan"));
+    el("text", { x: 120, y: 520, class: "m-label", fill: C.amber, "font-size": 38, text: "Banda de 2.4 GHz" }, g);
+    el("line", { x1: 110, y1: 960, x2: 950, y2: 960, stroke: C.ink2, "stroke-width": 4 }, g);
+    for (let n = 1; n <= 13; n++) {
+      const x = FX(2412 + 5 * (n - 1));
+      el("line", { x1: x, y1: 960, x2: x, y2: 975, stroke: C.ink2, "stroke-width": 3 }, g);
+      el("text", { x, y: 1010, "text-anchor": "middle", "font-size": 26, fill: n === 1 || n === 6 || n === 11 ? C.amber : C.muted, "font-weight": n === 1 || n === 6 || n === 11 ? 700 : 400, text: String(n) }, g);
+    }
+    el("text", { x: 120, y: 1050, class: "m-note", text: "canal" }, g);
+    ch.over = [3, 4, 8, 9].map((n) => el("path", { d: arch(n), fill: "none", stroke: C.muted, "stroke-width": 4, "stroke-dasharray": "10 8" }, g));
+    ch.main = [1, 6, 11].map((n) => el("path", { d: arch(n), fill: C.amber, "fill-opacity": 0.18, stroke: C.amber, "stroke-width": 6 }, g));
+    ch.mainL = [1, 6, 11].map((n) => el("text", { x: FX(2412 + 5 * (n - 1)), y: 680, "text-anchor": "middle", "font-size": 34, "font-weight": 700, fill: C.amber, text: String(n) }, g));
+    ch.overL = el("text", { x: 540, y: 600, "text-anchor": "middle", class: "m-label", fill: C.muted, text: "los demás se enciman y se estorban" }, g);
+    ch.chips = ["vecinos", "bluetooth", "microondas"].map((txt, i) => {
+      const cg = el("g", {}, g);
+      const x = 120 + i * 280;
+      el("rect", { x, y: 1100, width: 250, height: 76, rx: 38, fill: C.card, stroke: C.fuchsia, "stroke-width": 4 }, cg);
+      el("text", { x: x + 125, y: 1149, "text-anchor": "middle", "font-size": 32, "font-weight": 600, fill: C.fuchsia, text: txt }, cg);
+      return cg;
+    });
+    ch.chipNote = el("text", { x: 120, y: 1225, class: "m-note", text: "también usan 2.4 GHz" }, g);
+  }
+  function drawChan(t, s, A) {
+    ch.main.forEach((m, i) => op(m, ramp(t, A.tres.start - 0.3 + i * 0.2, A.tres.start + i * 0.2)));
+    ch.mainL.forEach((m, i) => op(m, ramp(t, A.tres.start - 0.3 + i * 0.2, A.tres.start + i * 0.2)));
+    const ov = ramp(t, A.estorban.start - 0.3, A.estorban.start + 0.2);
+    ch.over.forEach((m) => op(m, ov));
+    op(ch.overL, ov);
+    const ks = [A.vecinos, A.bluetooth, A.microondas];
+    ch.chips.forEach((c, i) => op(c, ramp(t, ks[i].start - 0.3, ks[i].start + 0.1)));
+    op(ch.chipNote, ramp(t, A.vecinos.start - 0.3, A.vecinos.start + 0.1));
+  }
+
+  // ---------------------------------------------------------------- the practical rule: best network per spot
+  let ru = {};
+  function buildRule() {
+    ru = buildPlan($("#sc-rule"));
+    ru.leg.remove();
+    const lg = el("g", {}, ru.g);
+    el("rect", { x: PX + 330, y: PY + PH + 76, width: 30, height: 30, rx: 4, fill: C.blue, opacity: 0.6 }, lg);
+    el("text", { x: PX + 370, y: PY + PH + 100, class: "m-label", "font-size": 28, text: "usa 5 GHz" }, lg);
+    el("rect", { x: PX + 560, y: PY + PH + 76, width: 30, height: 30, rx: 4, fill: C.amber, opacity: 0.6 }, lg);
+    el("text", { x: PX + 600, y: PY + PH + 100, class: "m-label", "font-size": 28, text: "usa 2.4 GHz" }, lg);
+  }
+  function drawRule(t, s, A) {
+    const p5 = ramp(t, A.cerca.start - 0.4, A.cerca.end + 0.2), p24 = ramp(t, A.fondo.start - 0.6, A.fondo.end + 0.2);
+    for (const c of ru.cells) {
+      const use5 = c.l5 >= 2;
+      c.r.setAttribute("fill", use5 ? C.blue : C.amber);
+      c.r.setAttribute("fill-opacity", String(0.55 * (use5 ? p5 : p24 * (c.l24 >= 1 ? 1 : 0.4))));
+    }
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "Tu módem tiene dos redes: una de dos punto cuatro gigahertz y otra de cinco. ¿Cuál conviene? El número es la frecuencia: cuántas veces por segundo oscila la señal. Cinco gigahertz son cinco mil millones de veces por segundo. Una frecuencia más alta puede cargar más datos, así que la red de cinco es más rápida. Pero esas ondas pierden fuerza más rápido con la distancia y les cuesta más atravesar paredes y pisos. La de dos punto cuatro llega más lejos, pero es más lenta y está más saturada: solo tiene tres canales que no se estorban entre sí, y la comparte con los vecinos, el bluetooth y hasta el microondas. Regla práctica: cerca del módem, cinco; en el cuarto del fondo, dos punto cuatro.";
+
+  Mosaic.short({
+    kicker: "Internet y redes",
+    title: "¿Por qué el wifi de 5 GHz llega menos lejos?",
+    script: SCRIPT,
+    anchors: {
+      redes: "dos redes",
+      dospunto: ["dos punto cuatro", "2.4", "24"],
+      cinco1: ["otra de cinco", "otra de 5"],
+      conviene: "conviene",
+      frecuencia: "frecuencia",
+      oscila: "oscila",
+      cincogiga: ["cinco gigahertz", "5 gigahertz", "5 ghz", "cinco ghz"],
+      milmillones: ["cinco mil millones", "5000 millones", "5 mil millones"],
+      alta: "mas alta",
+      datos: "mas datos",
+      rapida: "mas rapida",
+      pierden: "pierden",
+      distancia: "distancia",
+      paredes: "paredes",
+      pisos: "pisos",
+      lejos: "mas lejos",
+      lenta: "mas lenta",
+      saturada: "saturada",
+      tres: ["tres canales", "3 canales"],
+      estorban: "estorban",
+      vecinos: "vecinos",
+      bluetooth: ["bluetooth", "blutut", "bluetut"],
+      microondas: "microondas",
+      regla: "regla",
+      cerca: "cerca del modem",
+      fondo: "cuarto del fondo",
+    },
+    build() { buildList(); buildWave(); buildPlanScene(); buildChan(); buildRule(); },
+    scenes: [
+      { el: "#sc-list", from: 0, to: "frecuencia-0.4", fadeIn: 0.3, rise: 0, update: drawList },
+      { el: "#cap-list", from: "dospunto-0.3", to: "frecuencia-0.4", fade: 0.3 },
+      { el: "#sc-wave", from: "frecuencia-0.4", to: "pierden-0.4", rise: 0, update: drawWave },
+      { el: "#cap-freq", from: "frecuencia-0.3", to: "alta-0.3", fade: 0.3 },
+      { el: "#cap-fast", from: "alta-0.3", to: "pierden-0.4", fade: 0.3 },
+      { el: "#sc-plan", from: "pierden-0.4", to: "saturada-0.3", rise: 0, update: drawPlan },
+      { el: "#cap-5", from: "pierden-0.3", to: "lejos-0.6", fade: 0.3 },
+      { el: "#cap-24", from: "lejos-0.6", to: "saturada-0.3", fade: 0.3 },
+      { el: "#sc-chan", from: "saturada-0.3", to: "regla-0.3", rise: 0, update: drawChan },
+      { el: "#cap-chan", from: "saturada-0.2", to: "regla-0.3", fade: 0.3 },
+      { el: "#sc-rule", from: "regla-0.3", to: "end", rise: 0, update: drawRule },
+      { el: "#cap-rule", from: "cerca-0.4", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
