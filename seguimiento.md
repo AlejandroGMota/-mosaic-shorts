@@ -78,6 +78,16 @@ Guion: `guiones/shorts-lote-02-2026-10-27.md` · Tomas: `audios/shorts-lote-02-2
 | R11 | ¿Por qué el 5G es más rápido que el 4G? | ✅ 27 oct | — | — | — | — | — | confirmar bandas de Telcel/AT&T con el IFT |
 | R12 | ¿Dónde están tus fotos cuando las subes a la nube? | ✅ 27 oct | — | — | — | — | — | |
 
+## Lote 03
+
+Guion: `guiones/shorts-lote-03-2026-10-27.md` · Tomas: `audios/shorts-lote-03-2026-10-27/` (solo en la Mac). Serie N (noticias): grabar y publicar pronto, pierden vigencia.
+
+| ID | Short | Guion | Grabado | Audio | Animación | Render | Publicado | Notas |
+|---|---|---|---|---|---|---|---|---|
+| N1 ⭐ | ¿Una librería de IA puede robarte tus contraseñas? | ✅ 27 oct | — | — | — | — | — | LiteLLM 1.107.0, 21 oct |
+| N2 ⭐ | ¿El código que escribe la IA es seguro? | ✅ 27 oct | — | — | — | — | — | leer el abstract de arXiv 2610.14766 antes de publicar |
+| N3 | ¿Tu bot de WhatsApp ya cobra por contestar? | ✅ 27 oct | — | — | — | — | — | confirmar en la calculadora oficial de Meta |
+
 ## Notas
 
 - **Pipeline (27 oct, nube):** `pipeline/` listo: `shorts audio|video|estado|doctor|prueba`, plantilla `animaciones/_base/` y `animaciones/A2/`. Probado en la nube con un WAV sintético y Chromium; falta probar en la Mac con whisper.cpp, Edge y el audio real.

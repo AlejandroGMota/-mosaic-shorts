@@ -29,6 +29,7 @@ ID = letra + número (`M1`, `I12`…); es el prefijo del nombre de las tomas (`m
 | I | IA por dentro | lote 2 · incluye «¿Por qué una IA de 7B apenas cabe en una Mac de 8 GB?» |
 | T | Celular por dentro, sin marca | lote 2 |
 | R | Internet y redes | lote 2 |
+| N | Noticias (qué cambia para quien hace software o tiene un negocio) | lote 3 · se publican pronto o pierden vigencia |
 
 ## Nombres de archivo
 - Un archivo por lote: `guiones/shorts-lote-NN-AAAA-MM-DD.md` (el lote 1 se llama `shorts-hardware-2026-10-27.md`).
