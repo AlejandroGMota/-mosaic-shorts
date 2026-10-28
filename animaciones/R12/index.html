@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>R12 · ¿Dónde están tus fotos cuando las subes a la nube?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-up" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-q" style="top:1300px">¿Dónde quedan realmente?</div>
+
+    <svg class="full scene" id="sc-dc" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-dc" style="top:1300px">La nube no está en el cielo<small>son edificios: centros de datos</small></div>
+
+    <svg class="full scene" id="sc-disk" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-disk" style="top:1300px">Se guarda en discos<small>como en tu compu, solo que miles a la vez</small></div>
+
+    <svg class="full scene" id="sc-zones" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-copy" style="top:1300px">No la guardan una sola vez<small>la copian en varios discos y edificios</small></div>
+    <div class="m-caption scene" id="cap-s3" style="top:1300px">Al menos 3 zonas distintas<small>en el servicio principal de Amazon, por ejemplo</small></div>
+    <div class="m-caption scene" id="cap-fail" style="top:1300px">Si falla un disco o un edificio<small>tus fotos siguen en otro lado</small></div>
+    <div class="m-caption scene" id="cap-end" style="top:1300px">La computadora de alguien más<small>muy bien cuidada</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script src="../_base/redes.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp, clamp } = Mosaic;
+  const { C, op, place, phone, cloud, building, rack, world, thousands } = Redes;
+
+  function photo(parent, x, y, s) {
+    const g = el("g", { transform: `translate(${x} ${y}) scale(${s || 1})` }, parent);
+    el("rect", { x: -40, y: -30, width: 80, height: 60, rx: 6, fill: "#cfe0ea", stroke: C.blue, "stroke-width": 4 }, g);
+    el("polygon", { points: "-30,22 -6,-6 10,12 20,2 32,22", fill: C.mint }, g);
+    el("circle", { cx: 18, cy: -12, r: 7, fill: C.amber }, g);
+    return g;
+  }
+
+  // ---------------------------------------------------------------- upload to the cloud
+  let up = {};
+  function buildUp() {
+    const g = el("g", {}, $("#sc-up"));
+    phone(g, 300, 980, 1.5);
+    photo(g, 300, 960, 1.2);
+    up.cloud = cloud(g, 700, 620, 1.3, C.blue);
+    up.ph = photo(g, 0, 0, 0.9);
+    up.q = el("text", { x: 700, y: 650, "text-anchor": "middle", "font-size": 100, "font-weight": 700, fill: C.fuchsia, text: "?" }, g);
+  }
+  function drawUp(t, s, A) {
+    const u = ramp(t, A.subes.start, A.nube.end + 0.6, ease.inOut);
+    place(up.ph, lerp(300, 700, u), lerp(960, 640, u) - Math.sin(Math.PI * u) * 80, 0.9 * (1 - 0.4 * u));
+    op(up.ph, u < 1 ? 1 : 0);
+    op(up.q, ramp(t, A.realmente.start - 0.4, A.realmente.start + 0.1));
+  }
+
+  // ---------------------------------------------------------------- the cloud is buildings, around the world
+  let dc = {};
+  const SITES = [[-122, 45], [-78, 39], [-99, 20], [-47, -23], [-6, 53], [8, 50], [2, 48], [18, 59], [103, 1], [139, 35], [151, -33], [72, 19], [28, -26], [126, 37], [-123, 49], [-97, 33]];
+  function buildDc() {
+    const g = el("g", {}, $("#sc-dc"));
+    dc.cloud = cloud(g, 540, 650, 1.6, C.blue);
+    dc.bld = el("g", {}, g);
+    building(dc.bld, 360, 640, 150, 170, C.ink2);
+    building(dc.bld, 560, 620, 190, 210, C.ink2);
+    building(dc.bld, 760, 650, 140, 150, C.ink2);
+    el("line", { x1: 220, y1: 725, x2: 860, y2: 725, stroke: C.ink2, "stroke-width": 5 }, dc.bld);
+    dc.map = el("g", {}, g);
+    const W = world(dc.map, { x: 85, y: 800, w: 850 });
+    SITES.forEach(([lo, la]) => { const [x, y] = W.P(lo, la); el("rect", { x: x - 8, y: y - 8, width: 16, height: 16, rx: 3, fill: C.blue, stroke: "#fff", "stroke-width": 2 }, dc.map); });
+    el("text", { x: 935, y: 1160, "text-anchor": "end", class: "m-note", text: "ubicaciones ilustrativas" }, dc.map);
+  }
+  function drawDc(t, s, A) {
+    const open = ramp(t, A.cielo.start - 0.2, A.edificios.start + 0.2);
+    op(dc.cloud, 1 - open);
+    dc.cloud.setAttribute("transform", `translate(540 ${650 - 120 * open}) scale(${1.6 + 0.6 * open})`);
+    op(dc.bld, ramp(t, A.edificios.start - 0.3, A.edificios.start + 0.3));
+    op(dc.map, ramp(t, A.mundo.start - 0.6, A.mundo.start));
+  }
+
+  // ---------------------------------------------------------------- disks, thousands of them
+  let dk = {};
+  function buildDisk() {
+    const g = el("g", {}, $("#sc-disk"));
+    dk.racks = [];
+    for (let i = 0; i < 5; i++) dk.racks.push(rack(g, 180 + i * 180, 800, 1.1, C.ink2));
+    dk.ph = photo(g, 0, 0, 0.8);
+    dk.hl = el("rect", { x: 180 + 2 * 180 - 51, y: 800 - 95 + 3 * 33, width: 101, height: 26, rx: 4, fill: "none", stroke: C.amber, "stroke-width": 5 }, g);
+    dk.grid = el("g", {}, g);
+    for (let i = 0; i < 40; i++) for (let j = 0; j < 6; j++) el("rect", { x: 110 + i * 21.5, y: 1060 + j * 22, width: 17, height: 17, rx: 3, fill: C.ink2, opacity: 0.35 + 0.4 * Redes.rnd(i * 7 + j) }, dk.grid);
+    el("text", { x: 110, y: 1220, class: "m-note", text: "cada cuadrito: un disco" }, dk.grid);
+  }
+  function drawDisk(t, s, A) {
+    const u = ramp(t, A.viaja.start - 0.2, A.discos.start + 0.2, ease.inOut);
+    place(dk.ph, lerp(540, 540, u), lerp(520, 800 - 95 + 3 * 33 + 13, u), lerp(1.2, 0.3, u));
+    op(dk.ph, 1 - ramp(t, A.discos.start + 0.2, A.discos.start + 0.5));
+    op(dk.hl, ramp(t, A.discos.start, A.discos.start + 0.3));
+    op(dk.grid, ramp(t, A.miles.start - 0.4, A.miles.start + 0.1));
+  }
+
+  // ---------------------------------------------------------------- copies in three zones; a building fails
+  let zn = {};
+  const ZX = [230, 540, 850], ZY = 760;
+  function buildZones() {
+    const g = el("g", {}, $("#sc-zones"));
+    zn.src = photo(g, 540, 520, 1.3);
+    zn.b = ZX.map((x, i) => {
+      const bg = el("g", {}, g);
+      building(bg, x, ZY, 200, 190, C.ink2);
+      el("text", { x, y: ZY + 140, "text-anchor": "middle", class: "m-label", text: "zona " + "ABC"[i] }, bg);
+      return bg;
+    });
+    zn.copies = ZX.map((x) => photo(g, x, ZY, 0.9));
+    zn.x = el("g", {}, g);
+    el("path", { d: `M${ZX[0] - 80} ${ZY - 80} L${ZX[0] + 80} ${ZY + 80} M${ZX[0] + 80} ${ZY - 80} L${ZX[0] - 80} ${ZY + 80}`, stroke: C.fuchsia, "stroke-width": 14, "stroke-linecap": "round" }, zn.x);
+    zn.ok = ZX.slice(1).map((x) => el("text", { x, y: ZY - 120, "text-anchor": "middle", "font-size": 60, "font-weight": 700, fill: C.mint, text: "✓" }, g));
+    // design target
+    zn.num = el("g", {}, g);
+    el("text", { x: 540, y: 1010, "text-anchor": "middle", "font-size": 52, "font-weight": 700, fill: C.ink, class: "m-num", text: "10 000 000 archivos guardados" }, zn.num);
+    zn.num2 = el("text", { x: 540, y: 1090, "text-anchor": "middle", "font-size": 52, "font-weight": 700, fill: C.fuchsia, class: "m-num", text: "→ 1 perdido cada 10 000 años" }, zn.num);
+    el("text", { x: 540, y: 1150, "text-anchor": "middle", class: "m-note", text: "objetivo de diseño de Amazon S3, no una garantía" }, zn.num);
+  }
+  function drawZones(t, s, A) {
+    const fly = ramp(t, A.copian.start - 0.2, A.separados.end, ease.inOut);
+    zn.copies.forEach((c, i) => {
+      const p = clamp(fly * 1.4 - i * 0.2);
+      place(c, lerp(540, ZX[i], p), lerp(520, ZY - 10, p) - Math.sin(Math.PI * p) * 60, 0.9);
+      op(c, (fly > 0 ? 1 : 0) * (i === 0 ? 1 - ramp(t, A.entero.start - 0.2, A.entero.start + 0.3) * 0.85 : 1));
+    });
+    zn.b.forEach((b, i) => op(b, ramp(t, s.from + i * 0.2, s.from + 0.4 + i * 0.2) * (i === 0 ? 1 - 0.6 * ramp(t, A.entero.start - 0.2, A.entero.start + 0.3) : 1)));
+    op(zn.num, ramp(t, A.diez.start - 0.4, A.diez.start) * (1 - ramp(t, A.falla.start - 0.5, A.falla.start - 0.1)));
+    op(zn.num2, ramp(t, A.uno.start - 0.3, A.uno.start + 0.2));
+    op(zn.x, ramp(t, A.entero.start - 0.2, A.entero.start + 0.3));
+    zn.ok.forEach((o) => op(o, ramp(t, A.otro.start - 0.4, A.otro.start)));
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "Subes tus fotos a la nube. Pero, ¿dónde quedan realmente? La nube no está en el cielo: son edificios llenos de computadoras, los centros de datos, repartidos por el mundo. Tu foto viaja por internet hasta uno de ellos y se guarda en discos, como en tu compu, solo que miles a la vez. Lo interesante es cómo evitan perderla. No la guardan una sola vez: la copian en varios discos, y muchas veces en varios edificios separados. Amazon, por ejemplo, reparte cada archivo de su servicio principal en al menos tres zonas distintas. Lo diseñó para que, si guardaras diez millones de archivos, perdieras uno cada diez mil años. Si falla un disco, o un edificio entero, tus fotos siguen en otro lado. La nube es la computadora de alguien más, muy bien cuidada.";
+
+  Mosaic.short({
+    kicker: "Internet y redes",
+    title: "¿Dónde están tus fotos cuando las subes a la nube?",
+    script: SCRIPT,
+    anchors: {
+      subes: "subes",
+      nube: "nube",
+      realmente: "realmente",
+      cielo: "cielo",
+      edificios: "edificios",
+      centros: "centros de datos",
+      mundo: "mundo",
+      viaja: "viaja",
+      discos: "discos",
+      miles: "miles",
+      interesante: "interesante",
+      vez: "una sola vez",
+      copian: "copian",
+      separados: "separados",
+      amazon: "amazon",
+      tres: ["tres zonas", "3 zonas"],
+      diseno: "diseno",
+      diez: ["diez millones", "10 millones", "10000000"],
+      uno: ["uno cada", "1 cada"],
+      falla: "falla",
+      entero: "entero",
+      otro: "otro lado",
+      alguien: "alguien mas",
+    },
+    build() { buildUp(); buildDc(); buildDisk(); buildZones(); },
+    scenes: [
+      { el: "#sc-up", from: 0, to: "cielo-0.8", fadeIn: 0.3, rise: 0, update: drawUp },
+      { el: "#cap-q", from: "realmente-0.4", to: "cielo-0.8", fade: 0.3 },
+      { el: "#sc-dc", from: "cielo-0.8", to: "viaja-0.4", rise: 0, update: drawDc },
+      { el: "#cap-dc", from: "cielo-0.6", to: "viaja-0.4", fade: 0.3 },
+      { el: "#sc-disk", from: "viaja-0.4", to: "interesante-0.3", rise: 0, update: drawDisk },
+      { el: "#cap-disk", from: "discos-0.4", to: "interesante-0.3", fade: 0.3 },
+      { el: "#sc-zones", from: "interesante-0.3", to: "end", rise: 0, update: drawZones },
+      { el: "#cap-copy", from: "vez-0.4", to: "amazon-0.3", fade: 0.3 },
+      { el: "#cap-s3", from: "amazon-0.3", to: "falla-0.4", fade: 0.3 },
+      { el: "#cap-fail", from: "falla-0.4", to: "alguien-1.2", fade: 0.3 },
+      { el: "#cap-end", from: "alguien-1.2", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
