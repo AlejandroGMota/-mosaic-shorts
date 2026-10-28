@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>T8 · ¿Por qué una foto de 12 megapíxeles pesa solo 3 MB?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+  canvas.img { position: absolute; image-rendering: pixelated; }
+  .lbl { position: absolute; text-align: center; font-size: 34px; font-weight: 560; color: var(--ink-2); }
+  .lbl.note { font-size: 26px; font-weight: 450; color: var(--muted); }
+  .count { position: absolute; inset: auto; left: 80px; width: 920px; text-align: center; font-size: 64px; line-height: 1.25; font-weight: 640; }
+  .count .op { color: var(--muted); font-weight: 450; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-px" viewBox="0 0 1080 1920"></svg>
+    <div class="count scene m-num" id="cnt1" style="top:990px">12 000 000 puntos</div>
+    <div class="count scene m-num" id="cnt2" style="top:1070px"><span class="op">× 3 colores × 1 byte</span></div>
+    <div class="count scene m-num" id="cnt3" style="top:1150px"><span class="op">=</span> 36 MB</div>
+    <div class="m-caption scene" id="cap-px" style="top:1300px">¿Y por qué la tuya pesa como 3 MB?</div>
+
+    <div class="scene" id="sc-ycc">
+      <canvas class="img" id="cv-orig" width="128" height="128" style="left:340px;top:470px;width:400px;height:400px"></canvas>
+      <canvas class="img" id="cv-y" width="128" height="128" style="left:140px;top:560px;width:340px;height:340px"></canvas>
+      <canvas class="img" id="cv-c" width="128" height="128" style="left:600px;top:560px;width:340px;height:340px"></canvas>
+      <div class="lbl" id="lbl-y" style="left:140px;top:920px;width:340px">brillo<br><span style="font-size:26px;color:var(--muted)">con todo el detalle</span></div>
+      <div class="lbl" id="lbl-c" style="left:600px;top:920px;width:340px">color<br><span style="font-size:26px;color:var(--muted)">con la mitad de detalle</span></div>
+    </div>
+    <div class="m-caption scene" id="cap-jpeg" style="top:1300px">Se comprime en formato JPEG</div>
+    <div class="m-caption scene" id="cap-ycc" style="top:1300px">Separa el brillo del color<small>tu ojo nota mucho más los cambios de luz que los de color</small></div>
+
+    <div class="scene" id="sc-blk">
+      <canvas class="img" id="cv-blkimg" width="128" height="128" style="left:110px;top:500px;width:320px;height:320px"></canvas>
+      <canvas class="img" id="cv-blk" width="8" height="8" style="left:560px;top:500px;width:360px;height:360px"></canvas>
+      <svg class="full" viewBox="0 0 1080 1920" id="svg-blk"></svg>
+    </div>
+    <div class="m-caption scene" id="cap-blk" style="top:1300px">Cuadritos de 8 × 8 puntos<small>en cada uno descarta los detalles finísimos que casi no se ven</small></div>
+
+    <div class="scene" id="sc-res">
+      <svg class="full" viewBox="0 0 1080 1920" id="svg-res"></svg>
+      <canvas class="img" id="cv-r1" width="128" height="128" style="left:140px;top:820px;width:340px;height:340px"></canvas>
+      <canvas class="img" id="cv-r2" width="128" height="128" style="left:600px;top:820px;width:340px;height:340px"></canvas>
+      <div class="lbl note" style="left:140px;top:1170px;width:340px">original</div>
+      <div class="lbl note" style="left:600px;top:1170px;width:340px">JPEG</div>
+    </div>
+    <div class="m-caption scene" id="cap-res" style="top:1300px">Unas 10 veces más ligera<small>casi sin diferencia a simple vista</small></div>
+
+    <div class="scene" id="sc-gen">
+      <canvas class="img" id="cv-gen" width="128" height="128" style="left:250px;top:480px;width:580px;height:580px"></canvas>
+      <div class="lbl" id="gen-n" style="left:250px;top:1080px;width:580px"></div>
+      <div class="lbl note" style="left:250px;top:1140px;width:580px">ilustrativo</div>
+    </div>
+    <div class="m-caption scene" id="cap-gen" style="top:1300px">Comprime una y otra vez…<small>y aparecen los cuadritos</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp, clamp } = Mosaic;
+  const MINT = "#3a9a80", BLUE = "#2f5e8e", AMBER = "#c98a1b", FUCH = "#b3386b", INK = "#1d1d1b", INK2 = "#4a4843", MUTED = "#827e74";
+  const N = 128;
+
+  // ---------------------------------------------------------------- source image (procedural, sRGB 0..1)
+  function scene(x, y) {
+    const u = (x + 0.5) / N, v = (y + 0.5) / N;
+    let c = [lerp(0.35, 0.95, v / 0.6), lerp(0.55, 0.7, v / 0.6), lerp(0.85, 0.55, v / 0.6)];
+    if ((u - 0.7) ** 2 + (v - 0.28) ** 2 < 0.007) c = [1, 0.86, 0.35];
+    const ridge = 0.5 + 0.08 * Math.sin(u * 9) + 0.04 * Math.sin(u * 23);
+    if (v > ridge) c = [0.18 + 0.1 * Math.sin(u * 40) * 0.3, 0.42, 0.25];
+    if (v > 0.72) c = [0.48, 0.34, 0.2];
+    // fence: thin bright posts (fine detail)
+    if (v > 0.74 && v < 0.92 && x % 4 === 0) c = [0.95, 0.93, 0.88];
+    if (v > 0.78 && v < 0.8) c = [0.95, 0.93, 0.88];
+    // red flowers
+    if (v > 0.93 && (x * 7 + y * 3) % 11 < 2) c = [0.85, 0.15, 0.2];
+    return c;
+  }
+  const SRC = [];
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) SRC.push(scene(x, y));
+  const toY = (c) => 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2];
+  const toCb = (c, Y) => 0.564 * (c[2] - Y) + 0.5, toCr = (c, Y) => 0.713 * (c[0] - Y) + 0.5;
+  const fromYCC = (Y, cb, cr) => [Y + 1.403 * (cr - 0.5), Y - 0.344 * (cb - 0.5) - 0.714 * (cr - 0.5), Y + 1.773 * (cb - 0.5)];
+  const LY = SRC.map(toY), LCB = SRC.map((c, i) => toCb(c, LY[i])), LCR = SRC.map((c, i) => toCr(c, LY[i]));
+  // 4:2:0 chroma: average of each 2x2
+  function half(ch) {
+    const out = new Array(N * N);
+    for (let y = 0; y < N; y += 2) for (let x = 0; x < N; x += 2) {
+      const m = (ch[y * N + x] + ch[y * N + x + 1] + ch[(y + 1) * N + x] + ch[(y + 1) * N + x + 1]) / 4;
+      out[y * N + x] = out[y * N + x + 1] = out[(y + 1) * N + x] = out[(y + 1) * N + x + 1] = m;
+    }
+    return out;
+  }
+  const HCB = half(LCB), HCR = half(LCR);
+
+  // ---------------------------------------------------------------- 8x8 DCT
+  const COS = [];
+  for (let x = 0; x < 8; x++) { COS.push([]); for (let u = 0; u < 8; u++) COS[x].push(Math.cos(((2 * x + 1) * u * Math.PI) / 16)); }
+  const Cf = (u) => (u === 0 ? Math.SQRT1_2 : 1);
+  function dct(b) {
+    const F = new Array(64).fill(0);
+    for (let v = 0; v < 8; v++) for (let u = 0; u < 8; u++) {
+      let s = 0;
+      for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) s += b[y * 8 + x] * COS[x][u] * COS[y][v];
+      F[v * 8 + u] = 0.25 * Cf(u) * Cf(v) * s;
+    }
+    return F;
+  }
+  function idct(F) {
+    const b = new Array(64).fill(0);
+    for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) {
+      let s = 0;
+      for (let v = 0; v < 8; v++) for (let u = 0; u < 8; u++) s += Cf(u) * Cf(v) * F[v * 8 + u] * COS[x][u] * COS[y][v];
+      b[y * 8 + x] = 0.25 * s;
+    }
+    return b;
+  }
+  // keep only coefficients with u + v < keep (drops the finest detail first)
+  function blockwise(ch, keep) {
+    const out = new Array(N * N);
+    for (let by = 0; by < N; by += 8) for (let bx = 0; bx < N; bx += 8) {
+      const b = [];
+      for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) b.push(ch[(by + y) * N + bx + x] - 0.5);
+      const F = dct(b);
+      for (let v = 0; v < 8; v++) for (let u = 0; u < 8; u++) if (u + v >= keep) F[v * 8 + u] = 0;
+      const r = idct(F);
+      for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) out[(by + y) * N + bx + x] = r[y * 8 + x] + 0.5;
+    }
+    return out;
+  }
+  function paint(cv, w, fn) {
+    const ctx = cv.getContext("2d");
+    const im = ctx.createImageData(w, w);
+    for (let i = 0; i < w * w; i++) {
+      const c = fn(i);
+      for (let ch = 0; ch < 3; ch++) im.data[i * 4 + ch] = Math.round(255 * clamp(c[ch]));
+      im.data[i * 4 + 3] = 255;
+    }
+    ctx.putImageData(im, 0, 0);
+  }
+
+  // ---------------------------------------------------------------- scene 1: pixels and bytes
+  let px = {};
+  function buildPx() {
+    const g = el("g", {}, $("#sc-px"));
+    // 6x6 zoom on the photo's pixels
+    const S = 52, X0 = 160, Y0 = 560, RY = 92, RX = 60;
+    for (let j = 0; j < 6; j++) for (let i = 0; i < 6; i++) {
+      const c = SRC[(RY + j) * N + RX + i];
+      el("rect", { x: X0 + i * S, y: Y0 + j * S, width: S - 3, height: S - 3, fill: `rgb(${c.map((v) => Math.round(v * 255)).join(",")})` }, g);
+    }
+    el("rect", { x: X0 + 2 * S - 4, y: Y0 + 3 * S - 4, width: S + 5, height: S + 5, fill: "none", stroke: INK, "stroke-width": 5 }, g);
+    el("text", { x: X0, y: Y0 - 24, class: "m-label", fill: INK2, text: "puntos (píxeles)" }, g);
+    px.rgb = el("g", {}, g);
+    const c = SRC[(RY + 3) * N + RX + 2].map((v) => Math.round(v * 255));
+    [["rojo", "#c0504d", c[0]], ["verde", "#4f9d69", c[1]], ["azul", "#4a78c2", c[2]]].forEach(([name, col, val], k) => {
+      const y = Y0 + 20 + k * 100;
+      el("rect", { x: 560, y, width: 120, height: 70, rx: 8, fill: col }, px.rgb);
+      el("text", { x: 620, y: y + 46, "text-anchor": "middle", "font-size": 30, "font-weight": 650, fill: "#fff", class: "m-num", text: String(val) }, px.rgb);
+      el("text", { x: 700, y: y + 46, class: "m-label", fill: INK, text: name + ": 1 byte" }, px.rgb);
+    });
+    el("path", { d: `M${X0 + 3 * S + 4} ${Y0 + 3.5 * S} L550 ${Y0 + 135}`, fill: "none", stroke: INK, "stroke-width": 3 }, px.rgb);
+  }
+  function drawPx(t, s, A) {
+    px.rgb.setAttribute("opacity", String(ramp(t, A.colores.start - 0.4, A.colores.start + 0.2)));
+  }
+
+  // ---------------------------------------------------------------- scene 2: brightness / colour
+  function buildYcc() {
+    paint($("#cv-orig"), N, (i) => SRC[i]);
+    paint($("#cv-y"), N, (i) => [LY[i], LY[i], LY[i]]);
+    paint($("#cv-c"), N, (i) => fromYCC(0.6, HCB[i], HCR[i]));
+  }
+  function drawYcc(t, s, A) {
+    const sp = ramp(t, A.separa.start - 0.2, A.separa.start + 0.6);
+    $("#cv-orig").style.opacity = String(1 - sp);
+    ["#cv-y", "#cv-c", "#lbl-y", "#lbl-c"].forEach((q) => ($(q).style.opacity = String(sp)));
+    $("#cv-y").style.transform = `translateX(${(1 - sp) * 200}px)`;
+    $("#cv-c").style.transform = `translateX(${(1 - sp) * -200}px)`;
+  }
+
+  // ---------------------------------------------------------------- scene 3: one 8x8 block loses its finest detail
+  const BX = 64, BY = 96; // the block: fence posts (lots of fine detail)
+  let bk = {};
+  const blockY = [];
+  for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) blockY.push(LY[(BY + y) * N + BX + x] - 0.5);
+  const blockF = dct(blockY);
+  function buildBlk() {
+    paint($("#cv-blkimg"), N, (i) => [LY[i], LY[i], LY[i]]);
+    const g = el("g", {}, $("#svg-blk"));
+    const s = 320 / N;
+    el("rect", { x: 110 + BX * s, y: 500 + BY * s, width: 8 * s, height: 8 * s, fill: "none", stroke: FUCH, "stroke-width": 4 }, g);
+    el("line", { x1: 110 + (BX + 8) * s, y1: 500 + BY * s, x2: 560, y2: 500, stroke: FUCH, "stroke-width": 3 }, g);
+    el("line", { x1: 110 + (BX + 8) * s, y1: 500 + (BY + 8) * s, x2: 560, y2: 860, stroke: FUCH, "stroke-width": 3 }, g);
+    for (let i = 1; i < 8; i++) {
+      el("line", { x1: 560 + i * 45, y1: 500, x2: 560 + i * 45, y2: 860, stroke: "#faf8f3", "stroke-width": 1.5, opacity: 0.6 }, g);
+      el("line", { x1: 560, y1: 500 + i * 45, x2: 920, y2: 500 + i * 45, stroke: "#faf8f3", "stroke-width": 1.5, opacity: 0.6 }, g);
+    }
+    el("rect", { x: 560, y: 500, width: 360, height: 360, fill: "none", stroke: FUCH, "stroke-width": 4 }, g);
+    el("text", { x: 740, y: 480, "text-anchor": "middle", class: "m-label", fill: FUCH, text: "8 × 8 puntos" }, g);
+    // detail levels: from coarse (top-left) to finest (bottom-right)
+    el("text", { x: 110, y: 920, class: "m-label", fill: INK2, text: "niveles de detalle del cuadrito" }, g);
+    bk.cells = [];
+    for (let v = 0; v < 8; v++) for (let u = 0; u < 8; u++) bk.cells.push(el("rect", { x: 110 + u * 36, y: 950 + v * 36, width: 32, height: 32, rx: 4 }, g));
+    el("text", { x: 420, y: 980, class: "m-note", fill: MUTED, text: "← general" }, g);
+    el("text", { x: 420, y: 1230, class: "m-note", fill: MUTED, text: "finísimo →" }, g);
+    bk.kept = el("text", { x: 640, y: 1100, class: "m-label m-num", fill: INK, text: "" }, g);
+  }
+  let lastKeep = -1;
+  function drawBlk(t, s, A) {
+    const keep = Math.round(lerp(15, 4, ramp(t, A.descarta.start - 0.2, A.resultado.start - 0.4, ease.inOut)));
+    bk.cells.forEach((c, i) => {
+      const u = i % 8, v = Math.floor(i / 8), on = u + v < keep;
+      const mag = clamp(Math.abs(blockF[i]) * 2.2);
+      c.setAttribute("fill", on ? `rgba(47,94,142,${(0.25 + 0.75 * mag).toFixed(2)})` : "#e3ded3");
+    });
+    let n = 0;
+    for (let i = 0; i < 64; i++) if ((i % 8) + Math.floor(i / 8) < keep) n++;
+    bk.kept.textContent = `guarda ${n} de 64`;
+    if (keep !== lastKeep) {
+      const F = blockF.map((f, i) => ((i % 8) + Math.floor(i / 8) < keep ? f : 0));
+      const b = idct(F);
+      paint($("#cv-blk"), 8, (i) => [b[i] + 0.5, b[i] + 0.5, b[i] + 0.5]);
+      lastKeep = keep;
+    }
+  }
+
+  // ---------------------------------------------------------------- scene 4: result
+  let rs = {};
+  function jpegLike(keep) {
+    const Y = blockwise(LY, keep), cb = blockwise(HCB, Math.max(2, keep - 2)), cr = blockwise(HCR, Math.max(2, keep - 2));
+    return (i) => fromYCC(Y[i], cb[i], cr[i]);
+  }
+  function buildRes() {
+    paint($("#cv-r1"), N, (i) => SRC[i]);
+    paint($("#cv-r2"), N, jpegLike(7));
+    const g = el("g", {}, $("#svg-res"));
+    el("text", { x: 140, y: 520, class: "m-label", fill: INK2, text: "sin comprimir" }, g);
+    rs.big = el("rect", { x: 140, y: 540, height: 70, rx: 10, fill: BLUE }, g);
+    el("text", { x: 940, y: 520, "text-anchor": "end", class: "m-label m-num", fill: BLUE, text: "36 MB" }, g);
+    el("text", { x: 140, y: 680, class: "m-label", fill: INK2, text: "JPEG" }, g);
+    rs.small = el("rect", { x: 140, y: 700, height: 70, rx: 10, fill: MINT }, g);
+    rs.smallLbl = el("text", { y: 750, class: "m-label m-num", fill: MINT, text: "≈ 3.6 MB" }, g);
+  }
+  function drawRes(t, s, A) {
+    const p = ramp(t, s.from + 0.2, s.from + 1.2);
+    rs.big.setAttribute("width", (800 * p).toFixed(1));
+    const q = ramp(t, A.diez.start - 0.4, A.diez.start + 0.4);
+    rs.small.setAttribute("width", (80 * q).toFixed(1));
+    rs.smallLbl.setAttribute("x", (140 + 80 * q + 20).toFixed(1));
+    rs.smallLbl.setAttribute("opacity", String(q));
+  }
+
+  // ---------------------------------------------------------------- scene 5: recompressing again and again (illustrative)
+  const GENS = [[1, 7], [2, 5], [3, 4], [5, 3], [8, 2]];
+  const genCache = {};
+  let lastGen = -1;
+  function drawGen(t, s, A) {
+    const k = Math.min(GENS.length - 1, Math.floor(ramp(t, A.comprimes.start, A.aparecen.end + 0.6, ease.linear) * GENS.length));
+    if (k !== lastGen) {
+      if (!genCache[k]) genCache[k] = jpegLike(GENS[k][1]);
+      paint($("#cv-gen"), N, genCache[k]);
+      lastGen = k;
+    }
+    $("#gen-n").textContent = GENS[k][0] === 1 ? "comprimida 1 vez" : `comprimida ${GENS[k][0]} veces`;
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "Una foto de doce megapíxeles tiene doce millones de puntos. Cada punto guarda tres colores: rojo, verde y azul, y cada color ocupa un byte. Eso da treinta y seis megas por foto. ¿Por qué la tuya pesa como tres? Porque se comprime en formato JPEG. Primero separa el brillo del color, y guarda el color con menos detalle: tu ojo nota mucho más los cambios de luz que los de color. Luego divide la foto en cuadritos de ocho por ocho puntos y en cada uno descarta los detalles finísimos que casi no se ven. El resultado es unas diez veces más ligero, casi sin diferencia a simple vista. Por eso, si comprimes la misma foto una y otra vez, aparecen cuadritos.";
+
+  Mosaic.short({
+    kicker: "El celular por dentro",
+    title: "¿Por qué una foto de 12 megapíxeles pesa solo 3 MB?",
+    script: SCRIPT,
+    anchors: {
+      millones: ["doce millones", "12 millones", "12000000"],
+      colores: ["tres colores", "3 colores"],
+      byte: "byte",
+      treinta: ["treinta y seis", "36"],
+      tuya: "tuya",
+      jpeg: ["jpeg", "jpg"],
+      separa: "separa",
+      ojo: "ojo",
+      cuadritos: "cuadritos",
+      descarta: "descarta",
+      resultado: "resultado",
+      diez: ["diez veces", "10 veces"],
+      comprimes: "comprimes",
+      aparecen: "aparecen",
+    },
+    build() { buildPx(); buildYcc(); buildBlk(); buildRes(); },
+    scenes: [
+      { el: "#sc-px", from: 0, to: "jpeg-0.4", fadeIn: 0.3, rise: 0, update: drawPx },
+      { el: "#cnt1", from: "millones-0.3", to: "jpeg-0.4", fade: 0.3 },
+      { el: "#cnt2", from: "byte-0.3", to: "jpeg-0.4", fade: 0.3 },
+      { el: "#cnt3", from: "treinta-0.3", to: "jpeg-0.4", fade: 0.3 },
+      { el: "#cap-px", from: "tuya-0.4", to: "jpeg-0.4", fade: 0.3 },
+      { el: "#sc-ycc", from: "jpeg-0.4", to: "cuadritos-0.6", rise: 0, update: drawYcc },
+      { el: "#cap-jpeg", from: "jpeg-0.3", to: "separa-0.3", fade: 0.3 },
+      { el: "#cap-ycc", from: "separa-0.3", to: "cuadritos-0.6", fade: 0.3 },
+      { el: "#sc-blk", from: "cuadritos-0.6", to: "resultado-0.3", rise: 0, update: drawBlk },
+      { el: "#cap-blk", from: "cuadritos-0.5", to: "resultado-0.3", fade: 0.3 },
+      { el: "#sc-res", from: "resultado-0.3", to: "comprimes-0.8", rise: 0, update: drawRes },
+      { el: "#cap-res", from: "resultado-0.2", to: "comprimes-0.8", fade: 0.3 },
+      { el: "#sc-gen", from: "comprimes-0.8", to: "end", rise: 0, update: drawGen },
+      { el: "#cap-gen", from: "comprimes-0.7", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
