@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>N5 · ¿Cuánto cuesta mantener encendida una IA?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+  .source { position: absolute; inset: auto; left: 80px; top: 1500px; width: 860px; text-align: center; font-size: 26px; color: var(--muted); }
+  .commit { position: absolute; inset: auto; left: 80px; top: 540px; width: 860px; text-align: center; }
+  .commit .k { font-size: 34px; font-weight: 600; color: var(--ink-2); }
+  .commit .n { font-size: 210px; font-weight: 720; letter-spacing: -0.03em; color: var(--fuchsia); line-height: 1.05; margin-top: 20px; font-variant-numeric: tabular-nums; }
+  .commit .u { font-size: 46px; font-weight: 620; color: var(--ink); }
+  .commit .s { font-size: 30px; color: var(--muted); margin-top: 26px; line-height: 1.3; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-intro" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-intro" style="top:1300px">Sus cuentas, completas<small>¿en qué se le va el dinero?</small></div>
+
+    <svg class="full scene" id="sc-dc" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-dc" style="top:1300px">Su gasto n.º 1: computadoras<small>miles de chips especiales en centros de datos</small></div>
+
+    <svg class="full scene" id="sc-half" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-half" style="top:1300px">Más de la mitad de lo que entró</div>
+
+    <svg class="full scene" id="sc-q" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-q1" style="top:1300px">Hace año y medio: más del doble de lo que vendía</div>
+    <div class="m-caption scene" id="cap-q2" style="top:1300px">Cada generación abarata contestar<small>chips y modelos nuevos</small></div>
+
+    <div class="commit scene" id="sc-commit">
+      <div class="k">Cómputo ya firmado para los próximos años</div>
+      <div class="n">&gt; <span id="cmt">0</span></div>
+      <div class="u">mil millones de USD</div>
+      <div class="s">compromisos de 1 a 20 años</div>
+    </div>
+
+    <svg class="full scene" id="sc-end" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-end" style="top:1300px">Una carrera por chips y electricidad</div>
+
+    <div class="source scene" id="src">Fuente: prospecto S-1, 26 oct 2026 · cifras aproximadas</div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp, clamp } = Mosaic;
+  const op = (n, v) => n.setAttribute("opacity", String(v));
+  const fade = (t, a, d = 0.3) => ramp(t, a - d, a + 0.15);
+  const PAPER = "#faf8f3", BLUE = "#2f5e8e", FUCH = "#b3386b", MINT = "#3a9a80", AMBER = "#c98a1b", INK = "#1d1d1b", MUTED = "#827e74", LINE = "#d6d1c5";
+  const hash = (i) => { const x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+
+  function rack(g, x, y, w, h) {
+    const gg = el("g", {}, g);
+    el("rect", { x, y, width: w, height: h, rx: 8, fill: "#2b2a27" }, gg);
+    const leds = [];
+    const n = Math.floor((h - 20) / 46);
+    for (let i = 0; i < n; i++) {
+      el("rect", { x: x + 14, y: y + 14 + i * 46, width: w - 28, height: 34, rx: 4, fill: "#3b3a36" }, gg);
+      leds.push(el("circle", { cx: x + w - 30, cy: y + 31 + i * 46, r: 6, fill: MINT }, gg));
+    }
+    gg.leds = leds;
+    return gg;
+  }
+  function chip(g, cx, cy, s, color) {
+    const gg = el("g", {}, g);
+    for (let i = 0; i < 5; i++) {
+      const o = (-2 + i) * 22 * s;
+      el("line", { x1: cx + o, y1: cy - 80 * s, x2: cx + o, y2: cy + 80 * s, stroke: color, "stroke-width": 7 * s }, gg);
+      el("line", { x1: cx - 80 * s, y1: cy + o, x2: cx + 80 * s, y2: cy + o, stroke: color, "stroke-width": 7 * s }, gg);
+    }
+    el("rect", { x: cx - 62 * s, y: cy - 62 * s, width: 124 * s, height: 124 * s, rx: 10 * s, fill: color }, gg);
+    el("rect", { x: cx - 36 * s, y: cy - 36 * s, width: 72 * s, height: 72 * s, rx: 6 * s, fill: "none", stroke: PAPER, "stroke-width": 4 * s }, gg);
+    return gg;
+  }
+
+  // ---------------------------------------------------------------- 1. accounts become public
+  let it = {};
+  function buildIntro() {
+    const g = el("g", {}, $("#sc-intro"));
+    it.doc = el("g", {}, g);
+    el("rect", { x: 300, y: 520, width: 480, height: 620, rx: 10, fill: PAPER, stroke: INK, "stroke-width": 4 }, it.doc);
+    el("text", { x: 340, y: 590, "font-size": 34, "font-weight": 700, fill: INK, text: "Cuentas completas" }, it.doc);
+    el("text", { x: 340, y: 630, "font-size": 26, fill: MUTED, text: "ingresos · gastos · riesgos" }, it.doc);
+    it.rows = [];
+    for (let r = 0; r < 9; r++) {
+      const gg = el("g", {}, it.doc);
+      el("rect", { x: 340, y: 680 + r * 48, width: 200 - (r % 3) * 30, height: 16, rx: 8, fill: LINE }, gg);
+      el("rect", { x: 640 - (r % 2) * 20, y: 680 + r * 48, width: 100 + (r % 2) * 20, height: 16, rx: 8, fill: "#9db3c9" }, gg);
+      it.rows.push(gg);
+    }
+    it.q = el("text", { x: 860, y: 640, "text-anchor": "middle", "font-size": 140, "font-weight": 700, fill: AMBER, text: "$?" }, g);
+  }
+  function drawIntro(t, s, A) {
+    op(it.doc, ramp(t, 0.1, 0.5));
+    it.rows.forEach((r, i) => op(r, ramp(t, A.cuentas.start - 0.3 + i * 0.08, A.cuentas.start + i * 0.08)));
+    op(it.q, fade(t, A.dinero.start));
+  }
+
+  // ---------------------------------------------------------------- 2. the data center
+  let dc = {};
+  function buildDc() {
+    const g = el("g", {}, $("#sc-dc"));
+    el("text", { x: 80, y: 500, class: "m-label", text: "centro de datos" }, g);
+    dc.racks = [0, 1, 2, 3].map((i) => rack(g, 80 + i * 130, 530, 110, 480));
+    dc.chip = chip(g, 790, 660, 0.9, BLUE);
+    dc.chipLbl = el("text", { x: 790, y: 790, "text-anchor": "middle", "font-size": 28, "font-weight": 650, fill: BLUE, text: "chip especial para IA" }, g);
+    dc.train = el("g", {}, g);
+    el("rect", { x: 620, y: 850, width: 320, height: 80, rx: 12, fill: PAPER, stroke: BLUE, "stroke-width": 4 }, dc.train);
+    el("text", { x: 780, y: 902, "text-anchor": "middle", "font-size": 32, "font-weight": 650, fill: BLUE, text: "entrena modelos" }, dc.train);
+    dc.ans = el("g", {}, g);
+    el("rect", { x: 620, y: 950, width: 320, height: 80, rx: 12, fill: PAPER, stroke: MINT, "stroke-width": 4 }, dc.ans);
+    el("text", { x: 780, y: 1002, "text-anchor": "middle", "font-size": 32, "font-weight": 650, fill: MINT, text: "contesta preguntas" }, dc.ans);
+  }
+  function drawDc(t, s, A) {
+    dc.racks.forEach((r, i) => {
+      op(r, ramp(t, A.computadoras.start - 0.4 + i * 0.12, A.computadoras.start + i * 0.12));
+      r.leds.forEach((l, j) => op(l, hash(i * 31 + j * 7 + Math.floor(t * 3)) > 0.4 ? 1 : 0.25));
+    });
+    op(dc.chip, fade(t, A.chips.start));
+    op(dc.chipLbl, fade(t, A.chips.start));
+    op(dc.train, fade(t, A.entrenan.start));
+    op(dc.ans, fade(t, A.contestan.start));
+  }
+
+  // ---------------------------------------------------------------- 3. H1 2026: revenue bar with compute inside
+  let hf = {};
+  const BX = 80, BW = 860, SALES = 16.3, COMP = 8.9;
+  function buildHalf() {
+    const g = el("g", {}, $("#sc-half"));
+    el("text", { x: 80, y: 500, class: "m-label", text: "Primera mitad de 2026 · Anthropic" }, g);
+    hf.salesLbl = el("g", {}, g);
+    el("text", { x: BX, y: 640, "font-size": 40, "font-weight": 700, fill: BLUE, text: "Ventas ≈ 16.3 mil millones de USD" }, hf.salesLbl);
+    hf.sales = el("rect", { x: BX, y: 670, height: 160, rx: 10, fill: "#dfe8f1", stroke: BLUE, "stroke-width": 4 }, g);
+    hf.comp = el("rect", { x: BX, y: 670, height: 160, rx: 10, fill: FUCH }, g);
+    hf.rackIcon = el("g", {}, g);
+    for (let i = 0; i < 3; i++) {
+      el("rect", { x: BX + 30, y: 700 + i * 34, width: 70, height: 26, rx: 4, fill: PAPER, opacity: 0.9 }, hf.rackIcon);
+      el("circle", { cx: BX + 88, cy: 713 + i * 34, r: 5, fill: FUCH }, hf.rackIcon);
+    }
+    hf.compLbl = el("g", {}, g);
+    el("text", { x: BX, y: 900, "font-size": 40, "font-weight": 700, fill: FUCH, text: "Cómputo e infraestructura" }, hf.compLbl);
+    el("text", { x: BX, y: 950, "font-size": 40, "font-weight": 700, fill: FUCH, text: "≈ 8.9 mil millones de USD" }, hf.compLbl);
+    hf.pct = el("g", {}, g);
+    el("text", { x: 940, y: 1080, "text-anchor": "end", "font-size": 130, "font-weight": 720, fill: FUCH, text: "≈ 55 %" }, hf.pct);
+    el("text", { x: 940, y: 1130, "text-anchor": "end", "font-size": 32, fill: MUTED, text: "de lo que vendió" }, hf.pct);
+    hf.half = el("line", { x1: BX + BW / 2, y1: 662, x2: BX + BW / 2, y2: 850, stroke: INK, "stroke-width": 4, "stroke-dasharray": "10 8" }, g);
+  }
+  function drawHalf(t, s, A) {
+    const ps = ramp(t, A.dieciseis.start - 0.3, A.dieciseis.start + 0.8, ease.out);
+    hf.sales.setAttribute("width", Math.max(1, BW * ps).toFixed(1));
+    op(hf.salesLbl, ramp(t, A.dieciseis.start - 0.3, A.dieciseis.start + 0.2));
+    const pc = ramp(t, A.nueve.start - 0.3, A.nueve.start + 0.9, ease.out);
+    hf.comp.setAttribute("width", Math.max(1, BW * (COMP / SALES) * pc).toFixed(1));
+    op(hf.comp, pc > 0.01 ? 1 : 0);
+    op(hf.rackIcon, pc);
+    op(hf.compLbl, ramp(t, A.nueve.start - 0.2, A.nueve.start + 0.3));
+    op(hf.pct, fade(t, A.masMitad.start));
+    op(hf.half, fade(t, A.masMitad.start));
+  }
+
+  // ---------------------------------------------------------------- 4. compute as % of revenue, by quarter
+  let qq = {};
+  const Q = [["T1", "2025", 251], ["T2", "2025", 177], ["T3", "2025", 148], ["T4", "2025", 144], ["T1", "2026", 72], ["T2", "2026", 48]];
+  const Y0 = 1180, PX = 2.1; // 0 % at y=1180, 2.1 px per percentage point
+  function buildQ() {
+    const g = el("g", {}, $("#sc-q"));
+    el("text", { x: 80, y: 500, class: "m-label", text: "Cómputo como % de las ventas, por trimestre" }, g);
+    el("line", { x1: 80, y1: Y0, x2: 940, y2: Y0, stroke: INK, "stroke-width": 3 }, g);
+    qq.bars = Q.map(([a, b, v], i) => {
+      const x = 110 + i * 140;
+      const gg = el("g", {}, g);
+      const r = el("rect", { x, width: 104, fill: v > 100 ? FUCH : MINT }, gg);
+      const lbl = el("text", { x: x + 52, "text-anchor": "middle", "font-size": 36, "font-weight": 720, fill: v > 100 ? FUCH : MINT, text: `${v} %` }, gg);
+      el("text", { x: x + 52, y: Y0 + 40, "text-anchor": "middle", "font-size": 28, "font-weight": 600, fill: INK, text: a }, gg);
+      el("text", { x: x + 52, y: Y0 + 72, "text-anchor": "middle", "font-size": 24, fill: MUTED, text: b }, gg);
+      return { gg, r, lbl, v };
+    });
+    qq.line = el("g", {}, g);
+    el("line", { x1: 80, y1: Y0 - 100 * PX, x2: 940, y2: Y0 - 100 * PX, stroke: INK, "stroke-width": 4, "stroke-dasharray": "12 10" }, qq.line);
+    el("text", { x: 940, y: Y0 - 100 * PX - 14, "text-anchor": "end", "font-size": 28, "font-weight": 700, fill: INK, text: "100 %" }, qq.line);
+    el("line", { x1: 80, y1: 552, x2: 140, y2: 552, stroke: INK, "stroke-width": 4, "stroke-dasharray": "12 10" }, qq.line);
+    el("text", { x: 155, y: 562, "font-size": 30, "font-weight": 600, fill: INK, text: "arriba de 100 %: gasta más de lo que vende" }, qq.line);
+  }
+  function drawQ(t, s, A) {
+    const a0 = A.hace.start - 0.3;
+    qq.bars.forEach((b, i) => {
+      // the first bar appears with "hace año y medio"; the rest follow with "generación ... abarata"
+      const st = i === 0 ? a0 : A.generacion.start - 0.2 + (i - 1) * 0.35;
+      const p = ramp(t, st, st + 0.7, ease.out);
+      const h = b.v * PX * p;
+      b.r.setAttribute("y", (Y0 - h).toFixed(1));
+      b.r.setAttribute("height", h.toFixed(1));
+      b.lbl.setAttribute("y", (Y0 - h - 14).toFixed(1));
+      op(b.lbl, p > 0.9 ? 1 : 0);
+      op(b.gg, p > 0.001 ? 1 : 0);
+    });
+    op(qq.line, fade(t, A.doble.start));
+  }
+  function drawCommit(t, s, A) {
+    const p = ramp(t, A.doscientos.start - 0.4, A.doscientos.start + 1.0, ease.out);
+    $("#cmt").textContent = String(Math.round(265 * p));
+  }
+
+  // ---------------------------------------------------------------- 6. chips and electricity
+  let en = {};
+  function buildEnd() {
+    const g = el("g", {}, $("#sc-end"));
+    en.chip = chip(g, 340, 840, 1.6, BLUE);
+    en.plus = el("text", { x: 590, y: 875, "text-anchor": "middle", "font-size": 90, "font-weight": 600, fill: MUTED, text: "+" }, g);
+    en.bolt = el("path", { d: "M780 620 L680 860 L760 860 L700 1060 L860 790 L775 790 L840 620 Z", fill: AMBER }, g);
+    en.l1 = el("text", { x: 340, y: 1120, "text-anchor": "middle", "font-size": 40, "font-weight": 700, fill: BLUE, text: "chips" }, g);
+    en.l2 = el("text", { x: 770, y: 1120, "text-anchor": "middle", "font-size": 40, "font-weight": 700, fill: AMBER, text: "electricidad" }, g);
+  }
+  function drawEnd(t, s, A) {
+    const c = fade(t, A.chips2.start), e = fade(t, A.electricidad.start);
+    op(en.chip, c); op(en.l1, c);
+    op(en.plus, e); op(en.bolt, e); op(en.l2, e);
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "Por primera vez, una de las grandes empresas de IA tuvo que publicar sus cuentas completas. ¿En qué se le va el dinero? Su gasto número uno son las computadoras: miles de chips especiales en centros de datos, que entrenan los modelos y contestan cada pregunta. En la primera mitad de dos mil veintiséis, Anthropic, la empresa de Claude, vendió unos dieciséis mil millones de dólares y gastó casi nueve mil millones en cómputo e infraestructura. Más de la mitad de lo que entró. Hace año y medio era peor: el cómputo costaba más del doble de lo que vendía. Cada nueva generación de chips y de modelos abarata contestar. Y lo que ya firmó para los próximos años supera los doscientos mil millones de dólares en cómputo. Por eso la carrera de la IA es, al final, una carrera por chips y electricidad.";
+
+  Mosaic.short({
+    kicker: "Noticias · 26 oct 2026",
+    title: "¿Cuánto cuesta mantener encendida una IA?",
+    script: SCRIPT,
+    anchors: {
+      vez: "primera vez",
+      cuentas: ["cuentas completas", "cuentas"],
+      dinero: "dinero",
+      gasto: ["gasto numero uno", "gasto numero 1", "gasto"],
+      computadoras: "computadoras",
+      chips: ["chips especiales", "chips"],
+      centros: "centros de datos",
+      entrenan: "entrenan",
+      contestan: "contestan",
+      mitad: "primera mitad",
+      dieciseis: ["dieciseis mil millones", "16 mil millones", "16000 millones", "16 000 millones", "16,000 millones", "dieciseis", "16"],
+      nueve: ["nueve mil millones", "9 mil millones", "9000 millones", "9 000 millones", "9,000 millones", "nueve", "9"],
+      computo: ["computo e infraestructura", "infraestructura"],
+      masMitad: ["mas de la mitad", "la mitad"],
+      hace: ["ano y medio", "hace ano", "medio"],
+      peor: "peor",
+      doble: "doble",
+      generacion: "generacion",
+      abarata: "abarata",
+      firmo: "firmo",
+      doscientos: ["doscientos mil millones", "200 mil millones", "200000 millones", "200 000 millones", "200,000 millones", "doscientos", "200"],
+      carrera: "carrera",
+      chips2: "chips",
+      electricidad: "electricidad",
+    },
+    build() { buildIntro(); buildDc(); buildHalf(); buildQ(); buildEnd(); },
+    scenes: [
+      { el: "#sc-intro", from: 0, to: "gasto-0.3", fadeIn: 0.3, rise: 0, update: drawIntro },
+      { el: "#cap-intro", from: "cuentas-0.3", to: "gasto-0.3", fade: 0.3 },
+      { el: "#sc-dc", from: "gasto-0.3", to: "mitad-0.3", rise: 0, update: drawDc },
+      { el: "#cap-dc", from: "gasto-0.2", to: "mitad-0.3", fade: 0.3 },
+      { el: "#sc-half", from: "mitad-0.3", to: "hace-0.4", rise: 0, update: drawHalf },
+      { el: "#cap-half", from: "masMitad-0.3", to: "hace-0.4", fade: 0.3 },
+      { el: "#sc-q", from: "hace-0.4", to: "firmo-0.3", rise: 0, update: drawQ },
+      { el: "#cap-q1", from: "hace-0.3", to: "generacion-0.4", fade: 0.3 },
+      { el: "#cap-q2", from: "generacion-0.3", to: "firmo-0.3", fade: 0.3 },
+      { el: "#sc-commit", from: "firmo-0.3", to: "carrera-0.3", rise: 0, update: drawCommit },
+      { el: "#sc-end", from: "carrera-0.3", to: "end", rise: 0, update: drawEnd },
+      { el: "#cap-end", from: "carrera-0.2", to: "end", fade: 0.3 },
+      { el: "#src", from: 0, to: "end", fadeIn: 0.4, fadeOut: 0.3, rise: 0 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
