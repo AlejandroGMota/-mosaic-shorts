@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>I9 · ¿Por qué la IA olvida lo que le dijiste antes?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-chat" viewBox="0 0 1080 1920"></svg>
+    <svg class="full scene" id="sc-u" viewBox="0 0 1080 1920"></svg>
+
+    <div class="m-caption scene" id="cap-forgot" style="top:1300px">Olvidó algo del principio</div>
+    <div class="m-caption scene" id="cap-reread" style="top:1300px">No tiene memoria entre mensajes<small>cada vez relee toda la conversación</small></div>
+    <div class="m-caption scene" id="cap-win" style="top:1300px">Solo cabe cierta cantidad de tokens<small>ese límite es la ventana de contexto</small></div>
+    <div class="m-caption scene" id="cap-cut" style="top:1300px">Lo más viejo se recorta o se resume<small>y se pierde</small></div>
+    <div class="m-caption scene" id="cap-u" style="top:1300px">Lo del medio se aprovecha peor<small>estudio de 2023</small></div>
+    <div class="m-caption scene" id="cap-rep" style="top:1300px">Si es importante, repítelo<small>en tu último mensaje</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp, clamp } = Mosaic;
+
+  // ---------------------------------------------------------------- the conversation
+  const MSGS = [
+    [1, "Soy alérgica a la nuez."],
+    [0, "Anotado. ¿En qué te ayudo?"],
+    [1, "Quiero hacer un postre."],
+    [0, "¿Para cuántas personas?"],
+    [1, "Para ocho."],
+    [0, "¿Tienes horno?"],
+    [1, "Sí, y batidora."],
+    [0, "¿Algo dulce o ligero?"],
+    [1, "Dulce, con chocolate."],
+    [0, "Te sugiero un brownie con nuez."],
+  ];
+  const Y0 = 476, PITCH = 72, H = 60, OLD = 4, GAP = 46;
+  const yOf = (i) => Y0 + i * PITCH + (i >= OLD ? GAP : 0);
+  let ch = {};
+  function buildChat() {
+    const g = el("g", {}, $("#sc-chat"));
+    ch.items = MSGS.map(([user, txt], i) => {
+      const w = Math.min(560, 46 + txt.length * 16.5);
+      const x = user ? 940 - w : 120;
+      const y = yOf(i);
+      const gg = el("g", {}, g);
+      const r = el("rect", { x, y, width: w, height: H, rx: 22, fill: user ? "#dbe5ef" : "#faf8f3", stroke: i === 0 ? "#c98a1b" : user ? "#dbe5ef" : "#d6d1c5", "stroke-width": i === 0 ? 5 : 3 }, gg);
+      const tx = el("text", { x: x + 23, y: y + 41, "font-size": 30, "font-weight": 500, fill: "var(--ink)", text: txt }, gg);
+      return { gg, r, tx, x, y, w };
+    });
+    ch.bad = el("text", { x: 120 + ch.items[9].w + 20, y: yOf(9) + 42, "font-size": 40, "font-weight": 700, fill: "#b3386b", text: "✗" }, g);
+    ch.read = el("polygon", { points: "0,-14 22,0 0,14", fill: "#2f5e8e" }, g);
+    // context window over the last messages
+    ch.win = el("g", {}, g);
+    const wy = yOf(OLD) - 12;
+    ch.wy = wy; ch.wb = yOf(MSGS.length - 1) + H + 12;
+    ch.frame = el("rect", { x: 100, y: wy, width: 860, height: ch.wb - wy, rx: 18, fill: "none", stroke: "#2f5e8e", "stroke-width": 6 }, ch.win);
+    ch.badge = el("g", {}, ch.win);
+    el("rect", { x: 620, y: -23, width: 320, height: 46, rx: 10, fill: "#2f5e8e" }, ch.badge);
+    el("text", { x: 780, y: 9, "text-anchor": "middle", "font-size": 28, "font-weight": 700, fill: "#faf8f3", text: "ventana de contexto" }, ch.badge);
+    // summary chip that replaces the oldest messages
+    ch.sum = el("g", {}, g);
+    el("rect", { x: 120, y: Y0 + 60, width: 820, height: 74, rx: 16, fill: "#e9e5dc", stroke: "#827e74", "stroke-width": 3, "stroke-dasharray": "10 8" }, ch.sum);
+    el("text", { x: 145, y: Y0 + 108, "font-size": 30, fill: "var(--ink-2)", text: "resumen: «quiere un postre para ocho»" }, ch.sum);
+    ch.lost = el("text", { x: 120, y: Y0 + 200, "font-size": 30, "font-weight": 700, fill: "#b3386b", text: "se perdió: «soy alérgica a la nuez»" }, g);
+  }
+  function drawChat(t, s, A) {
+    const shown = lerp(0, MSGS.length, ramp(t, 0.2, A.olvido.start - 0.1, ease.linear));
+    const oldOut = ramp(t, A.recorta.start - 0.2, A.recorta.start + 0.4);
+    const sum = ramp(t, A.resume.start - 0.2, A.resume.start + 0.4);
+    ch.items.forEach((m, i) => {
+      const on = clamp(shown - i);
+      const old = i < OLD;
+      m.gg.setAttribute("opacity", String(on * (old ? 1 - 0.55 * oldOut - 0.45 * sum : 1)));
+      m.gg.setAttribute("transform", `translate(0 ${((1 - on) * 14).toFixed(1)})`);
+      m.tx.setAttribute("fill", old && oldOut > 0.5 ? "#827e74" : "var(--ink)");
+    });
+    ch.bad.setAttribute("opacity", String(ramp(t, A.olvido.start, A.olvido.start + 0.4)));
+    // re-reading from the top, every time
+    const rp = ramp(t, A.leer.start - 0.2, A.inicio.end + 0.4, ease.inOut);
+    const ry = lerp(yOf(0), yOf(MSGS.length - 1), rp) + H / 2;
+    ch.read.setAttribute("transform", `translate(92 ${ry.toFixed(1)})`);
+    ch.read.setAttribute("opacity", String(rp > 0 && rp < 1 ? 1 : 0));
+    ch.win.setAttribute("opacity", String(ramp(t, A.limitada.start - 0.2, A.limitada.start + 0.3)));
+    ch.sum.setAttribute("opacity", String(sum));
+    // the summary stays inside the window, the detail does not
+    const top = lerp(ch.wy, Y0 + 60 - 30, sum);
+    ch.frame.setAttribute("y", top.toFixed(1));
+    ch.frame.setAttribute("height", (ch.wb - top).toFixed(1));
+    ch.badge.setAttribute("transform", `translate(0 ${top.toFixed(1)})`);
+    ch.lost.setAttribute("opacity", String(ramp(t, A.pierde.start - 0.2, A.pierde.start + 0.3)));
+  }
+
+  // ---------------------------------------------------------------- the U: start and end are used better than the middle
+  const NB = 14, BX0 = 130, BW = 50, BG = 9, BY = 1020;
+  const att = (u) => 0.22 + 0.78 * Math.pow(2 * u - 1, 2);
+  let uu = {};
+  function buildU() {
+    const g = el("g", {}, $("#sc-u"));
+    el("text", { x: 120, y: 520, class: "m-label", text: "qué tanto aprovecha cada parte del texto" }, g);
+    el("rect", { x: BX0 - 20, y: BY - 20, width: NB * (BW + BG) - BG + 40, height: 100, rx: 16, fill: "none", stroke: "#2f5e8e", "stroke-width": 5 }, g);
+    uu.blocks = [];
+    for (let i = 0; i < NB; i++) {
+      uu.blocks.push(el("rect", { x: BX0 + i * (BW + BG), y: BY, width: BW, height: 60, rx: 8, fill: "#dbe5ef" }, g));
+    }
+    const pts = [];
+    for (let i = 0; i <= 60; i++) {
+      const u = i / 60;
+      pts.push(`${(BX0 + u * (NB * (BW + BG) - BG)).toFixed(1)},${(960 - 360 * att(u)).toFixed(1)}`);
+    }
+    uu.curve = el("polyline", { points: pts.join(" "), fill: "none", stroke: "#3a9a80", "stroke-width": 7, "stroke-linecap": "round", pathLength: 100, "stroke-dasharray": "100 100" }, g);
+    el("text", { x: BX0, y: 1140, class: "m-label", text: "principio" }, g);
+    el("text", { x: 540, y: 1140, "text-anchor": "middle", class: "m-label", fill: "#b3386b", text: "medio" }, g);
+    el("text", { x: BX0 + NB * (BW + BG) - BG, y: 1140, "text-anchor": "end", class: "m-label", text: "final" }, g);
+    el("text", { x: 540, y: 1200, "text-anchor": "middle", class: "m-note", text: "forma esquemática del resultado" }, g);
+    uu.copy = el("g", {}, g);
+    const lx = BX0 + (NB - 1) * (BW + BG);
+    el("path", { d: `M${BX0 + 3 * (BW + BG) + BW / 2} ${BY - 26} Q ${(BX0 + lx) / 2 + 60} ${BY - 80} ${lx + BW / 2} ${BY - 26}`, fill: "none", stroke: "#c98a1b", "stroke-width": 5, "stroke-dasharray": "12 9" }, uu.copy);
+  }
+  function drawU(t, s, A) {
+    const p = ramp(t, A.aprovechan.start - 0.3, A.medio.end, ease.inOut);
+    uu.curve.setAttribute("stroke-dashoffset", String(100 * (1 - p)));
+    const cp = ramp(t, A.repitelo.start - 0.2, A.repitelo.start + 0.4);
+    uu.blocks.forEach((b, i) => {
+      const a = att(i / (NB - 1));
+      let fill = `rgb(${Math.round(lerp(219, 47, a * p))},${Math.round(lerp(229, 94, a * p))},${Math.round(lerp(239, 142, a * p))})`;
+      if (i === 3) fill = "#c98a1b";
+      if (i === NB - 1 && cp > 0.5) fill = "#c98a1b";
+      b.setAttribute("fill", fill);
+    });
+    uu.copy.setAttribute("opacity", String(cp));
+  }
+
+  const SCRIPT = "En una conversación larga con una IA, de pronto parece que olvidó algo que le dijiste al principio. ¿Por qué? La IA no tiene memoria entre mensajes. Cada vez que le escribes, vuelve a leer toda la conversación desde el inicio, y solo puede leer una cantidad limitada de texto, que se mide en tokens, los pedazos en que corta las palabras. A ese límite se le llama ventana de contexto. Si la conversación lo rebasa, lo más viejo se recorta o se resume, y se pierde. Y aun dentro del límite, un estudio de dos mil veintitrés encontró que los modelos aprovechan mejor lo que está al principio y al final del texto que lo que queda en medio. Si algo es importante, repítelo en tu último mensaje.";
+
+  Mosaic.short({
+    kicker: "IA por dentro",
+    title: "¿Por qué la IA olvida lo que le dijiste antes?",
+    script: SCRIPT,
+    anchors: {
+      olvido: "olvido",
+      principio: "principio",
+      memoria: "memoria",
+      leer: "vuelve a leer",
+      inicio: "inicio",
+      limitada: "limitada",
+      ventana: "ventana",
+      rebasa: "rebasa",
+      recorta: "recorta",
+      resume: "resume",
+      pierde: "pierde",
+      estudio: "estudio",
+      anio: ["dos mil veintitres", "2023"],
+      aprovechan: "aprovechan",
+      medio: "en medio",
+      importante: "importante",
+      repitelo: ["repitelo", "repetelo"],
+    },
+    build() { buildChat(); buildU(); },
+    scenes: [
+      { el: "#sc-chat", from: 0, to: "estudio-0.3", fadeIn: 0.4, rise: 0, update: drawChat },
+      { el: "#sc-u", from: "estudio-0.3", to: "end", rise: 0, update: drawU },
+      { el: "#cap-forgot", from: "olvido-0.2", to: "memoria-0.6", fade: 0.3 },
+      { el: "#cap-reread", from: "memoria-0.6", to: "limitada-0.3", fade: 0.3 },
+      { el: "#cap-win", from: "limitada-0.3", to: "rebasa-0.4", fade: 0.3 },
+      { el: "#cap-cut", from: "rebasa-0.4", to: "estudio-0.3", fade: 0.3 },
+      { el: "#cap-u", from: "estudio-0.3", to: "importante-0.3", fade: 0.3 },
+      { el: "#cap-rep", from: "importante-0.3", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
