@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>I5 · ¿Cómo aprende una IA a reconocer un gato?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-main" viewBox="0 0 1080 1920"></svg>
+
+    <div class="m-caption scene" id="cap-nobody" style="top:1300px">Nadie le explica qué es un gato</div>
+    <div class="m-caption scene" id="cap-guess" style="top:1300px">Ve una foto y responde<small>al principio, al azar</small></div>
+    <div class="m-caption scene" id="cap-err" style="top:1300px">La etiqueta decía «gato»<small>se mide qué tan equivocada estuvo</small></div>
+    <div class="m-caption scene" id="cap-knobs" style="top:1300px">Se giran un poquito sus perillas<small>los parámetros, para reducir ese error</small></div>
+    <div class="m-caption scene" id="cap-rep" style="top:1300px">Y se repite, con millones de fotos</div>
+    <div class="m-caption scene" id="cap-inet" style="top:1300px">ImageNet: más de 14 000 000 de imágenes<small>etiquetadas a mano</small></div>
+    <div class="m-caption scene" id="cap-end" style="top:1300px">Nadie le programó «orejas» ni «bigotes»<small>esas pistas aparecen solas dentro de la red</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp, clamp } = Mosaic;
+  const rnd = (i) => { const x = Math.sin(i * 12.9898 + 78.233) * 43758.5453; return x - Math.floor(x); };
+  // solid colour between paper (a = 0) and c (a = 1), so nodes hide the edges behind them
+  const mix = (c, a) => `rgb(${c.map((v, i) => Math.round(lerp([250, 248, 243][i], v, a))).join(",")})`;
+  const fmt = (n) => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+
+  let m = {};
+  function cat(g) {
+    const c = el("g", { transform: "translate(210 640)" }, g);
+    m.ears = [
+      el("polygon", { points: "-70,-30 -58,-108 -14,-62", fill: "#d9a35b", stroke: "#8a5a22", "stroke-width": 4, "stroke-linejoin": "round" }, c),
+      el("polygon", { points: "70,-30 58,-108 14,-62", fill: "#d9a35b", stroke: "#8a5a22", "stroke-width": 4, "stroke-linejoin": "round" }, c),
+    ];
+    el("ellipse", { cx: 0, cy: 0, rx: 82, ry: 72, fill: "#d9a35b", stroke: "#8a5a22", "stroke-width": 4 }, c);
+    el("ellipse", { cx: -28, cy: -12, rx: 9, ry: 13, fill: "#2b2a27" }, c);
+    el("ellipse", { cx: 28, cy: -12, rx: 9, ry: 13, fill: "#2b2a27" }, c);
+    el("polygon", { points: "-9,14 9,14 0,24", fill: "#b3386b" }, c);
+    m.whiskers = el("g", { stroke: "#5a4632", "stroke-width": 3, "stroke-linecap": "round" }, c);
+    [[-20, 24, -96, 10], [-20, 30, -96, 34], [-20, 36, -92, 56], [20, 24, 96, 10], [20, 30, 96, 34], [20, 36, 92, 56]].forEach((w) =>
+      el("line", { x1: w[0], y1: w[1], x2: w[2], y2: w[3] }, m.whiskers));
+  }
+
+  // network nodes
+  const COLS = [{ x: 430, ys: [530, 590, 650, 710] }, { x: 545, ys: [500, 560, 620, 680, 740] }, { x: 660, ys: [560, 620, 680] }];
+  const KN = 7;
+  function build() {
+    const g = el("g", {}, $("#sc-main"));
+    // photo
+    el("rect", { x: 90, y: 500, width: 240, height: 250, rx: 10, fill: "#faf8f3", stroke: "var(--line)", "stroke-width": 4 }, g);
+    cat(g);
+    el("text", { x: 210, y: 790, "text-anchor": "middle", class: "m-note", text: "foto (ilustración)" }, g);
+    m.q = el("text", { x: 300, y: 550, "text-anchor": "middle", "font-size": 54, "font-weight": 700, fill: "#827e74", text: "?" }, g);
+    // network
+    m.net = el("g", {}, g);
+    el("line", { x1: 340, y1: 625, x2: 395, y2: 625, stroke: "var(--ink-2)", "stroke-width": 4 }, m.net);
+    m.edges = [];
+    for (let c = 0; c < COLS.length - 1; c++) {
+      for (const y0 of COLS[c].ys) for (const y1 of COLS[c + 1].ys) {
+        m.edges.push(el("line", { x1: COLS[c].x, y1: y0, x2: COLS[c + 1].x, y2: y1, stroke: "#c9c3b6", "stroke-width": 2 }, m.net));
+      }
+    }
+    m.nodes = [];
+    COLS.forEach((col, c) => col.ys.forEach((y, k) => {
+      m.nodes.push({ c, k, n: el("circle", { cx: col.x, cy: y, r: 19, fill: "#faf8f3", stroke: "#2f5e8e", "stroke-width": 4 }, m.net) });
+    }));
+    el("line", { x1: 685, y1: 625, x2: 725, y2: 625, stroke: "var(--ink-2)", "stroke-width": 4 }, m.net);
+    el("text", { x: 545, y: 800, "text-anchor": "middle", class: "m-note", text: "red neuronal" }, m.net);
+    // answer
+    m.ans = el("g", {}, g);
+    el("rect", { x: 735, y: 560, width: 205, height: 130, rx: 14, fill: "#faf8f3", stroke: "var(--ink-2)", "stroke-width": 4 }, m.ans);
+    m.ansW = el("text", { x: 837, y: 615, "text-anchor": "middle", "font-size": 42, "font-weight": 700 }, m.ans);
+    m.ansP = el("text", { x: 837, y: 665, "text-anchor": "middle", "font-size": 40, "font-weight": 600 }, m.ans);
+    el("text", { x: 837, y: 730, "text-anchor": "middle", class: "m-note", text: "respuesta" }, m.ans);
+    // label / counter row
+    m.label = el("g", {}, g);
+    el("text", { x: 90, y: 880, "font-size": 42, "font-weight": 600, fill: "var(--ink)", text: "etiqueta de la foto:" }, m.label);
+    el("text", { x: 480, y: 880, "font-size": 42, "font-weight": 750, fill: "#3a9a80", text: "«gato»" }, m.label);
+    m.count = el("g", {}, g);
+    el("text", { x: 90, y: 880, "font-size": 42, "font-weight": 600, fill: "var(--ink)", text: "fotos vistas:" }, m.count);
+    m.countN = el("text", { x: 940, y: 880, "text-anchor": "end", "font-size": 58, "font-weight": 750, fill: "#2f5e8e" }, m.count);
+    // error bar
+    m.err = el("g", {}, g);
+    el("text", { x: 90, y: 965, "font-size": 40, "font-weight": 600, fill: "var(--ink-2)", text: "error" }, m.err);
+    el("rect", { x: 230, y: 930, width: 710, height: 46, rx: 6, fill: "#e9e5dc" }, m.err);
+    m.errBar = el("rect", { x: 230, y: 930, width: 0, height: 46, rx: 6, fill: "#b3386b" }, m.err);
+    // knobs
+    m.knobs = el("g", {}, g);
+    m.knobList = [];
+    for (let i = 0; i < KN; i++) {
+      const x = 150 + i * 130, y = 1085;
+      const k = el("g", {}, m.knobs);
+      el("circle", { cx: x, cy: y, r: 44, fill: "#faf8f3", stroke: "var(--ink-2)", "stroke-width": 4 }, k);
+      const hand = el("line", { x1: x, y1: y, x2: x, y2: y - 34, stroke: "#c98a1b", "stroke-width": 7, "stroke-linecap": "round" }, k);
+      m.knobList.push({ x, y, hand });
+    }
+    el("text", { x: 540, y: 1180, "text-anchor": "middle", class: "m-note", text: "perillas = parámetros (en una red real son millones)" }, m.knobs);
+    // learned features
+    m.feat = el("g", {}, g);
+    m.featEar = el("g", {}, m.feat);
+    el("circle", { cx: 110, cy: 945, r: 19, fill: "#c98a1b" }, m.featEar);
+    el("text", { x: 150, y: 960, "font-size": 42, "font-weight": 700, fill: "#c98a1b", text: "detector de «oreja puntiaguda»" }, m.featEar);
+    m.featWh = el("g", {}, m.feat);
+    el("circle", { cx: 110, cy: 1035, r: 19, fill: "#3a9a80" }, m.featWh);
+    el("text", { x: 150, y: 1050, "font-size": 42, "font-weight": 700, fill: "#3a9a80", text: "detector de «bigotes»" }, m.featWh);
+    el("text", { x: 90, y: 1140, class: "m-note", text: "ilustrativo · nadie los programó, salieron del entrenamiento" }, m.feat);
+  }
+
+  // progress of the fast repeat phase: 0..1, photos seen grow exponentially
+  function repeatP(t, A) { return ramp(t, A.repite.start, A.catorce.end, ease.inOut); }
+
+  function update(t, s, A) {
+    m.q.setAttribute("opacity", String(1 - ramp(t, A.foto.start - 0.2, A.foto.start + 0.2)));
+    m.net.setAttribute("opacity", String(ramp(t, A.foto.start - 0.2, A.foto.start + 0.3)));
+    m.ans.setAttribute("opacity", String(ramp(t, A.respuesta.start - 0.2, A.respuesta.start + 0.3)));
+    const rp = repeatP(t, A);
+    const cycle = t < A.repite.start ? 0 : Math.floor(rp * 40) + 1;
+    // node activity: a pass travels left to right on "da una respuesta" and in every repeat cycle
+    const pass = t < A.repite.start ? ramp(t, A.respuesta.start - 0.6, A.respuesta.start + 0.4, ease.linear) : (rp * 40) % 1;
+    const finalOn = ramp(t, A.final.start - 0.2, A.final.start + 0.4);
+    m.nodes.forEach((nd, i) => {
+      const hitCol = Math.abs(pass * 3 - nd.c - 0.5) < 0.6 ? 1 : 0;
+      const act = t >= A.respuesta.start - 0.6 && t < A.final.start ? hitCol * (0.3 + 0.7 * rnd(i + cycle * 17)) : 0;
+      let fill = mix([47, 94, 142], act * 0.85);
+      if (finalOn > 0 && nd.c === 1 && nd.k === 0) fill = mix([201, 138, 27], finalOn);
+      if (finalOn > 0 && nd.c === 1 && nd.k === 3) fill = mix([58, 154, 128], finalOn);
+      nd.n.setAttribute("fill", fill);
+    });
+    // answer: random at first ("perro 60 %"), then better and better while it repeats
+    const steps = [["perro", 60, "#b3386b"], ["gato", 35, "#c98a1b"], ["gato", 52, "#c98a1b"], ["gato", 70, "#2f5e8e"], ["gato", 83, "#2f5e8e"], ["gato", 96, "#3a9a80"]];
+    const si = t < A.repite.start ? 0 : Math.min(steps.length - 1, Math.floor(rp * steps.length));
+    const st = steps[si];
+    m.ansW.textContent = st[0];
+    m.ansP.textContent = st[1] + " %";
+    m.ansW.setAttribute("fill", st[2]);
+    m.ansP.setAttribute("fill", st[2]);
+    // label, error and knobs
+    const learnOff = 1 - finalOn;
+    m.label.setAttribute("opacity", String(ramp(t, A.etiqueta.start - 0.2, A.etiqueta.start + 0.3) * (1 - ramp(t, A.repite.start - 0.3, A.repite.start))));
+    m.count.setAttribute("opacity", String(ramp(t, A.repite.start - 0.1, A.repite.start + 0.3) * learnOff));
+    const photos = t < A.repite.start ? 1 : Math.pow(14e6, rp);
+    m.countN.textContent = fmt(Math.max(1, photos));
+    m.err.setAttribute("opacity", String(ramp(t, A.equivocada.start - 0.4, A.equivocada.start) * learnOff));
+    const errV = t < A.repite.start ? ramp(t, A.equivocada.start - 0.2, A.equivocada.start + 0.6, ease.out) * 0.92
+      : lerp(0.9, 0.06, rp) * (0.92 + 0.08 * Math.sin(rp * 60));
+    m.errBar.setAttribute("width", (710 * clamp(errV)).toFixed(1));
+    m.knobs.setAttribute("opacity", String(ramp(t, A.ajustan.start - 0.3, A.ajustan.start + 0.2) * learnOff));
+    const turn = ramp(t, A.ajustan.start, A.perillas.end + 0.3, ease.inOut);
+    m.knobList.forEach((k, i) => {
+      const dir = rnd(i + 3) > 0.5 ? 1 : -1;
+      const a = (rnd(i) * 300 - 150) + dir * 22 * turn + (t >= A.repite.start ? (rnd(i * 7 + cycle) - 0.5) * 30 : 0);
+      const r = (a * Math.PI) / 180;
+      k.hand.setAttribute("x2", (k.x + 34 * Math.sin(r)).toFixed(1));
+      k.hand.setAttribute("y2", (k.y - 34 * Math.cos(r)).toFixed(1));
+    });
+    // learned features show up at the end
+    m.featEar.setAttribute("opacity", String(ramp(t, A.orejas.start - 0.2, A.orejas.start + 0.3)));
+    m.featWh.setAttribute("opacity", String(ramp(t, A.bigotes.start - 0.2, A.bigotes.start + 0.3)));
+    const fe = ramp(t, A.orejas.start - 0.2, A.orejas.start + 0.3), fw = ramp(t, A.bigotes.start - 0.2, A.bigotes.start + 0.3);
+    m.ears.forEach((e) => { e.setAttribute("stroke", fe > 0.5 ? "#c98a1b" : "#8a5a22"); e.setAttribute("stroke-width", fe > 0.5 ? 8 : 4); });
+    m.whiskers.setAttribute("stroke", fw > 0.5 ? "#3a9a80" : "#5a4632");
+    m.whiskers.setAttribute("stroke-width", fw > 0.5 ? 5 : 3);
+    m.feat.setAttribute("opacity", String(finalOn));
+  }
+
+  const SCRIPT = "Nadie le explica a una IA qué es un gato. Entonces, ¿cómo aprende a reconocerlo? Con ejemplos y errores. Le enseñas una foto y la IA da una respuesta, al principio al azar: «perro, sesenta por ciento». Como la foto tenía la etiqueta «gato», se calcula qué tan equivocada estuvo. Luego se ajustan un poquito sus millones de perillas internas, los parámetros, en la dirección que habría reducido ese error. Y se repite. Con millones de fotos. Uno de los conjuntos más famosos para entrenar, ImageNet, tiene más de catorce millones de imágenes etiquetadas a mano. Al final, nadie le programó «orejas puntiagudas» ni «bigotes». Esas pistas aparecen solas dentro de la red, porque son las que más ayudaban a acertar.";
+
+  Mosaic.short({
+    kicker: "IA por dentro",
+    title: "¿Cómo aprende una IA a reconocer un gato?",
+    script: SCRIPT,
+    anchors: {
+      aprende: "aprende",
+      ejemplos: "ejemplos",
+      foto: "foto",
+      respuesta: "respuesta",
+      azar: "azar",
+      perro: "perro",
+      etiqueta: "etiqueta",
+      equivocada: "equivocada",
+      ajustan: "ajustan",
+      perillas: "perillas",
+      parametros: "parametros",
+      repite: "se repite",
+      imagenet: ["imagenet", "image net"],
+      catorce: ["catorce millones", "14 millones", "14000000"],
+      final: "al final",
+      orejas: "orejas",
+      bigotes: "bigotes",
+      pistas: "pistas",
+    },
+    build,
+    scenes: [
+      { el: "#sc-main", from: 0, to: "end", fadeIn: 0.4, rise: 0, update },
+      { el: "#cap-nobody", from: 0.2, to: "ejemplos-0.3", fade: 0.3 },
+      { el: "#cap-guess", from: "ejemplos-0.3", to: "etiqueta-0.5", fade: 0.3 },
+      { el: "#cap-err", from: "etiqueta-0.5", to: "ajustan-0.3", fade: 0.3 },
+      { el: "#cap-knobs", from: "ajustan-0.3", to: "repite-0.3", fade: 0.3 },
+      { el: "#cap-rep", from: "repite-0.3", to: "imagenet-0.3", fade: 0.3 },
+      { el: "#cap-inet", from: "imagenet-0.3", to: "final-0.3", fade: 0.3 },
+      { el: "#cap-end", from: "final-0.3", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
