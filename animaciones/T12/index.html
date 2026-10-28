@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>T12 · ¿Cómo lee tu huella la pantalla del celular?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-hook" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-hook" style="top:1300px">Se desbloquea, aunque ahí no hay botón</div>
+
+    <svg class="full scene" id="sc-print" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-print" style="top:1300px">Tu huella: crestas y valles<small>separados por apenas unas décimas de milímetro</small></div>
+
+    <svg class="full scene" id="sc-cut" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-cam" style="top:1300px">Debajo de la pantalla: una cámara diminuta<small>en la mayoría de los celulares</small></div>
+    <div class="m-caption scene" id="cap-light" style="top:1300px">En los valles hay aire: la luz rebota fuerte<small>en las crestas la piel toca el vidrio y la luz se pierde</small></div>
+    <div class="m-caption scene" id="cap-gaps" style="top:1300px">La cámara ve el contraste<small>a través de los huecos entre los píxeles</small></div>
+    <div class="m-caption scene" id="cap-sound" style="top:1300px">Otros usan ultrasonido<small>el eco también cambia entre cresta y valle</small></div>
+
+    <svg class="full scene" id="sc-map" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-map" style="top:1300px">No guarda la foto de tu huella<small>guarda un mapa de puntos clave y compara contra él</small></div>
+    <div class="m-caption scene" id="cap-wet" style="top:1300px">Un dedo mojado o una mica gruesa<small>a veces lo confunden</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp, clamp, keys } = Mosaic;
+  const MINT = "#3a9a80", BLUE = "#2f5e8e", AMBER = "#c98a1b", FUCH = "#b3386b", INK = "#1d1d1b", INK2 = "#4a4843", MUTED = "#827e74";
+  const SKIN = "#e7c3a6", SKIN_E = "#b98d6f", RIDGE = "#6b4a3a";
+
+  // ---------------------------------------------------------------- fingerprint (top view): concentric ridges with gaps and branches
+  // Ridge endings (gaps) and bifurcations (branches) are the "minutiae": the key points the phone stores.
+  function fingerprint(g, cx, cy, s, idp) {
+    const out = { ends: [], forks: [] };
+    const defs = el("defs", {}, g);
+    const cp = el("clipPath", { id: idp + "clip" }, defs);
+    el("ellipse", { cx, cy, rx: 220 * s, ry: 290 * s }, cp);
+    el("ellipse", { cx, cy, rx: 220 * s, ry: 290 * s, fill: SKIN, stroke: SKIN_E, "stroke-width": 5 }, g);
+    const r = el("g", { "clip-path": `url(#${idp}clip)` }, g);
+    const gaps = { 2: 0.6, 4: 3.6, 5: 1.9, 7: 5.0, 8: 2.6, 10: 4.2, 11: 0.9 };
+    const forks = { 3: 2.2, 6: 4.4, 9: 0.3 };
+    const pt = (i, a) => { const rx = (26 + i * 22) * s, ry = rx * 1.3; return [cx + rx * Math.cos(a), cy - 30 * s + ry * Math.sin(a)]; };
+    for (let i = 0; i < 14; i++) {
+      const g0 = gaps[i];
+      const a0 = g0 === undefined ? 0 : g0 + 0.3, a1 = g0 === undefined ? Math.PI * 2 : g0 + Math.PI * 2;
+      const pts = [];
+      for (let k = 0; k <= 120; k++) pts.push(pt(i, lerp(a0, a1, k / 120)));
+      el("polyline", { points: pts.map((p) => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" "), fill: "none", stroke: RIDGE, "stroke-width": 9 * s, "stroke-linecap": "round" }, r);
+      if (g0 !== undefined) { out.ends.push(pt(i, a0)); out.ends.push(pt(i, a1)); }
+      if (forks[i] !== undefined) {
+        const a = forks[i], p0 = pt(i, a), p1 = pt(i + 1, a + 0.22);
+        el("line", { x1: p0[0], y1: p0[1], x2: p1[0], y2: p1[1], stroke: RIDGE, "stroke-width": 9 * s, "stroke-linecap": "round" }, r);
+        out.forks.push(p0);
+      }
+    }
+    // keep only points inside the finger outline
+    const inside = (p) => ((p[0] - cx) / (210 * s)) ** 2 + ((p[1] - cy) / (280 * s)) ** 2 < 1;
+    out.ends = out.ends.filter(inside); out.forks = out.forks.filter(inside);
+    return out;
+  }
+
+  // ---------------------------------------------------------------- scene 1: unlock
+  let hk = {};
+  function buildHook() {
+    const g = el("g", {}, $("#sc-hook"));
+    el("rect", { x: 380, y: 480, width: 320, height: 680, rx: 48, fill: "#2b2d31" }, g);
+    el("rect", { x: 396, y: 496, width: 288, height: 648, rx: 36, fill: "#e9e5dc" }, g);
+    hk.lock = el("g", { transform: "translate(540 620)" }, g);
+    hk.shackle = el("path", { d: "M-26 0 L-26 -26 A26 26 0 0 1 26 -26 L26 0", fill: "none", stroke: INK2, "stroke-width": 9 }, hk.lock);
+    el("rect", { x: -38, y: -4, width: 76, height: 58, rx: 10, fill: INK2 }, hk.lock);
+    hk.print = el("g", {}, g);
+    for (let i = 0; i < 4; i++) el("ellipse", { cx: 540, cy: 1010, rx: 10 + i * 12, ry: 13 + i * 15, fill: "none", stroke: "#9a958a", "stroke-width": 4 }, hk.print);
+    hk.finger = el("g", {}, g);
+    el("path", { d: "M-62 250 L-62 40 A62 62 0 0 1 62 40 L62 250 Z", fill: SKIN, stroke: SKIN_E, "stroke-width": 5 }, hk.finger);
+  }
+  function drawHook(t, s, A) {
+    const p = ramp(t, 0.2, A.dedo.start + 0.4, ease.out) * (1 - ramp(t, A.desbloquea.start + 0.6, A.desbloquea.start + 1.2));
+    hk.finger.setAttribute("transform", `translate(540 ${lerp(1160, 990, p).toFixed(1)})`);
+    hk.finger.setAttribute("opacity", String(ramp(t, 0, 0.4) * (1 - ramp(t, A.desbloquea.start + 0.6, A.desbloquea.start + 1.0))));
+    const open = ramp(t, A.desbloquea.start, A.desbloquea.start + 0.4);
+    hk.shackle.setAttribute("transform", `translate(${(open * 52).toFixed(1)} ${(-open * 10).toFixed(1)})`);
+    hk.lock.setAttribute("opacity", String(1));
+  }
+
+  // ---------------------------------------------------------------- scene 2: ridges and valleys
+  let pr = {};
+  function buildPrint() {
+    const g = el("g", {}, $("#sc-print"));
+    fingerprint(g, 400, 820, 1, "p2");
+    // zoom callout: ridges and valleys side by side
+    pr.zoom = el("g", {}, g);
+    el("circle", { cx: 790, cy: 640, r: 140, fill: SKIN, stroke: INK2, "stroke-width": 5 }, pr.zoom);
+    const zc = el("clipPath", { id: "p2z" }, el("defs", {}, pr.zoom));
+    el("circle", { cx: 790, cy: 640, r: 136 }, zc);
+    const zg = el("g", { "clip-path": "url(#p2z)" }, pr.zoom);
+    for (let i = -4; i <= 4; i++) el("rect", { x: 790 + i * 50 - 16, y: 490, width: 32, height: 300, fill: RIDGE }, zg);
+    el("text", { x: 790, y: 830, "text-anchor": "middle", class: "m-label", fill: RIDGE, text: "cresta" }, pr.zoom);
+    el("line", { x1: 790, y1: 800, x2: 790, y2: 760, stroke: INK, "stroke-width": 3 }, pr.zoom);
+    el("text", { x: 790, y: 470, "text-anchor": "middle", class: "m-label", fill: INK2, text: "valle" }, pr.zoom);
+    el("line", { x1: 815, y1: 480, x2: 815, y2: 520, stroke: INK, "stroke-width": 3 }, pr.zoom);
+    pr.scale = el("g", {}, g);
+    el("line", { x1: 765, y1: 900, x2: 815, y2: 900, stroke: INK, "stroke-width": 4 }, pr.scale);
+    el("line", { x1: 765, y1: 888, x2: 765, y2: 912, stroke: INK, "stroke-width": 4 }, pr.scale);
+    el("line", { x1: 815, y1: 888, x2: 815, y2: 912, stroke: INK, "stroke-width": 4 }, pr.scale);
+    el("text", { x: 790, y: 950, "text-anchor": "middle", class: "m-label m-num", fill: INK, text: "≈ 0.5 mm" }, pr.scale);
+    el("line", { x1: 520, y1: 700, x2: 660, y2: 640, stroke: INK2, "stroke-width": 3, "stroke-dasharray": "8 6" }, pr.zoom);
+    el("circle", { cx: 505, cy: 705, r: 18, fill: "none", stroke: INK2, "stroke-width": 4 }, pr.zoom);
+  }
+  function drawPrint(t, s, A) {
+    pr.zoom.setAttribute("opacity", String(ramp(t, A.crestas.start - 0.3, A.crestas.start + 0.3)));
+    pr.scale.setAttribute("opacity", String(ramp(t, A.decimas.start - 0.3, A.decimas.start + 0.3)));
+  }
+
+  // ---------------------------------------------------------------- scene 3/4: cross-section (optical, then ultrasound)
+  const P = 120, X0 = 120, X1 = 960, GLASS = 700;
+  const skinY = (x) => GLASS - 2 - 40 * (0.5 - 0.5 * Math.cos((2 * Math.PI * (x - 180)) / P));
+  const isRidge = (x) => Math.cos((2 * Math.PI * (x - 180)) / P) > 0;
+  let cu = {};
+  function buildCut() {
+    const g = el("g", {}, $("#sc-cut"));
+    // skin with ridges (ridges touch the glass)
+    const pts = [[X0, 470]];
+    for (let x = X0; x <= X1; x += 4) pts.push([x, skinY(x)]);
+    pts.push([X1, 470]);
+    el("polygon", { points: pts.map((p) => p.join(",")).join(" "), fill: SKIN, stroke: SKIN_E, "stroke-width": 4 }, g);
+    el("text", { x: X0 + 20, y: 520, class: "m-label", fill: SKIN_E, text: "dedo" }, g);
+    cu.rv = el("g", {}, g);
+    el("text", { x: 180, y: 620, "text-anchor": "middle", class: "m-note", fill: INK2, text: "cresta" }, cu.rv);
+    el("text", { x: 240, y: 620, "text-anchor": "middle", class: "m-note", fill: INK2, text: "" }, cu.rv);
+    el("text", { x: 300, y: 690, "text-anchor": "middle", class: "m-note", fill: BLUE, text: "aire" }, cu.rv);
+    el("rect", { x: X0, y: GLASS, width: X1 - X0, height: 70, fill: "#d8e6ee", stroke: "#8fb0c4", "stroke-width": 3 }, g);
+    el("text", { x: X1 - 14, y: GLASS + 46, "text-anchor": "end", class: "m-note", fill: INK2, text: "vidrio" }, g);
+    // pixel layer with gaps
+    cu.pix = [];
+    for (let x = X0; x < X1; x += 40) cu.pix.push(el("rect", { x: x + 4, y: 800, width: 24, height: 22, rx: 3, fill: ["#c0504d", "#4f9d69", "#4a78c2"][((x - X0) / 40) % 3] }, g));
+    el("text", { x: X1 - 14, y: 860, "text-anchor": "end", class: "m-note", fill: INK2, text: "píxeles (con huecos)" }, g);
+    // camera
+    cu.cam = el("g", {}, g);
+    el("rect", { x: 440, y: 980, width: 200, height: 70, rx: 10, fill: INK2 }, cu.cam);
+    el("ellipse", { cx: 540, cy: 975, rx: 60, ry: 14, fill: "#8fb0c4", stroke: INK2, "stroke-width": 3 }, cu.cam);
+    el("text", { x: 660, y: 1028, class: "m-label", fill: INK2, text: "cámara diminuta" }, cu.cam);
+    // rays: from a pixel up to the glass top, then down to the lens
+    cu.rays = [];
+    for (let k = 0; k < 14; k++) {
+      const xh = 150 + k * 60;
+      cu.rays.push({ xh, up: el("line", { stroke: AMBER, "stroke-width": 4, "stroke-linecap": "round" }, g), dn: el("line", { stroke: AMBER, "stroke-linecap": "round" }, g), lost: el("path", { fill: "none", stroke: AMBER, "stroke-width": 3, "stroke-dasharray": "4 6" }, g) });
+    }
+    // the image the camera sees
+    cu.img = el("g", {}, g);
+    for (let x = X0; x < X1; x += 6) el("rect", { x, y: 1110, width: 6, height: 60, fill: isRidge(x + 3) ? "#3a3530" : "#efe9dc" }, cu.img);
+    el("rect", { x: X0, y: 1110, width: X1 - X0, height: 60, fill: "none", stroke: INK2, "stroke-width": 3 }, cu.img);
+    el("text", { x: X0, y: 1210, class: "m-note", fill: MUTED, text: "lo que ve: valles claros, crestas oscuras" }, cu.img);
+    // ultrasound
+    cu.us = el("g", {}, g);
+    el("rect", { x: X0, y: 990, width: X1 - X0, height: 40, rx: 6, fill: "#9a958a" }, cu.us);
+    el("text", { x: X0, y: 1075, class: "m-label", fill: INK2, text: "sensor de ultrasonido" }, cu.us);
+    cu.front = el("line", { x1: X0, x2: X1, stroke: BLUE, "stroke-width": 6 }, cu.us);
+    cu.echoes = [];
+    for (let x = X0 + 10; x < X1; x += 20) cu.echoes.push({ x, n: el("line", { x1: x, x2: x + 12, stroke: BLUE, "stroke-linecap": "round" }, cu.us) });
+    el("text", { x: X1, y: 1075, "text-anchor": "end", class: "m-note", fill: MUTED, text: "ilustrativo" }, cu.us);
+  }
+  function drawCut(t, s, A) {
+    const sound = ramp(t, A.sonido.start - 0.4, A.sonido.start + 0.2);
+    cu.cam.setAttribute("opacity", String(ramp(t, A.camara.start - 0.3, A.camara.start + 0.3) * (1 - sound)));
+    cu.rv.setAttribute("opacity", String(ramp(t, A.tocan.start - 0.6, A.tocan.start)));
+    const lit = ramp(t, A.ilumina.start - 0.2, A.ilumina.start + 0.4) * (1 - sound);
+    const contrast = ramp(t, A.rebota.start - 0.2, A.rebota.start + 0.6);
+    cu.rays.forEach((r) => {
+      const xp = r.xh - 30, ridge = isRidge(r.xh);
+      r.up.setAttribute("x1", xp); r.up.setAttribute("y1", 800); r.up.setAttribute("x2", r.xh); r.up.setAttribute("y2", GLASS);
+      r.up.setAttribute("opacity", String(lit * 0.8));
+      // valley: strong reflection at the glass/air surface; ridge: light goes into the skin
+      const strong = ridge ? 0.12 : 1;
+      r.dn.setAttribute("x1", r.xh); r.dn.setAttribute("y1", GLASS); r.dn.setAttribute("x2", 540); r.dn.setAttribute("y2", 975);
+      r.dn.setAttribute("stroke-width", String(lerp(4, ridge ? 1.5 : 6, contrast)));
+      r.dn.setAttribute("opacity", String(lit * lerp(0.6, strong, contrast)));
+      r.lost.setAttribute("d", `M${r.xh} ${GLASS} q10 -30 -4 -60 q-14 -30 6 -60`);
+      r.lost.setAttribute("opacity", String(ridge ? lit * contrast : 0));
+    });
+    cu.img.setAttribute("opacity", String(ramp(t, A.contraste.start - 0.3, A.contraste.start + 0.3) * (1 - sound)));
+    // ultrasound: a pulse rises, echoes come back; stronger under valleys (skin/air), weaker under ridges
+    cu.us.setAttribute("opacity", String(sound));
+    const ph = (Math.max(0, t - A.ultrasonido.start + 0.8) % 1.6) / 1.6;
+    const up = ph < 0.5 ? ph / 0.5 : 1, dn = ph < 0.5 ? 0 : (ph - 0.5) / 0.5;
+    cu.front.setAttribute("y1", lerp(985, GLASS, up).toFixed(1)); cu.front.setAttribute("y2", lerp(985, GLASS, up).toFixed(1));
+    cu.front.setAttribute("opacity", String(ph < 0.5 ? 1 : 0));
+    cu.echoes.forEach((e) => {
+      const y = lerp(GLASS, 985, dn), ridge = isRidge(e.x + 6);
+      e.n.setAttribute("y1", y.toFixed(1)); e.n.setAttribute("y2", y.toFixed(1));
+      e.n.setAttribute("stroke-width", ridge ? 3 : 9);
+      e.n.setAttribute("opacity", String(ph >= 0.5 ? (ridge ? 0.35 : 1) : 0));
+    });
+    cu.pix.forEach((p) => p.setAttribute("opacity", String(1 - 0.6 * sound)));
+  }
+
+  // ---------------------------------------------------------------- scene 5/6: key points, comparison, wet finger
+  let mp = {};
+  function buildMap() {
+    const g = el("g", {}, $("#sc-map"));
+    mp.print = el("g", {}, g);
+    const fp = fingerprint(mp.print, 330, 800, 0.9, "p5");
+    mp.pts = el("g", {}, g);
+    fp.ends.forEach(([x, y]) => el("circle", { cx: x, cy: y, r: 13, fill: "none", stroke: FUCH, "stroke-width": 5 }, mp.pts));
+    fp.forks.forEach(([x, y]) => el("rect", { x: x - 12, y: y - 12, width: 24, height: 24, fill: "none", stroke: AMBER, "stroke-width": 5 }, mp.pts));
+    // stored template (the same points), on the right
+    mp.saved = el("g", {}, g);
+    el("rect", { x: 640, y: 560, width: 300, height: 400, rx: 16, fill: "#faf8f3", stroke: INK2, "stroke-width": 4 }, mp.saved);
+    el("text", { x: 790, y: 540, "text-anchor": "middle", class: "m-label", fill: INK2, text: "guardado" }, mp.saved);
+    const sx = (x) => 790 + (x - 330) * 0.62, sy = (y) => 760 + (y - 800) * 0.62;
+    fp.ends.forEach(([x, y]) => el("circle", { cx: sx(x), cy: sy(y), r: 9, fill: "none", stroke: FUCH, "stroke-width": 4 }, mp.saved));
+    fp.forks.forEach(([x, y]) => el("rect", { x: sx(x) - 8, y: sy(y) - 8, width: 16, height: 16, fill: "none", stroke: AMBER, "stroke-width": 4 }, mp.saved));
+    mp.ok = el("text", { x: 790, y: 1010, "text-anchor": "middle", "font-size": 44, "font-weight": 700, fill: MINT, text: "coincide ✓" }, g);
+    mp.legend = el("g", {}, g);
+    el("circle", { cx: 130, cy: 1170, r: 11, fill: "none", stroke: FUCH, "stroke-width": 4 }, mp.legend);
+    el("text", { x: 152, y: 1180, class: "m-note", fill: INK2, text: "fin de línea" }, mp.legend);
+    el("rect", { x: 330, y: 1159, width: 22, height: 22, fill: "none", stroke: AMBER, "stroke-width": 4 }, mp.legend);
+    el("text", { x: 364, y: 1180, class: "m-note", fill: INK2, text: "bifurcación" }, mp.legend);
+    // water drop over the ridges
+    mp.drop = el("path", { d: "M330 690 C 400 760 430 820 420 870 C 410 930 250 930 240 870 C 230 820 260 760 330 690 Z", fill: "#a9cbe3", stroke: BLUE, "stroke-width": 4 }, g);
+    mp.bad = el("text", { x: 790, y: 1010, "text-anchor": "middle", "font-size": 44, "font-weight": 700, fill: FUCH, text: "¿no coincide?" }, g);
+  }
+  function drawMap(t, s, A) {
+    mp.pts.setAttribute("opacity", String(ramp(t, A.mapa.start - 0.4, A.mapa.start + 0.2)));
+    mp.legend.setAttribute("opacity", String(ramp(t, A.mapa.start - 0.4, A.mapa.start + 0.2)));
+    mp.print.setAttribute("opacity", String(1 - 0.75 * ramp(t, A.mapa.start, A.mapa.start + 0.6) + 0.75 * ramp(t, A.mojado.start - 0.6, A.mojado.start)));
+    mp.saved.setAttribute("opacity", String(ramp(t, A.compara.start - 0.4, A.compara.start + 0.1)));
+    const wet = ramp(t, A.mojado.start - 0.3, A.mojado.start + 0.3);
+    mp.ok.setAttribute("opacity", String(ramp(t, A.compara.start + 0.4, A.compara.start + 0.8) * (1 - wet)));
+    mp.drop.setAttribute("opacity", String(wet));
+    mp.bad.setAttribute("opacity", String(ramp(t, A.confunden.start - 0.3, A.confunden.start + 0.2)));
+    mp.pts.setAttribute("opacity", String(ramp(t, A.mapa.start - 0.4, A.mapa.start + 0.2) * (1 - 0.7 * wet)));
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "Pones el dedo sobre la pantalla y el celular se desbloquea, aunque ahí no hay ningún botón. ¿Cómo lee tu huella? Tu huella son crestas y valles: líneas separadas por apenas unas décimas de milímetro. En la mayoría de los celulares, debajo de la pantalla hay una cámara diminuta. La pantalla ilumina tu dedo, y la luz rebota distinto en las crestas, que tocan el vidrio, que en los valles, donde queda aire. La cámara ve ese contraste a través de los huecos entre los píxeles. Otros usan sonido: mandan un pulso de ultrasonido y miden el eco, que también cambia entre cresta y valle. Luego, el celular no guarda la foto de tu huella: guarda un mapa de puntos clave y compara contra él. Por eso un dedo mojado o una mica gruesa a veces lo confunden.";
+
+  Mosaic.short({
+    kicker: "El celular por dentro",
+    title: "¿Cómo lee tu huella la pantalla del celular?",
+    script: SCRIPT,
+    anchors: {
+      dedo: "dedo",
+      desbloquea: "desbloquea",
+      boton: "boton",
+      crestas: "crestas",
+      decimas: "decimas",
+      mayoria: "la mayoria",
+      camara: "camara diminuta",
+      ilumina: "ilumina",
+      rebota: "rebota",
+      tocan: "tocan el vidrio",
+      aire: "aire",
+      contraste: "contraste",
+      huecos: "huecos",
+      sonido: "sonido",
+      ultrasonido: "ultrasonido",
+      eco: "eco",
+      foto: "foto de tu huella",
+      mapa: "mapa de puntos",
+      compara: "compara",
+      mojado: "mojado",
+      mica: "mica gruesa",
+      confunden: "confunden",
+    },
+    build() { buildHook(); buildPrint(); buildCut(); buildMap(); },
+    scenes: [
+      { el: "#sc-hook", from: 0, to: "crestas-0.8", fadeIn: 0.3, rise: 0, update: drawHook },
+      { el: "#cap-hook", from: "desbloquea-0.2", to: "crestas-0.8", fade: 0.3 },
+      { el: "#sc-print", from: "crestas-0.8", to: "mayoria-0.3", rise: 0, update: drawPrint },
+      { el: "#cap-print", from: "crestas-0.6", to: "mayoria-0.3", fade: 0.3 },
+      { el: "#sc-cut", from: "mayoria-0.3", to: "foto-1.2", rise: 0, update: drawCut },
+      { el: "#cap-cam", from: "mayoria-0.2", to: "ilumina-0.2", fade: 0.3 },
+      { el: "#cap-light", from: "ilumina-0.2", to: "contraste-0.6", fade: 0.3 },
+      { el: "#cap-gaps", from: "contraste-0.6", to: "sonido-0.4", fade: 0.3 },
+      { el: "#cap-sound", from: "sonido-0.4", to: "foto-1.2", fade: 0.3 },
+      { el: "#sc-map", from: "foto-1.2", to: "end", rise: 0, update: drawMap },
+      { el: "#cap-map", from: "foto-1.2", to: "mojado-0.6", fade: 0.3 },
+      { el: "#cap-wet", from: "mojado-0.6", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
