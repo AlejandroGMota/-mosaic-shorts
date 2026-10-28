@@ -25,7 +25,7 @@ Guion: `guiones/shorts-hardware-2026-10-27.md` · Tomas: `audios/shorts-hardware
 
 ## Lote 02
 
-Guion: `guiones/shorts-lote-02-2026-10-27.md` · Tomas: `audios/shorts-lote-02-2026-10-27/` (solo en la Mac). Series M (memoria, chips y SO), I (IA por dentro), T (celular por dentro), R (internet y redes). 43 Shorts; 15 ⭐. Lo pendiente de verificar está al final del guion.
+Guion: `guiones/shorts-lote-02-2026-10-27.md` · Tomas: `audios/shorts-lote-02-2026-10-27/` (solo en la Mac). Series M (memoria, chips y SO), I (IA por dentro), T (celular por dentro), R (internet y redes). 47 Shorts (I1 descartado el 27 oct; I12, I13, T12, R11 y R12 agregados el 27 oct); 15 ⭐ activos. Lo pendiente de verificar está al final del guion.
 
 | ID | Short | Guion | Grabado | Audio | Animación | Render | Publicado | Notas |
 |---|---|---|---|---|---|---|---|---|
@@ -40,7 +40,7 @@ Guion: `guiones/shorts-lote-02-2026-10-27.md` · Tomas: `audios/shorts-lote-02-2
 | M9 | ¿Qué significan los «3 nanómetros» de un chip? | ✅ 27 oct | — | — | — | — | — |  |
 | M10 | ¿Cómo hace tu compu muchas cosas a la vez? | ✅ 27 oct | — | — | — | — | — | 6 ms es de CFS; Linux 6.6+ usa EEVDF |
 | M11 | ¿Qué pasa en tu compu desde que la prendes? | ✅ 27 oct | — | — | — | — | — |  |
-| I1 ⭐ | ¿Por qué una IA de 7B apenas cabe en una Mac de 8 GB? | ✅ 27 oct | — | — | — | — | — | probar en la Mac un 7B Q4 antes de grabar |
+| I1 | ¿Por qué una IA de 7B apenas cabe en una Mac de 8 GB? | ✅ 27 oct | ✗ 27 oct | — | — | — | — | descartado por Enrique (27 oct) |
 | I2 ⭐ | ¿Cómo escribe una IA como ChatGPT? | ✅ 27 oct | — | — | — | — | — |  |
 | I3 ⭐ | ¿Por qué la IA no sabe contar letras? | ✅ 27 oct | — | — | — | — | — | confirmar en un tokenizer cómo se corta «ferrocarril» |
 | I4 ⭐ | ¿Por qué la IA inventa cosas con tanta seguridad? | ✅ 27 oct | — | — | — | — | — |  |
@@ -51,6 +51,8 @@ Guion: `guiones/shorts-lote-02-2026-10-27.md` · Tomas: `audios/shorts-lote-02-2
 | I9 | ¿Por qué la IA olvida lo que le dijiste antes? | ✅ 27 oct | — | — | — | — | — |  |
 | I10 | ¿Cómo sabe la IA que «rey» y «reina» se parecen? | ✅ 27 oct | — | — | — | — | — |  |
 | I11 | ¿Cuánta energía gasta una pregunta a la IA? | ✅ 27 oct | — | — | — | — | — | cifra de Google (may 2025); revisar si hay una más nueva |
+| I12 ⭐ | ¿De verdad la IA gasta agua? | ✅ 27 oct | — | — | — | — | — | Google 0.26 ml vs. UC Riverside: dos cuentas distintas |
+| I13 | ¿Cómo decide TikTok qué video sigue? | ✅ 27 oct | — | — | — | — | — | señales según TikTok (2020) |
 | T1 ⭐ | ¿Cómo sabe tu pantalla dónde la tocas? | ✅ 27 oct | — | — | — | — | — |  |
 | T2 | ¿Cómo sabe tu celular si lo volteas? | ✅ 27 oct | — | — | — | — | — |  |
 | T3 ⭐ | ¿Cómo sabe tu celular dónde estás sin internet? | ✅ 27 oct | — | — | — | — | — |  |
@@ -62,6 +64,7 @@ Guion: `guiones/shorts-lote-02-2026-10-27.md` · Tomas: `audios/shorts-lote-02-2
 | T9 | ¿Por qué tu celular se pone lento cuando se calienta? | ✅ 27 oct | — | — | — | — | — |  |
 | T10 | ¿Cómo sabe tu celular que lo pegaste a la oreja? | ✅ 27 oct | — | — | — | — | — |  |
 | T11 | ¿Cómo vibra tu celular? | ✅ 27 oct | — | — | — | — | — |  |
+| T12 | ¿Cómo lee tu huella la pantalla del celular? | ✅ 27 oct | — | — | — | — | — | |
 | R1 ⭐ | ¿Cómo llega tu mensaje de WhatsApp a otro país? | ✅ 27 oct | — | — | — | — | — |  |
 | R2 ⭐ | ¿Internet viaja por satélite o por el fondo del mar? | ✅ 27 oct | — | — | — | — | — | conteo de cables cambia rápido |
 | R3 | ¿Por qué toda tu casa comparte una sola IP? | ✅ 27 oct | — | — | — | — | — |  |
@@ -72,6 +75,8 @@ Guion: `guiones/shorts-lote-02-2026-10-27.md` · Tomas: `audios/shorts-lote-02-2
 | R8 | ¿Qué es el ping y por qué arruina tus partidas? | ✅ 27 oct | — | — | — | — | — |  |
 | R9 | ¿Cómo viaja la luz dentro de la fibra óptica? | ✅ 27 oct | — | — | — | — | — |  |
 | R10 ⭐ | ¿Cómo sabe YouTube bajar la calidad del video? | ✅ 27 oct | — | — | — | — | — |  |
+| R11 | ¿Por qué el 5G es más rápido que el 4G? | ✅ 27 oct | — | — | — | — | — | confirmar bandas de Telcel/AT&T con el IFT |
+| R12 | ¿Dónde están tus fotos cuando las subes a la nube? | ✅ 27 oct | — | — | — | — | — | |
 
 ## Notas
 
