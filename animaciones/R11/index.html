@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>R11 · ¿Por qué el 5G es más rápido que el 4G?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-phone" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-q" style="top:1300px">¿Qué cambió en realidad?</div>
+
+    <svg class="full scene" id="sc-road" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-road" style="top:1300px">El espectro es la carretera<small>tus datos son los coches</small></div>
+    <div class="m-caption scene" id="cap-wide" style="top:1300px">Más ancha: más coches a la vez</div>
+    <div class="m-caption scene" id="cap-4g" style="top:1300px">Un canal de 4G: 20 MHz<small>normalmente</small></div>
+    <div class="m-caption scene" id="cap-x5" style="top:1300px">Una carretera 5 veces más ancha<small>4G: 20 MHz · 5G banda media: hasta 100 MHz</small></div>
+    <div class="m-caption scene" id="cap-mx" style="top:1300px">En México: banda de 3.5 GHz<small>la que más usa el 5G</small></div>
+
+    <svg class="full scene" id="sc-beam" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-beam" style="top:1300px">Decenas de antenitas<small>apuntan la señal hacia tu celular</small></div>
+
+    <svg class="full scene" id="sc-cells" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-cost" style="top:1300px">El costo: llega menos lejos<small>por eso se necesitan más antenas</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script src="../_base/redes.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp, clamp } = Mosaic;
+  const { C, op, place, phone, tower, rnd } = Redes;
+
+  // ---------------------------------------------------------------- the phone says 5G
+  let ph = {};
+  function buildPhone() {
+    const g = el("g", {}, $("#sc-phone"));
+    phone(g, 540, 860, 3.2, C.ink);
+    ph.sig = el("g", {}, g);
+    el("text", { x: 600, y: 640, "font-size": 56, "font-weight": 800, fill: C.ink, text: "5G" }, ph.sig);
+    for (let i = 0; i < 4; i++) el("rect", { x: 470 + i * 22, y: 640 - 14 - i * 12, width: 14, height: 14 + i * 12, rx: 2, fill: C.ink }, ph.sig);
+    ph.arrow = el("g", {}, g);
+    el("path", { d: "M540 760 L540 960 M480 900 L540 960 L600 900", fill: "none", stroke: C.mint, "stroke-width": 18, "stroke-linecap": "round", "stroke-linejoin": "round" }, ph.arrow);
+    ph.q = el("text", { x: 820, y: 900, "font-size": 140, "font-weight": 700, fill: C.fuchsia, text: "?" }, g);
+  }
+  function drawPhone(t, s, A) {
+    op(ph.sig, ramp(t, A.cincoge.start - 0.3, A.cincoge.start + 0.2));
+    op(ph.arrow, ramp(t, A.rapido.start - 0.3, A.rapido.start + 0.2));
+    place(ph.arrow, 0, ((t * 160) % 120) - 40);
+    op(ph.q, ramp(t, A.cambio.start - 0.3, A.cambio.start + 0.2));
+  }
+
+  // ---------------------------------------------------------------- roads: lanes = MHz of channel
+  let rd = {};
+  const LANE = 34, RX = 110, RW = 860;
+  const CARC = [C.blue, C.mint, C.amber, C.fuchsia];
+  function road(parent, y, lanes, label, sub, color) {
+    const g = el("g", {}, parent);
+    const h = lanes * LANE;
+    el("rect", { x: RX, y, width: RW, height: h + 12, rx: 6, fill: "#d9d4c8" }, g);
+    el("line", { x1: RX, y1: y + 3, x2: RX + RW, y2: y + 3, stroke: "#fff", "stroke-width": 3 }, g);
+    el("line", { x1: RX, y1: y + h + 9, x2: RX + RW, y2: y + h + 9, stroke: "#fff", "stroke-width": 3 }, g);
+    for (let i = 1; i < lanes; i++) el("line", { x1: RX, y1: y + 6 + i * LANE, x2: RX + RW, y2: y + 6 + i * LANE, stroke: "#fff", "stroke-width": 2, "stroke-dasharray": "18 14" }, g);
+    el("text", { x: RX, y: y - 18, "font-size": 40, "font-weight": 750, fill: color, text: label }, g);
+    el("text", { x: RX + RW, y: y - 18, "text-anchor": "end", class: "m-label", fill: color, text: sub }, g);
+    const cars = [];
+    for (let l = 0; l < lanes; l++) for (let k = 0; k < 4; k++) {
+      cars.push({ l, off: rnd(l * 7 + lanes), sp: 0.85 + 0.3 * rnd(l * 3 + lanes), node: el("rect", { y: y + 6 + l * LANE + 5, width: 46, height: LANE - 12, rx: 5, fill: CARC[(l + k) % 4] }, g) });
+    }
+    return { g, cars, y, lanes };
+  }
+  function driveCars(R, t, density) {
+    R.cars.forEach((c, i) => {
+      const k = i % 4;
+      const show = k < density ? 1 : 0;
+      const x = RX + ((((t * 140 * c.sp) + c.off * RW + k * RW / 4) % (RW + 40)) - 40);
+      c.node.setAttribute("x", String(clamp(x, RX, RX + RW - 46)));
+      c.node.setAttribute("opacity", String(show * (x < RX || x > RX + RW - 46 ? 0 : 1)));
+    });
+  }
+  function buildRoad() {
+    const g = el("g", {}, $("#sc-road"));
+    rd.one = road(g, 640, 4, "espectro", "= carretera", C.ink2);
+    rd.r4 = road(g, 560, 2, "4G", "20 MHz", C.blue);
+    rd.r5 = road(g, 760, 10, "5G banda media", "100 MHz", C.mint);
+    rd.cnt = el("g", {}, g);
+    rd.c4 = el("text", { x: RX, y: 690, class: "m-label", fill: C.blue, text: "2 carriles" }, rd.cnt);
+    rd.c5 = el("text", { x: RX, y: 1160, class: "m-label", fill: C.mint, text: "10 carriles: ×5 coches a la vez" }, rd.cnt);
+    rd.mx = el("g", {}, g);
+    el("rect", { x: 250, y: 1190, width: 580, height: 80, rx: 40, fill: C.card, stroke: C.amber, "stroke-width": 4 }, rd.mx);
+    el("text", { x: 540, y: 1242, "text-anchor": "middle", "font-size": 36, "font-weight": 700, fill: C.amber, text: "México: banda de 3.5 GHz" }, rd.mx);
+  }
+  function drawRoad(t, s, A) {
+    const two = ramp(t, A.cuatroge.start - 0.6, A.cuatroge.start - 0.1);
+    op(rd.one.g, 1 - two);
+    const dens = Math.round(lerp(1, 4, ramp(t, A.ancha.start - 0.2, A.ancha.end + 0.5)));
+    driveCars(rd.one, t, dens);
+    op(rd.r4.g, ramp(t, A.cuatroge.start - 0.3, A.cuatroge.start + 0.2));
+    op(rd.r5.g, ramp(t, A.cien.start - 0.6, A.cien.start));
+    driveCars(rd.r4, t, 3);
+    driveCars(rd.r5, t, 3);
+    op(rd.c4, ramp(t, A.veinte.start - 0.2, A.veinte.end + 0.2));
+    op(rd.c5, ramp(t, A.veces.start - 0.3, A.veces.start + 0.2));
+    op(rd.mx, 0);
+  }
+
+  // ---------------------------------------------------------------- old fan vs steered beam
+  let bm = {};
+  function buildBeam() {
+    const g = el("g", {}, $("#sc-beam"));
+    // left: classic antenna spreads the signal everywhere
+    bm.old = el("g", {}, g);
+    tower(bm.old, 300, 860, 1.2, C.ink2);
+    for (let i = 1; i <= 4; i++) el("circle", { cx: 300, cy: 800, r: i * 55, fill: "none", stroke: C.blue, "stroke-width": 4, opacity: 0.8 - i * 0.15 }, bm.old);
+    el("text", { x: 300, y: 1080, "text-anchor": "middle", class: "m-label", text: "antena clásica" }, bm.old);
+    el("text", { x: 300, y: 1120, "text-anchor": "middle", class: "m-note", text: "riega la señal para todos lados" }, bm.old);
+    // right: panel of many small antennas and a beam towards a phone
+    bm.neu = el("g", {}, g);
+    el("rect", { x: 640, y: 700, width: 120, height: 200, rx: 8, fill: C.card, stroke: C.ink, "stroke-width": 5 }, bm.neu);
+    bm.elems = [];
+    for (let i = 0; i < 4; i++) for (let j = 0; j < 8; j++) bm.elems.push(el("rect", { x: 652 + i * 27, y: 712 + j * 23, width: 16, height: 14, rx: 3, fill: C.mint }, bm.neu));
+    phone(bm.neu, 900, 620, 0.45);
+    bm.beam = el("path", { fill: C.mint, opacity: 0.25 }, bm.neu);
+    bm.pulse = el("circle", { r: 10, fill: C.mint }, bm.neu);
+    el("text", { x: 760, y: 1080, "text-anchor": "middle", class: "m-label", text: "antena 5G" }, bm.neu);
+    el("text", { x: 760, y: 1120, "text-anchor": "middle", class: "m-note", text: "decenas de antenitas apuntan a ti" }, bm.neu);
+  }
+  function drawBeam(t, s, A) {
+    op(bm.old, ramp(t, s.from + 0.1, s.from + 0.5));
+    op(bm.neu, ramp(t, A.antenitas.start - 0.4, A.antenitas.start));
+    const b = ramp(t, A.apuntan.start - 0.2, A.apuntan.start + 0.4);
+    const ox = 760, oy = 800, tx = 880, ty = 640;
+    const ang = Math.atan2(ty - oy, tx - ox), L = Math.hypot(tx - ox, ty - oy) * b, w = 0.16;
+    bm.beam.setAttribute("d", `M${ox} ${oy} L${ox + Math.cos(ang - w) * L} ${oy + Math.sin(ang - w) * L} L${ox + Math.cos(ang + w) * L} ${oy + Math.sin(ang + w) * L} Z`);
+    const u = ((t - A.apuntan.start) * 1.2) % 1;
+    bm.pulse.setAttribute("cx", lerp(ox, tx, u)); bm.pulse.setAttribute("cy", lerp(oy, ty, u));
+    op(bm.pulse, b >= 1 ? 1 : 0);
+    bm.elems.forEach((e, i) => op(e, 0.55 + 0.45 * b * (0.5 + 0.5 * Math.sin(t * 6 - (i % 4) * 0.9))));
+  }
+
+  // ---------------------------------------------------------------- coverage: more antennas for the same area
+  let cl = {};
+  function buildCells() {
+    const g = el("g", {}, $("#sc-cells"));
+    el("rect", { x: 110, y: 560, width: 400, height: 420, rx: 16, fill: C.card, stroke: C.line, "stroke-width": 3 }, g);
+    el("rect", { x: 570, y: 560, width: 400, height: 420, rx: 16, fill: C.card, stroke: C.line, "stroke-width": 3 }, g);
+    cl.c4 = el("circle", { cx: 310, cy: 770, r: 0, fill: C.blue, "fill-opacity": 0.18, stroke: C.blue, "stroke-width": 4 }, g);
+    tower(g, 310, 760, 0.55, C.ink2);
+    el("text", { x: 310, y: 1040, "text-anchor": "middle", class: "m-label", fill: C.blue, text: "4G: 1 antena" }, g);
+    cl.c5 = [];
+    const pos = [[690, 680], [845, 680], [690, 860], [845, 860]];
+    cl.t5 = pos.map(([x, y], i) => {
+      const tg = el("g", {}, g);
+      cl.c5.push(el("circle", { cx: x, cy: y, r: 0, fill: C.mint, "fill-opacity": 0.18, stroke: C.mint, "stroke-width": 4 }, tg));
+      tower(tg, x, y - 10, 0.45, C.ink2);
+      return tg;
+    });
+    cl.l5 = el("text", { x: 770, y: 1040, "text-anchor": "middle", class: "m-label", fill: C.mint, text: "5G: más antenas" }, g);
+    el("text", { x: 540, y: 1110, "text-anchor": "middle", class: "m-note", text: "alcances ilustrativos: dependen del terreno y la potencia" }, g);
+  }
+  function drawCells(t, s, A) {
+    cl.c4.setAttribute("r", String(185 * ramp(t, s.from, s.from + 0.8, ease.out)));
+    const r5 = 95 * ramp(t, A.lejos.start - 0.3, A.lejos.end + 0.3, ease.out);
+    cl.t5.forEach((tg, i) => {
+      const on = i === 0 ? 1 : ramp(t, A.necesitan.start + (i - 1) * 0.25, A.necesitan.start + (i - 1) * 0.25 + 0.3);
+      op(tg, on);
+      cl.c5[i].setAttribute("r", String(r5));
+    });
+    op(cl.l5, ramp(t, A.necesitan.start, A.necesitan.start + 0.3));
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "Tu celular dice cinco ge y todo baja más rápido. ¿Qué cambió en realidad? Piensa en tus datos como coches y en el espectro, la franja de ondas de radio que usa la compañía, como una carretera. Mientras más ancha, más coches pasan al mismo tiempo. Un canal de cuatro ge mide, normalmente, veinte megahertz de ancho. Uno de cinco ge en la banda media puede medir cien: una carretera cinco veces más ancha. En México, el cinco ge usa sobre todo la banda de tres punto cinco gigahertz. Además, las antenas nuevas tienen decenas de antenitas que apuntan la señal hacia tu celular, en vez de regarla para todos lados. El costo: a esa frecuencia la señal llega menos lejos que la de cuatro ge. Por eso necesitan más antenas.";
+
+  Mosaic.short({
+    kicker: "Internet y redes",
+    title: "¿Por qué el 5G es más rápido que el 4G?",
+    script: SCRIPT,
+    anchors: {
+      cincoge: ["cinco ge", "5g", "5 g"],
+      rapido: "mas rapido",
+      cambio: "cambio",
+      coches: "coches",
+      espectro: "espectro",
+      carretera: "carretera",
+      ancha: "mas ancha",
+      tiempo: "mismo tiempo",
+      cuatroge: ["cuatro ge", "4g", "4 g"],
+      veinte: ["veinte megahertz", "20 megahertz", "20 mhz", "veinte"],
+      banda: "banda media",
+      cien: ["medir cien", "medir 100", "cien"],
+      veces: ["cinco veces", "5 veces"],
+      mexico: "mexico",
+      trespunto: ["tres punto cinco", "3.5", "35"],
+      ademas: "ademas",
+      antenitas: "antenitas",
+      apuntan: "apuntan",
+      regarla: "regarla",
+      costo: "costo",
+      lejos: "menos lejos",
+      necesitan: "necesitan",
+    },
+    build() { buildPhone(); buildRoad(); buildBeam(); buildCells(); },
+    scenes: [
+      { el: "#sc-phone", from: 0, to: "coches-0.6", fadeIn: 0.3, rise: 0, update: drawPhone },
+      { el: "#cap-q", from: "cambio-0.4", to: "coches-0.6", fade: 0.3 },
+      { el: "#sc-road", from: "coches-0.6", to: "ademas-0.3", rise: 0, update: drawRoad },
+      { el: "#cap-road", from: "coches-0.5", to: "ancha-0.3", fade: 0.3 },
+      { el: "#cap-wide", from: "ancha-0.3", to: "cuatroge-0.5", fade: 0.3 },
+      { el: "#cap-4g", from: "cuatroge-0.5", to: "cien-0.6", fade: 0.3 },
+      { el: "#cap-x5", from: "cien-0.6", to: "mexico-0.3", fade: 0.3 },
+      { el: "#cap-mx", from: "mexico-0.3", to: "ademas-0.3", fade: 0.3 },
+      { el: "#sc-beam", from: "ademas-0.3", to: "costo-0.3", rise: 0, update: drawBeam },
+      { el: "#cap-beam", from: "antenitas-0.4", to: "costo-0.3", fade: 0.3 },
+      { el: "#sc-cells", from: "costo-0.3", to: "end", rise: 0, update: drawCells },
+      { el: "#cap-cost", from: "costo-0.2", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
