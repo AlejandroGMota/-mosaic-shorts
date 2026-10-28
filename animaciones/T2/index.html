@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>T2 · ¿Cómo sabe tu celular si lo volteas?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-turn" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-turn" style="top:1300px">La pantalla gira sola<small>¿cómo sabe dónde está abajo?</small></div>
+
+    <svg class="full scene" id="sc-chip" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-chip" style="top:1300px">Un acelerómetro<small>un chip más pequeño que un grano de arroz</small></div>
+
+    <svg class="full scene" id="sc-mems" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-mass" style="top:1300px">Una pieza de silicio colgada de resortes</div>
+    <div class="m-caption scene" id="cap-comb" style="top:1300px">Dedos como un peine<small>metidos entre dedos fijos</small></div>
+    <div class="m-caption scene" id="cap-tilt" style="top:1300px">La gravedad jala la pieza<small>los dedos se acercan o se alejan</small></div>
+    <div class="m-caption scene" id="cap-cap" style="top:1300px">Cambia la carga entre los dedos<small>y el chip la mide</small></div>
+
+    <svg class="full scene" id="sc-axes" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-axes" style="top:1300px">Uno para cada dirección<small>así sabe dónde está el suelo</small></div>
+    <div class="m-caption scene" id="cap-steps" style="top:1300px">El mismo sensor cuenta tus pasos<small>y avisa si el celular se cae</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp, clamp } = Mosaic;
+  const MINT = "#3a9a80", BLUE = "#2f5e8e", AMBER = "#c98a1b", FUCH = "#b3386b", INK2 = "#4a4843", MUTED = "#827e74";
+
+  function arrow(g, x1, y1, x2, y2, color, w = 8) {
+    const a = Math.atan2(y2 - y1, x2 - x1), h = 26;
+    const gg = el("g", {}, g);
+    el("line", { x1, y1, x2: x2 - Math.cos(a) * h * 0.8, y2: y2 - Math.sin(a) * h * 0.8, stroke: color, "stroke-width": w, "stroke-linecap": "round" }, gg);
+    el("polygon", { points: `${x2},${y2} ${x2 - h * Math.cos(a - 0.45)},${y2 - h * Math.sin(a - 0.45)} ${x2 - h * Math.cos(a + 0.45)},${y2 - h * Math.sin(a + 0.45)}`, fill: color }, gg);
+    return gg;
+  }
+
+  // ---------------------------------------------------------------- scene 1: the screen turns by itself
+  let tu = {};
+  function buildTurn() {
+    const g = el("g", {}, $("#sc-turn"));
+    tu.phone = el("g", {}, g);
+    el("rect", { x: -160, y: -310, width: 320, height: 620, rx: 46, fill: "#2b2d31" }, tu.phone);
+    el("rect", { x: -144, y: -294, width: 288, height: 588, rx: 34, fill: "#faf8f3" }, tu.phone);
+    tu.ui = el("g", {}, tu.phone);
+    // a generic photo + text lines, drawn upright in the screen's own frame
+    el("rect", { x: -110, y: -120, width: 220, height: 150, rx: 10, fill: "#d9e3ec" }, tu.ui);
+    el("polygon", { points: "-96,22 -40,-46 -4,-6 30,-36 96,22", fill: MINT }, tu.ui);
+    el("circle", { cx: 60, cy: -80, r: 16, fill: AMBER }, tu.ui);
+    [60, 92, 124].forEach((y, i) => el("rect", { x: -110, y, width: [220, 180, 120][i], height: 16, rx: 8, fill: "#d6d1c5" }, tu.ui));
+    tu.g = el("g", {}, g);
+    arrow(tu.g, 900, 560, 900, 760, FUCH);
+    el("text", { x: 900, y: 810, "text-anchor": "middle", class: "m-label", fill: FUCH, text: "abajo" }, tu.g);
+  }
+  function drawTurn(t, s, A) {
+    const rot = -90 * ramp(t, A.volteas.start, A.volteas.start + 1.0);
+    const fix = 90 * ramp(t, A.gira.start, A.gira.start + 0.6);
+    tu.phone.setAttribute("transform", `translate(520 840) rotate(${rot.toFixed(2)})`);
+    // the UI turns to stay upright: scaled so it fits the landscape screen
+    const sc = lerp(1, 0.9, fix / 90);
+    tu.ui.setAttribute("transform", `rotate(${fix.toFixed(2)}) scale(${sc.toFixed(3)})`);
+    tu.g.setAttribute("opacity", String(ramp(t, A.abajo.start - 0.3, A.abajo.start + 0.3)));
+  }
+
+  // ---------------------------------------------------------------- scene 2: chip vs grain of rice (to scale)
+  let ch = {};
+  function buildChip() {
+    const g = el("g", {}, $("#sc-chip"));
+    const MM = 90; // px per mm
+    ch.chip = el("g", {}, g);
+    el("rect", { x: 540 - MM, y: 640 - MM, width: 2 * MM, height: 2 * MM, rx: 8, fill: "#3b3e44" }, ch.chip);
+    for (let i = 0; i < 4; i++) {
+      el("rect", { x: 540 - MM + 22 + i * 40, y: 640 + MM - 2, width: 20, height: 12, fill: "#b8b2a4" }, ch.chip);
+      el("rect", { x: 540 - MM + 22 + i * 40, y: 640 - MM - 10, width: 20, height: 12, fill: "#b8b2a4" }, ch.chip);
+    }
+    el("text", { x: 540, y: 648, "text-anchor": "middle", "font-size": 30, "font-weight": 600, fill: "#d6d1c5", text: "2 mm" }, ch.chip);
+    ch.rice = el("g", {}, g);
+    el("ellipse", { cx: 540, cy: 960, rx: 3.3 * MM, ry: 1.15 * MM, fill: "#efe7d2", stroke: "#a99d80", "stroke-width": 5 }, ch.rice);
+    el("path", { d: `M${540 - 2.6 * MM} 960 Q540 ${960 - 0.5 * MM} ${540 + 2.6 * MM} 960`, fill: "none", stroke: "#c9bd9f", "stroke-width": 4 }, ch.rice);
+    el("text", { x: 540, y: 1140, "text-anchor": "middle", class: "m-label", text: "grano de arroz ≈ 6 a 7 mm" }, ch.rice);
+    el("text", { x: 540, y: 1200, "text-anchor": "middle", class: "m-note", fill: MUTED, text: "a escala (chip típico ≈ 2 × 2 mm)" }, ch.rice);
+    el("text", { x: 540, y: 500, "text-anchor": "middle", class: "m-label", text: "acelerómetro" }, ch.chip);
+  }
+  function drawChip(t, s, A) {
+    ch.chip.setAttribute("opacity", String(ramp(t, s.from, s.from + 0.4)));
+    ch.rice.setAttribute("opacity", String(ramp(t, A.arroz.start - 0.5, A.arroz.start)));
+  }
+
+  // ---------------------------------------------------------------- scene 3: MEMS structure, top view
+  // The proof mass moves along x. Each moving finger sits between two fixed fingers:
+  // electrode A on its left (blue) and electrode B on its right (amber). Moving right shrinks
+  // the gap to B (C_B goes up) and widens the gap to A (C_A goes down): differential sensing.
+  const XS = [];
+  for (let i = 0; i < 5; i++) XS.push(320 + i * 110);
+  const GAP = 20, FW = 12;
+  let me = {};
+  function spring(x0, x1, y, n) {
+    // meander with vertical legs: compliant along x
+    const pts = [[x0, y]];
+    const step = (x1 - x0) / n;
+    for (let k = 0; k < n; k++) {
+      const x = x0 + step * (k + 0.5), yy = k % 2 ? y + 60 : y - 60;
+      pts.push([x, y], [x, yy], [x + step / 2, yy]);
+    }
+    pts.push([x1, y]);
+    return pts;
+  }
+  function buildMems() {
+    const g = el("g", {}, $("#sc-mems"));
+    me.fixed = el("g", {}, g);
+    el("rect", { x: 280, y: 500, width: 520, height: 30, rx: 4, fill: "#b8b2a4" }, me.fixed);
+    el("rect", { x: 280, y: 1100, width: 520, height: 30, rx: 4, fill: "#b8b2a4" }, me.fixed);
+    me.fa = []; me.fb = [];
+    XS.forEach((x) => {
+      // top: fixed fingers hang down from the top stator; bottom: rise from the bottom stator
+      me.fa.push(el("rect", { x: x - GAP - FW, y: 530, width: FW, height: 200, fill: BLUE }, me.fixed));
+      me.fb.push(el("rect", { x: x + GAP, y: 530, width: FW, height: 200, fill: AMBER }, me.fixed));
+      me.fa.push(el("rect", { x: x - GAP - FW, y: 900, width: FW, height: 200, fill: BLUE }, me.fixed));
+      me.fb.push(el("rect", { x: x + GAP, y: 900, width: FW, height: 200, fill: AMBER }, me.fixed));
+    });
+    // anchors
+    el("rect", { x: 130, y: 760, width: 50, height: 100, rx: 4, fill: "#8a857a" }, me.fixed);
+    el("rect", { x: 900, y: 760, width: 50, height: 100, rx: 4, fill: "#8a857a" }, me.fixed);
+    el("text", { x: 155, y: 900, "text-anchor": "middle", class: "m-note", fill: MUTED, text: "fijo" }, me.fixed);
+    me.springL = el("polyline", { fill: "none", stroke: MINT, "stroke-width": 6, "stroke-linejoin": "round" }, g);
+    me.springR = el("polyline", { fill: "none", stroke: MINT, "stroke-width": 6, "stroke-linejoin": "round" }, g);
+    me.mass = el("g", {}, g);
+    el("rect", { x: 300, y: 760, width: 480, height: 100, rx: 6, fill: MINT }, me.mass);
+    el("text", { x: 540, y: 822, "text-anchor": "middle", "font-size": 34, "font-weight": 650, fill: "#faf8f3", text: "masa de silicio" }, me.mass);
+    me.comb = el("g", {}, me.mass);
+    XS.forEach((x) => {
+      el("rect", { x: x - FW / 2, y: 570, width: FW, height: 190, fill: MINT }, me.comb);
+      el("rect", { x: x - FW / 2, y: 860, width: FW, height: 200, fill: MINT }, me.comb);
+    });
+    me.lblSpring = el("text", { x: 240, y: 730, "text-anchor": "middle", class: "m-label", fill: MINT, text: "resorte" }, g);
+    // tilt icon (top-right) with gravity
+    me.tilt = el("g", {}, g);
+    me.tiltPhone = el("g", {}, me.tilt);
+    el("rect", { x: -30, y: -56, width: 60, height: 112, rx: 12, fill: "none", stroke: INK2, "stroke-width": 6 }, me.tiltPhone);
+    arrow(me.tilt, 0, 80, 0, 140, FUCH, 6);
+    el("text", { x: 30, y: 136, class: "m-note", fill: FUCH, text: "g" }, me.tilt);
+    // capacitance meters
+    me.meters = el("g", {}, g);
+    el("text", { x: 140, y: 1186, class: "m-label", fill: BLUE, text: "carga A" }, me.meters);
+    el("text", { x: 580, y: 1186, class: "m-label", fill: AMBER, text: "carga B" }, me.meters);
+    el("rect", { x: 280, y: 1162, width: 220, height: 30, rx: 6, fill: "#e9e5dc" }, me.meters);
+    el("rect", { x: 720, y: 1162, width: 220, height: 30, rx: 6, fill: "#e9e5dc" }, me.meters);
+    me.barA = el("rect", { x: 280, y: 1162, height: 30, rx: 6, fill: BLUE }, me.meters);
+    me.barB = el("rect", { x: 720, y: 1162, height: 30, rx: 6, fill: AMBER }, me.meters);
+    me.note = el("text", { x: 540, y: 1240, "text-anchor": "middle", class: "m-note", fill: MUTED, text: "movimiento real: nanómetros (aquí exagerado)" }, g);
+  }
+  function drawMems(t, s, A) {
+    me.springL.setAttribute("opacity", String(ramp(t, A.resortes.start - 0.3, A.resortes.start + 0.3)));
+    me.springR.setAttribute("opacity", String(ramp(t, A.resortes.start - 0.3, A.resortes.start + 0.3)));
+    me.lblSpring.setAttribute("opacity", String(ramp(t, A.resortes.start - 0.3, A.resortes.start + 0.3) * (1 - ramp(t, A.dedos.start, A.dedos.start + 0.4))));
+    me.comb.setAttribute("opacity", String(ramp(t, A.dedos.start - 0.3, A.dedos.start + 0.3)));
+    me.fixed.setAttribute("opacity", String(ramp(t, A.fijos.start - 0.4, A.fijos.start + 0.2)));
+    // tilt: phone tilts back and forth after "mueves"; the mass follows gravity's component (pure function of t)
+    const on = ramp(t, A.mueves.start - 0.2, A.mueves.start + 0.4);
+    const tilt = on * 35 * Math.sin(Math.max(0, t - A.mueves.start) * 1.6);
+    me.tilt.setAttribute("transform", "translate(880 560)");
+    me.tilt.setAttribute("opacity", String(on));
+    me.tiltPhone.setAttribute("transform", `rotate(${tilt.toFixed(2)})`);
+    const dx = 8 * Math.sin((tilt * Math.PI) / 180) / Math.sin((35 * Math.PI) / 180);
+    me.mass.setAttribute("transform", `translate(${dx.toFixed(2)} 0)`);
+    me.springL.setAttribute("points", spring(180, 300 + dx, 810, 3).map((p) => p.join(",")).join(" "));
+    me.springR.setAttribute("points", spring(780 + dx, 900, 810, 3).map((p) => p.join(",")).join(" "));
+    // capacitance ~ 1 / gap
+    const gA = GAP - FW / 2 + dx, gB = GAP - FW / 2 - dx;
+    const cA = (GAP - FW / 2) / gA, cB = (GAP - FW / 2) / gB;
+    me.meters.setAttribute("opacity", String(ramp(t, A.distancia.start - 0.3, A.distancia.start + 0.3)));
+    me.barA.setAttribute("width", clamp(70 * cA, 0, 220).toFixed(1));
+    me.barB.setAttribute("width", clamp(70 * cB, 0, 220).toFixed(1));
+    me.note.setAttribute("opacity", String(ramp(t, A.nanometros.start - 0.3, A.nanometros.start + 0.3)));
+  }
+
+  // ---------------------------------------------------------------- scene 4: three axes
+  let ax = {};
+  function buildAxes() {
+    const g = el("g", {}, $("#sc-axes"));
+    // phone in a simple oblique view
+    const P = (x, y, z) => [540 + x - 0.45 * y, 860 - z - 0.3 * y];
+    const face = [P(-130, -250, 0), P(130, -250, 0), P(130, 250, 0), P(-130, 250, 0)];
+    el("polygon", { points: face.map((p) => p.join(",")).join(" "), fill: "#e9e5dc", stroke: INK2, "stroke-width": 6, "stroke-linejoin": "round" }, g);
+    const o = P(0, 0, 0);
+    ax.x = arrow(g, o[0], o[1], P(300, 0, 0)[0], P(300, 0, 0)[1], BLUE);
+    ax.y = arrow(g, o[0], o[1], P(0, -420, 0)[0], P(0, -420, 0)[1], AMBER);
+    ax.z = arrow(g, o[0], o[1], P(0, 0, 300)[0], P(0, 0, 300)[1], MINT);
+    el("text", { x: P(300, 0, 0)[0] - 40, y: P(300, 0, 0)[1] - 30, "text-anchor": "middle", class: "m-label", fill: BLUE, text: "a un lado" }, ax.x);
+    el("text", { x: P(0, -420, 0)[0] + 150, y: P(0, -420, 0)[1] + 10, "text-anchor": "middle", class: "m-label", fill: AMBER, text: "adelante" }, ax.y);
+    el("text", { x: P(0, 0, 300)[0] - 100, y: P(0, 0, 300)[1] + 10, "text-anchor": "middle", class: "m-label", fill: MINT, text: "arriba" }, ax.z);
+    ax.g = el("g", {}, g);
+    arrow(ax.g, 220, 900, 220, 1160, FUCH);
+    el("text", { x: 250, y: 1160, class: "m-label", fill: FUCH, text: "suelo" }, ax.g);
+    ax.steps = el("g", {}, g);
+    [[420, 1200], [520, 1150], [620, 1200], [720, 1150], [820, 1200]].forEach(([x, y]) => {
+      el("ellipse", { cx: x, cy: y, rx: 32, ry: 17, fill: INK2 }, ax.steps);
+    });
+  }
+  function drawAxes(t, s, A) {
+    ax.x.setAttribute("opacity", String(ramp(t, A.lado.start - 0.3, A.lado.start + 0.2)));
+    ax.y.setAttribute("opacity", String(ramp(t, A.adelante.start - 0.3, A.adelante.start + 0.2)));
+    ax.z.setAttribute("opacity", String(ramp(t, A.arriba.start - 0.3, A.arriba.start + 0.2)));
+    ax.g.setAttribute("opacity", String(ramp(t, A.suelo.start - 0.4, A.suelo.start + 0.2)));
+    ax.steps.setAttribute("opacity", String(ramp(t, A.pasos.start - 0.3, A.pasos.start + 0.3)));
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "Volteas el celular y la pantalla gira sola. ¿Cómo sabe hacia dónde está abajo? Dentro hay un acelerómetro: un chip más pequeño que un grano de arroz con una pieza de silicio colgada de resortes microscópicos. Esa pieza tiene dedos, como un peine, metidos entre otros dedos fijos. Cuando mueves el celular, o simplemente lo inclinas, la gravedad jala la pieza y los dedos se acercan o se alejan unos nanómetros. Esa distancia cambia la carga eléctrica entre ellos, y el chip la mide. Hay uno para cada dirección: adelante, a un lado y arriba. Así sabe dónde está el suelo. Es el mismo sensor que cuenta tus pasos y que manda la alerta si el celular se cae.";
+
+  Mosaic.short({
+    kicker: "El celular por dentro",
+    title: "¿Cómo sabe tu celular si lo volteas?",
+    script: SCRIPT,
+    anchors: {
+      volteas: "volteas",
+      gira: "gira sola",
+      abajo: "abajo",
+      acelerometro: "acelerometro",
+      arroz: "arroz",
+      silicio: "silicio",
+      resortes: "resortes",
+      dedos: "tiene dedos",
+      peine: "peine",
+      fijos: "fijos",
+      mueves: "mueves",
+      gravedad: "gravedad",
+      nanometros: "nanometros",
+      distancia: "esa distancia",
+      mide: "la mide",
+      direccion: "cada direccion",
+      adelante: "adelante",
+      lado: "a un lado",
+      arriba: "arriba",
+      suelo: "suelo",
+      pasos: "pasos",
+    },
+    build() { buildTurn(); buildChip(); buildMems(); buildAxes(); },
+    scenes: [
+      { el: "#sc-turn", from: 0, to: "acelerometro-0.3", fadeIn: 0.3, rise: 0, update: drawTurn },
+      { el: "#cap-turn", from: "gira-0.2", to: "acelerometro-0.3", fade: 0.3 },
+      { el: "#sc-chip", from: "acelerometro-0.3", to: "silicio-0.2", rise: 0, update: drawChip },
+      { el: "#cap-chip", from: "acelerometro-0.2", to: "silicio-0.2", fade: 0.3 },
+      { el: "#sc-mems", from: "silicio-0.2", to: "direccion-0.3", rise: 0, update: drawMems },
+      { el: "#cap-mass", from: "silicio-0.2", to: "dedos-0.2", fade: 0.3 },
+      { el: "#cap-comb", from: "dedos-0.2", to: "mueves-0.2", fade: 0.3 },
+      { el: "#cap-tilt", from: "mueves-0.2", to: "distancia-0.2", fade: 0.3 },
+      { el: "#cap-cap", from: "distancia-0.2", to: "direccion-0.3", fade: 0.3 },
+      { el: "#sc-axes", from: "direccion-0.3", to: "end", rise: 0, update: drawAxes },
+      { el: "#cap-axes", from: "direccion-0.2", to: "pasos-0.6", fade: 0.3 },
+      { el: "#cap-steps", from: "pasos-0.6", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
