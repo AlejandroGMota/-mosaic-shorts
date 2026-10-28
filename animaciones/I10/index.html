@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>I10 · ¿Cómo sabe la IA que «rey» y «reina» se parecen?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-map" viewBox="0 0 1080 1920"></svg>
+
+    <div class="m-caption scene" id="cap-letters" style="top:1300px">Para una computadora, solo son letras</div>
+    <div class="m-caption scene" id="cap-nums" style="top:1300px">Cada palabra se vuelve una lista de números<small>como coordenadas en un mapa</small></div>
+    <div class="m-caption scene" id="cap-near" style="top:1300px">Frases parecidas, palabras cerca</div>
+    <div class="m-caption scene" id="cap-dir" style="top:1300px">Las direcciones también significan algo<small>estudio de 2013</small></div>
+    <div class="m-caption scene" id="cap-nobody" style="top:1300px">Nadie le enseñó qué es la realeza<small>lo sacó de cómo usamos las palabras</small></div>
+    <div class="m-caption scene" id="cap-bias" style="top:1300px">Por lo mismo, también aprende<br>nuestros prejuicios</div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp } = Mosaic;
+
+  // Illustrative 2D map (real embeddings have hundreds of dimensions).
+  const W = {
+    perro: [280, 640, "#c98a1b"], gato: [370, 600, "#c98a1b"], caballo: [250, 720, "#c98a1b"],
+    lunes: [650, 600, "#3a9a80"], martes: [750, 640, "#3a9a80"], miércoles: [670, 690, "#3a9a80"],
+    hombre: [310, 1060, "#2f5e8e", 1], mujer: [470, 970, "#2f5e8e"],
+    rey: [650, 1070, "#b3386b", 1], reina: [810, 980, "#b3386b"], "príncipe": [620, 1140, "#b3386b"],
+  };
+  let m = {};
+  function arrow(g, color) {
+    const a = el("g", {}, g);
+    const line = el("line", { stroke: color, "stroke-width": 7, "stroke-linecap": "round" }, a);
+    const head = el("polygon", { fill: color }, a);
+    return { a, line, head };
+  }
+  function setArrow(ar, x0, y0, x1, y1, p) {
+    const xe = lerp(x0, x1, p), ye = lerp(y0, y1, p);
+    const ang = Math.atan2(y1 - y0, x1 - x0), L = 26;
+    const bx = xe - Math.cos(ang) * 30, by = ye - Math.sin(ang) * 30;
+    ar.line.setAttribute("x1", x0); ar.line.setAttribute("y1", y0);
+    ar.line.setAttribute("x2", bx.toFixed(1)); ar.line.setAttribute("y2", by.toFixed(1));
+    const px = Math.cos(ang + Math.PI / 2) * 16, py = Math.sin(ang + Math.PI / 2) * 16;
+    ar.head.setAttribute("points", `${(xe - Math.cos(ang) * 4).toFixed(1)},${(ye - Math.sin(ang) * 4).toFixed(1)} ${(bx + px - Math.cos(ang) * (L - 30)).toFixed(1)},${(by + py).toFixed(1)} ${(bx - px).toFixed(1)},${(by - py).toFixed(1)}`);
+  }
+  function build() {
+    const g = el("g", {}, $("#sc-map"));
+    m.grid = el("g", {}, g);
+    el("rect", { x: 120, y: 480, width: 820, height: 720, rx: 14, fill: "#faf8f3", stroke: "var(--line)", "stroke-width": 3 }, m.grid);
+    for (let x = 220; x < 940; x += 100) el("line", { x1: x, y1: 482, x2: x, y2: 1198, stroke: "#ebe7de", "stroke-width": 2 }, m.grid);
+    for (let y = 580; y < 1200; y += 100) el("line", { x1: 122, y1: y, x2: 938, y2: y, stroke: "#ebe7de", "stroke-width": 2 }, m.grid);
+    el("text", { x: 930, y: 1185, "text-anchor": "end", class: "m-note", text: "mapa ilustrativo · en realidad son cientos de dimensiones" }, m.grid);
+    // the vector of one word
+    m.vec = el("g", {}, g);
+    el("rect", { x: 150, y: 500, width: 760, height: 70, rx: 12, fill: "#f3eadb" }, m.vec);
+    el("text", { x: 175, y: 548, "font-size": 34, "font-weight": 600, fill: "var(--ink)", "font-family": "var(--mono)", text: "perro → [0.21, −0.43, 0.88, 0.05, …]" }, m.vec);
+    // points
+    m.pts = {};
+    for (const [w, [x, y, c, left]] of Object.entries(W)) {
+      const p = el("g", {}, g);
+      el("circle", { cx: x, cy: y, r: 13, fill: c }, p);
+      el("text", { x: left ? x - 22 : x + 20, y: y + 11, "text-anchor": left ? "end" : "start", "font-size": 34, "font-weight": 650, fill: c, text: w }, p);
+      m.pts[w] = p;
+    }
+    // intro: the two words as plain letters
+    m.big = el("g", {}, g);
+    el("text", { x: 540, y: 780, "text-anchor": "middle", "font-size": 110, "font-weight": 700, fill: "var(--ink)", "letter-spacing": "18", text: "rey" }, m.big);
+    el("text", { x: 540, y: 940, "text-anchor": "middle", "font-size": 110, "font-weight": 700, fill: "var(--ink)", "letter-spacing": "18", text: "reina" }, m.big);
+    // directions
+    m.a1 = arrow(g, "#2f5e8e");
+    m.a2 = arrow(g, "#b3386b");
+    m.eq = el("text", { x: 540, y: 1255, "text-anchor": "middle", "font-size": 46, "font-weight": 700, fill: "var(--ink)", text: "rey − hombre + mujer ≈ reina" }, g);
+    m.bias = el("g", {}, g);
+  }
+  function update(t, s, A) {
+    const mapOn = ramp(t, A.convierte.start - 0.3, A.convierte.start + 0.3);
+    m.big.setAttribute("opacity", String(1 - mapOn));
+    m.grid.setAttribute("opacity", String(mapOn));
+    m.vec.setAttribute("opacity", String(ramp(t, A.numeros.start - 0.3, A.numeros.start + 0.2) * (1 - ramp(t, A.perro.start - 0.3, A.perro.start))));
+    const show = (w, a) => m.pts[w].setAttribute("opacity", String(ramp(t, a - 0.3, a + 0.2)));
+    show("perro", A.perro.start); show("gato", A.gato.start); show("caballo", A.gato.start + 0.3);
+    show("lunes", A.lunes.start); show("martes", A.martes.start); show("miércoles", A.martes.start + 0.3);
+    show("rey", A.coordenadas.start); show("príncipe", A.coordenadas.start + 0.3);
+    show("hombre", A.hombre.start); show("mujer", A.mujer.start); show("reina", A.cercano.start);
+    // hombre -> mujer, then the same arrow moved to start at rey: it lands on reina
+    const [hx, hy] = W.hombre, [mx, my] = W.mujer, [rx, ry] = W.rey;
+    const p1 = ramp(t, A.mujer.start - 0.2, A.mujer.end + 0.3, ease.inOut);
+    setArrow(m.a1, hx, hy, mx, my, Math.max(0.01, p1));
+    m.a1.a.setAttribute("opacity", String(p1 > 0 ? 1 : 0));
+    const p2 = ramp(t, A.mujer.end + 0.3, A.cercano.start, ease.inOut);
+    setArrow(m.a2, rx, ry, rx + (mx - hx), ry + (my - hy), Math.max(0.01, p2));
+    m.a2.a.setAttribute("opacity", String(p2 > 0 ? 1 : 0));
+    m.eq.setAttribute("opacity", String(ramp(t, A.reina2.start - 0.2, A.reina2.start + 0.3)));
+  }
+
+  const SCRIPT = "Para una computadora, «rey» y «reina» son solo letras. ¿Cómo sabe una IA que significan cosas parecidas? Convierte cada palabra en una lista de números, como coordenadas en un mapa. Las palabras que aparecen en frases parecidas terminan cerca: «perro» junto a «gato», «lunes» junto a «martes». Lo sorprendente es que las direcciones del mapa también significan algo. En un estudio de dos mil trece, a las coordenadas de «rey» le restaron «hombre», le sumaron «mujer», y el punto más cercano fue «reina». Nadie le enseñó qué es la realeza ni qué es el género: lo sacó de ver cómo usamos las palabras. Ojo: por lo mismo, también aprende nuestros prejuicios.";
+
+  Mosaic.short({
+    kicker: "IA por dentro",
+    title: "¿Cómo sabe la IA que «rey» y «reina» se parecen?",
+    script: SCRIPT,
+    anchors: {
+      letras: "letras",
+      parecidas: "parecidas",
+      convierte: "convierte",
+      numeros: "numeros",
+      frases: "frases",
+      perro: "perro",
+      gato: "gato",
+      lunes: "lunes",
+      martes: "martes",
+      sorprendente: "sorprendente",
+      estudio: "estudio",
+      anio: ["dos mil trece", "2013"],
+      coordenadas: "coordenadas",
+      hombre: "hombre",
+      mujer: "mujer",
+      cercano: "cercano",
+      reina2: "reina",
+      nadie: "nadie",
+      ojo: "ojo",
+      prejuicios: "prejuicios",
+    },
+    build,
+    scenes: [
+      { el: "#sc-map", from: 0, to: "end", fadeIn: 0.4, rise: 0, update },
+      { el: "#cap-letters", from: 0.2, to: "convierte-0.3", fade: 0.3 },
+      { el: "#cap-nums", from: "convierte-0.3", to: "frases-0.3", fade: 0.3 },
+      { el: "#cap-near", from: "frases-0.3", to: "sorprendente-0.3", fade: 0.3 },
+      { el: "#cap-dir", from: "sorprendente-0.3", to: "nadie-0.3", fade: 0.3 },
+      { el: "#cap-nobody", from: "nadie-0.3", to: "ojo-0.3", fade: 0.3 },
+      { el: "#cap-bias", from: "ojo-0.3", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
