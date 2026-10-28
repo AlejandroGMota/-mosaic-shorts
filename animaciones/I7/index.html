@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>I7 · ¿Cómo convierte una IA tu voz en texto?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-main" viewBox="0 0 1080 1920"></svg>
+    <svg class="full scene" id="sc-hours" viewBox="0 0 1080 1920"></svg>
+    <svg class="full scene" id="sc-robust" viewBox="0 0 1080 1920"></svg>
+
+    <div class="m-caption scene" id="cap-q" style="top:1300px">Dictas un mensaje y aparece escrito</div>
+    <div class="m-caption scene" id="cap-img" style="top:1300px">Primero, tu voz se vuelve una imagen</div>
+    <div class="m-caption scene" id="cap-cut" style="top:1300px">Se corta en pedacitos<small>de pocas centésimas de segundo</small></div>
+    <div class="m-caption scene" id="cap-tone" style="top:1300px">De cada uno se mide cada tono<small>de graves a agudos</small></div>
+    <div class="m-caption scene" id="cap-spec" style="top:1300px">Ese mapa se llama espectrograma</div>
+    <div class="m-caption scene" id="cap-net" style="top:1300px">Una red neuronal lo lee<small>y predice el texto palabra por palabra</small></div>
+    <div class="m-caption scene" id="cap-learn" style="top:1300px">Whisper, un modelo abierto<small>se entrenó con audio y su transcripción</small></div>
+    <div class="m-caption scene" id="cap-rob" style="top:1300px">Por eso entiende mucho más que voz limpia</div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp, clamp } = Mosaic;
+  const rnd = (i) => { const x = Math.sin(i * 12.9898 + 78.233) * 43758.5453; return x - Math.floor(x); };
+
+  // ---------------------------------------------------------------- a synthetic voice: 5 words with pauses
+  const WORDS = ["Nos", "vemos", "a", "las", "ocho"];
+  const SEG = [[0.03, 0.15], [0.19, 0.42], [0.47, 0.53], [0.58, 0.72], [0.77, 0.97]];
+  const NC = 60, NR = 30;
+  const X0 = 140, X1 = 940, WY = 560, SY0 = 720, SY1 = 1100;
+  function env(u) {
+    let e = 0;
+    for (const [a, b] of SEG) {
+      if (u >= a && u <= b) e = Math.max(e, Math.sin(Math.PI * (u - a) / (b - a)) ** 0.6);
+    }
+    return e;
+  }
+  // pitch (in rows) drifts slowly; harmonics at multiples of it; two formant bands shape them
+  function cell(c, r) {
+    const u = (c + 0.5) / NC, e = env(u);
+    if (e <= 0) return 0.03 * rnd(c * 31 + r);
+    const f0 = 2.2 + 0.5 * Math.sin(u * 9);
+    const k = (r + 0.5) / f0;
+    const harm = Math.exp(-Math.pow((k - Math.round(k)) * f0 / 0.55, 2));
+    const fm1 = 7 + 3 * Math.sin(u * 17), fm2 = 16 + 4 * Math.cos(u * 11);
+    const formant = 0.25 + Math.exp(-Math.pow((r - fm1) / 3, 2)) + 0.8 * Math.exp(-Math.pow((r - fm2) / 3.5, 2));
+    const tilt = Math.exp(-r / 22);
+    return clamp(e * harm * formant * tilt * 1.7 + 0.04 * rnd(c * 31 + r));
+  }
+  function shade(v) {
+    const p = [243, 240, 233], q = [31, 64, 104];
+    return `rgb(${p.map((a, i) => Math.round(lerp(a, q[i], Math.pow(v, 0.8)))).join(",")})`;
+  }
+
+  let m = {};
+  function build() {
+    const g = el("g", {}, $("#sc-main"));
+    // waveform
+    m.wave = el("g", {}, g);
+    const pts = [];
+    for (let i = 0; i <= 600; i++) {
+      const u = i / 600;
+      const a = env(u) * 80 * (0.55 + 0.45 * Math.sin(u * 260)) * Math.sin(u * 2900 + 3 * Math.sin(u * 700));
+      pts.push(`${(X0 + (X1 - X0) * u).toFixed(1)},${(WY + a).toFixed(1)}`);
+    }
+    m.wavePath = el("polyline", { points: pts.join(" "), fill: "none", stroke: "#2f5e8e", "stroke-width": 3 }, m.wave);
+    el("text", { x: X0, y: WY - 110, class: "m-label", text: "tu voz (onda de sonido)" }, m.wave);
+    m.slices = el("g", {}, m.wave);
+    for (let c = 1; c < NC; c++) {
+      const x = X0 + ((X1 - X0) * c) / NC;
+      el("line", { x1: x, y1: WY - 92, x2: x, y2: WY + 92, stroke: "#b3386b", "stroke-width": 1.5 }, m.slices);
+    }
+    m.sliceLbl = el("text", { x: X1, y: WY + 135, "text-anchor": "end", class: "m-note", text: "cada franja: unas centésimas de segundo" }, m.wave);
+    // first bubble: the text you get
+    m.bubble = el("g", {}, g);
+    el("rect", { x: 300, y: 800, width: 640, height: 120, rx: 30, fill: "#2f5e8e" }, m.bubble);
+    m.bubbleTxt = el("text", { x: 340, y: 878, "font-size": 50, "font-weight": 560, fill: "#faf8f3" }, m.bubble);
+    // spectrogram
+    m.spec = el("g", {}, g);
+    m.cells = [];
+    const cw = (X1 - X0) / NC, ch = (SY1 - SY0) / NR;
+    for (let c = 0; c < NC; c++) {
+      const col = [];
+      for (let r = 0; r < NR; r++) {
+        col.push(el("rect", { x: (X0 + c * cw).toFixed(1), y: (SY1 - (r + 1) * ch).toFixed(1), width: (cw + 0.6).toFixed(1), height: (ch + 0.6).toFixed(1), fill: shade(cell(c, r)) }, m.spec));
+      }
+      m.cells.push(col);
+    }
+    el("rect", { x: X0, y: SY0, width: X1 - X0, height: SY1 - SY0, fill: "none", stroke: "var(--ink-2)", "stroke-width": 3 }, m.spec);
+    m.axes = el("g", {}, m.spec);
+    el("text", { x: X0, y: SY0 - 16, class: "m-note", text: "agudos ↑" }, m.axes);
+    el("text", { x: X0, y: SY1 + 40, class: "m-note", text: "graves" }, m.axes);
+    el("text", { x: X1, y: SY1 + 40, "text-anchor": "end", class: "m-note", text: "tiempo →" }, m.axes);
+    el("text", { x: X1, y: SY0 - 16, "text-anchor": "end", class: "m-note", text: "más oscuro = más fuerte" }, m.axes);
+    m.specLbl = el("text", { x: 540, y: SY1 + 90, "text-anchor": "middle", "font-size": 44, "font-weight": 700, fill: "#2f5e8e", text: "espectrograma" }, m.spec);
+    // network and output text
+    m.net = el("g", {}, g);
+    el("line", { x1: 540, y1: 880, x2: 540, y2: 930, stroke: "var(--ink-2)", "stroke-width": 5 }, m.net);
+    el("polygon", { points: "526,926 554,926 540,946", fill: "var(--ink-2)" }, m.net);
+    el("rect", { x: 330, y: 955, width: 420, height: 100, rx: 16, fill: "#faf8f3", stroke: "var(--ink)", "stroke-width": 5 }, m.net);
+    el("text", { x: 540, y: 1018, "text-anchor": "middle", "font-size": 42, "font-weight": 700, fill: "var(--ink)", text: "red neuronal" }, m.net);
+    el("line", { x1: 540, y1: 1055, x2: 540, y2: 1095, stroke: "var(--ink-2)", "stroke-width": 5 }, m.net);
+    el("polygon", { points: "526,1091 554,1091 540,1111", fill: "var(--ink-2)" }, m.net);
+    m.out = el("text", { x: 540, y: 1185, "text-anchor": "middle", "font-size": 60, "font-weight": 650, fill: "var(--ink)" }, m.net);
+  }
+
+  function update(t, s, A) {
+    // intro: the dictated message appears as text
+    const intro = 1 - ramp(t, A.primero.start - 0.3, A.primero.start + 0.1);
+    const typed = Math.floor(lerp(0, WORDS.length, ramp(t, 0.6, A.escrito.end, ease.linear)) + 1e-6);
+    m.bubbleTxt.textContent = WORDS.slice(0, typed).join(" ");
+    m.bubble.setAttribute("opacity", String(ramp(t, 0.4, 0.8) * intro));
+    // cut into slices
+    m.slices.setAttribute("opacity", String(ramp(t, A.corta.start - 0.2, A.corta.start + 0.4)));
+    m.sliceLbl.setAttribute("opacity", String(ramp(t, A.centesimas.start - 0.2, A.centesimas.start + 0.3)));
+    // the spectrogram is built column by column
+    const on = ramp(t, A.imagen.start - 0.3, A.imagen.start + 0.1);
+    m.spec.setAttribute("opacity", String(on));
+    const built = Math.floor(NC * ramp(t, A.mide.start - 0.2, A.agudos.end, ease.linear));
+    m.cells.forEach((col, c) => col.forEach((r) => r.setAttribute("opacity", c < built ? "1" : "0")));
+    m.axes.setAttribute("opacity", String(ramp(t, A.graves.start - 0.3, A.graves.start + 0.2)));
+    m.specLbl.setAttribute("opacity", String(ramp(t, A.espectrograma.start - 0.2, A.espectrograma.start + 0.3)));
+    // then it moves up, the waveform leaves, and the network reads it
+    const up = ramp(t, A.luego.start - 0.4, A.luego.start + 0.4, ease.inOut);
+    m.wave.setAttribute("opacity", String(1 - up));
+    m.spec.setAttribute("transform", `translate(0 ${(-260 * up).toFixed(1)})`);
+    m.specLbl.setAttribute("opacity", String(ramp(t, A.espectrograma.start - 0.2, A.espectrograma.start + 0.3) * (1 - up)));
+    m.net.setAttribute("opacity", String(ramp(t, A.red.start - 0.3, A.red.start + 0.2)));
+    const words = Math.floor(lerp(0, WORDS.length, ramp(t, A.predice.start, A.palabra.end + 0.6, ease.linear)) + 1e-6);
+    m.out.textContent = WORDS.slice(0, words).join(" ");
+    // a playhead runs over the spectrogram while it is read
+    const read = ramp(t, A.predice.start, A.palabra.end + 0.6, ease.linear);
+    m.cells.forEach((col, c) => {
+      if (t < A.lee.start) return;
+      const hot = (c + 0.5) / NC <= read;
+      col.forEach((r) => r.setAttribute("opacity", hot || t < A.predice.start ? "1" : "0.55"));
+    });
+  }
+
+  // ---------------------------------------------------------------- 680 000 hours = 77.6 years
+  let hr = {};
+  function buildHours() {
+    const g = el("g", {}, $("#sc-hours"));
+    hr.n = el("text", { x: 540, y: 720, "text-anchor": "middle", "font-size": 170, "font-weight": 720, fill: "#2f5e8e", "letter-spacing": "-4" }, g);
+    el("text", { x: 540, y: 800, "text-anchor": "middle", "font-size": 48, "font-weight": 600, fill: "var(--ink-2)", text: "horas de audio con su transcripción" }, g);
+    hr.eq = el("g", {}, g);
+    el("text", { x: 540, y: 960, "text-anchor": "middle", "font-size": 52, fill: "var(--ink-2)", text: "=" }, hr.eq);
+    hr.y = el("text", { x: 540, y: 1090, "text-anchor": "middle", "font-size": 120, "font-weight": 720, fill: "#3a9a80" }, hr.eq);
+    el("text", { x: 540, y: 1160, "text-anchor": "middle", "font-size": 44, "font-weight": 600, fill: "var(--ink-2)", text: "años sin parar" }, hr.eq);
+  }
+  function drawHours(t, s, A) {
+    const n = 680000 * ramp(t, A.seiscientas.start - 0.3, A.seiscientas.end + 0.3, ease.out);
+    hr.n.textContent = Math.round(n / 1000) * 1000 === 0 ? "0" : (Math.round(n / 1000)).toString() + " 000";
+    hr.eq.setAttribute("opacity", String(ramp(t, A.anios.start - 0.3, A.anios.start + 0.2)));
+    hr.y.textContent = (77.6 * ramp(t, A.anios.start - 0.2, A.anios.end + 0.6, ease.out)).toFixed(1);
+  }
+
+  // ---------------------------------------------------------------- accents, noise, English words
+  let rb = {};
+  function buildRobust() {
+    const g = el("g", {}, $("#sc-robust"));
+    const items = [["acentos", "#2f5e8e", "«¿qué onda?» · «¿qué más, parce?»"], ["ruido", "#c98a1b", "tráfico, música, gente hablando"], ["palabras en inglés", "#b3386b", "«mándame el link del meeting»"]];
+    rb.rows = items.map(([w, c, ex], i) => {
+      const r = el("g", {}, g);
+      const y = 560 + i * 200;
+      el("rect", { x: 100, y, width: 840, height: 150, rx: 18, fill: "#faf8f3", stroke: c, "stroke-width": 5 }, r);
+      el("text", { x: 140, y: y + 66, "font-size": 50, "font-weight": 700, fill: c, text: w }, r);
+      el("text", { x: 140, y: y + 118, "font-size": 34, fill: "var(--ink-2)", text: ex }, r);
+      return r;
+    });
+  }
+  function drawRobust(t, s, A) {
+    const on = [A.acentos, A.ruido, A.ingles];
+    rb.rows.forEach((r, i) => r.setAttribute("opacity", String(ramp(t, on[i].start - 0.3, on[i].start + 0.2))));
+  }
+
+  const SCRIPT = "Le dictas un mensaje al celular y aparece escrito. ¿Cómo convierte la IA tu voz en palabras? Primero, tu voz se vuelve una imagen. El sonido se corta en pedacitos de pocas centésimas de segundo, y de cada uno se mide qué tan fuerte suena cada tono, de graves a agudos. Eso forma un mapa de colores llamado espectrograma. Luego, una red neuronal lee ese mapa como quien lee una partitura, y predice el texto palabra por palabra. ¿Cómo aprendió? Escuchando muchísimo. Whisper, un modelo abierto de reconocimiento de voz, se entrenó con seiscientas ochenta mil horas de audio con su transcripción. Eso es más de setenta y siete años sin parar. Por eso entiende acentos, ruido y hasta palabras en inglés a la mitad.";
+
+  Mosaic.short({
+    kicker: "IA por dentro",
+    title: "¿Cómo convierte una IA tu voz en texto?",
+    script: SCRIPT,
+    anchors: {
+      dictas: "dictas",
+      escrito: "escrito",
+      primero: "primero",
+      imagen: "imagen",
+      corta: "corta",
+      centesimas: "centesimas",
+      mide: "mide",
+      graves: "graves",
+      agudos: "agudos",
+      espectrograma: "espectrograma",
+      luego: "luego",
+      red: "red neuronal",
+      lee: "lee ese mapa",
+      predice: "predice",
+      palabra: "palabra por palabra",
+      aprendio: "aprendio",
+      whisper: "whisper",
+      seiscientas: ["seiscientas ochenta mil", "680 mil", "680000", "680 000"],
+      anios: ["setenta y siete", "77"],
+      acentos: "acentos",
+      ruido: "ruido",
+      ingles: "ingles",
+    },
+    build() { build(); buildHours(); buildRobust(); },
+    scenes: [
+      { el: "#sc-main", from: 0, to: "aprendio-0.3", fadeIn: 0.4, rise: 0, update },
+      { el: "#sc-hours", from: "aprendio-0.3", to: "acentos-0.4", rise: 0, update: drawHours },
+      { el: "#sc-robust", from: "acentos-0.4", to: "end", rise: 0, update: drawRobust },
+      { el: "#cap-q", from: 0.2, to: "primero-0.3", fade: 0.3 },
+      { el: "#cap-img", from: "primero-0.3", to: "corta-0.3", fade: 0.3 },
+      { el: "#cap-cut", from: "corta-0.3", to: "mide-0.3", fade: 0.3 },
+      { el: "#cap-tone", from: "mide-0.3", to: "espectrograma-0.6", fade: 0.3 },
+      { el: "#cap-spec", from: "espectrograma-0.6", to: "luego-0.3", fade: 0.3 },
+      { el: "#cap-net", from: "luego-0.3", to: "aprendio-0.3", fade: 0.3 },
+      { el: "#cap-learn", from: "aprendio-0.3", to: "acentos-0.4", fade: 0.3 },
+      { el: "#cap-rob", from: "acentos-0.4", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
