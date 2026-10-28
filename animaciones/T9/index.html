@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>T9 · ¿Por qué tu celular se pone lento cuando se calienta?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-hook" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-hook" style="top:1300px">No es tu imaginación<small>lo hace a propósito</small></div>
+
+    <svg class="full scene" id="sc-main" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-chip" style="top:1300px">Por dentro, el procesador pasa de 80 °C<small>y el celular no tiene ventilador</small></div>
+    <div class="m-caption scene" id="cap-skin" style="top:1300px">Por fuera, no debería pasar de unos 45 °C<small>más tiempo en la mano podría quemarte la piel poco a poco</small></div>
+    <div class="m-caption scene" id="cap-throttle" style="top:1300px">Cerca del límite, baja la velocidad<small>menos velocidad, menos calor</small></div>
+    <div class="m-caption scene" id="cap-study" style="top:1300px">Hasta un tercio menos de rendimiento<small>en un estudio con un celular Android</small></div>
+    <div class="m-caption scene" id="cap-fix" style="top:1300px">Quítale la funda y sácalo del sol<small>se recupera solo</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp, clamp, keys } = Mosaic;
+  const MINT = "#3a9a80", BLUE = "#2f5e8e", AMBER = "#c98a1b", FUCH = "#b3386b", INK = "#1d1d1b", INK2 = "#4a4843", MUTED = "#827e74";
+
+  // ---------------------------------------------------------------- hook: the game gets choppy
+  let hk = {};
+  function buildHook() {
+    const g = el("g", {}, $("#sc-hook"));
+    el("rect", { x: 200, y: 600, width: 680, height: 360, rx: 50, fill: "#2b2d31" }, g);
+    el("rect", { x: 222, y: 622, width: 636, height: 316, rx: 34, fill: "#cfe0ea" }, g);
+    const defs = el("defs", {}, g);
+    const cp = el("clipPath", { id: "t9scr" }, defs);
+    el("rect", { x: 222, y: 622, width: 636, height: 316, rx: 34 }, cp);
+    const sc = el("g", { "clip-path": "url(#t9scr)" }, g);
+    el("polygon", { points: "480,700 600,700 858,938 222,938", fill: "#8a857a" }, sc);
+    el("rect", { x: 222, y: 622, width: 636, height: 78, fill: "#cfe0ea" }, sc);
+    hk.lines = [];
+    for (let i = 0; i < 5; i++) hk.lines.push(el("rect", { width: 14, fill: "#faf8f3" }, sc));
+    hk.car = el("rect", { x: 505, y: 860, width: 70, height: 50, rx: 10, fill: FUCH }, sc);
+    hk.fps = el("text", { x: 840, y: 670, "text-anchor": "end", class: "m-label m-num", fill: INK, text: "" }, g);
+    el("text", { x: 540, y: 1030, "text-anchor": "middle", class: "m-note", fill: MUTED, text: "cuadros por segundo del juego (ilustrativo)" }, g);
+    hk.heat = el("g", {}, g);
+    for (let i = 0; i < 4; i++) el("path", { d: `M${330 + i * 140} 580 q12 -20 0 -40 q-12 -20 0 -40`, fill: "none", stroke: AMBER, "stroke-width": 6, "stroke-linecap": "round" }, hk.heat);
+  }
+  function drawHook(t, s, A) {
+    const fps = keys(t, [[A.calienta.start, 60], [A.lento.start + 0.3, 30]]);
+    hk.fps.textContent = Math.round(fps) + " cuadros/s";
+    // road lines advance in steps of 1/fps (choppier when fps drops)
+    const tq = Math.floor(t * fps) / fps;
+    hk.lines.forEach((l, i) => {
+      const p = ((tq * 0.9 + i / 5) % 1);
+      const y = 700 + p * p * 238, w = 6 + p * 18, h = 10 + p * 40;
+      l.setAttribute("x", (540 - w / 2).toFixed(1)); l.setAttribute("y", y.toFixed(1));
+      l.setAttribute("width", w.toFixed(1)); l.setAttribute("height", h.toFixed(1));
+    });
+    hk.heat.setAttribute("opacity", String(ramp(t, A.calienta.start - 0.3, A.calienta.start + 0.3)));
+  }
+
+  // ---------------------------------------------------------------- main: two thermometers and a speed gauge
+  const TY0 = 1060, TY1 = 560;
+  const ty = (c) => TY0 - (TY0 - TY1) * (c - 20) / 80;
+  let mn = {};
+  function thermo(g, x, color, label) {
+    const gg = el("g", {}, g);
+    el("rect", { x: x - 26, y: TY1 - 30, width: 52, height: TY0 - TY1 + 40, rx: 26, fill: "#faf8f3", stroke: INK2, "stroke-width": 5 }, gg);
+    el("circle", { cx: x, cy: TY0 + 40, r: 46, fill: color, stroke: INK2, "stroke-width": 5 }, gg);
+    const col = el("rect", { x: x - 14, width: 28, rx: 10, fill: color }, gg);
+    [20, 40, 60, 80, 100].forEach((c) => {
+      el("line", { x1: x + 28, y1: ty(c), x2: x + 44, y2: ty(c), stroke: INK2, "stroke-width": 3 }, gg);
+      el("text", { x: x + 52, y: ty(c) + 9, class: "m-note", fill: MUTED, text: c + "°" }, gg);
+    });
+    el("text", { x, y: TY0 + 130, "text-anchor": "middle", class: "m-label", fill: INK, text: label }, gg);
+    const val = el("text", { x, y: TY1 - 56, "text-anchor": "middle", "font-size": 44, "font-weight": 650, class: "m-num", fill: color, text: "" }, gg);
+    return { g: gg, col, val };
+  }
+  function buildMain() {
+    const g = el("g", {}, $("#sc-main"));
+    mn.chip = thermo(g, 190, FUCH, "chip (adentro)");
+    mn.skin = thermo(g, 480, AMBER, "superficie");
+    mn.limit = el("g", {}, g);
+    el("line", { x1: 430, y1: ty(45), x2: 600, y2: ty(45), stroke: FUCH, "stroke-width": 5, "stroke-dasharray": "12 8" }, mn.limit);
+    el("text", { x: 600, y: ty(45) - 12, "text-anchor": "end", class: "m-note", fill: FUCH, text: "45 °C" }, mn.limit);
+    // speed gauge
+    mn.gauge = el("g", { transform: "translate(810 820)" }, g);
+    const R = 120;
+    el("path", { d: `M${-R} 0 A${R} ${R} 0 0 1 ${R} 0`, fill: "none", stroke: "#e3ded3", "stroke-width": 26, "stroke-linecap": "round" }, mn.gauge);
+    mn.arc = el("path", { fill: "none", stroke: BLUE, "stroke-width": 26, "stroke-linecap": "round" }, mn.gauge);
+    mn.needle = el("line", { x1: 0, y1: 0, stroke: INK, "stroke-width": 6, "stroke-linecap": "round" }, mn.gauge);
+    el("circle", { r: 12, fill: INK }, mn.gauge);
+    mn.speed = el("text", { x: 0, y: 80, "text-anchor": "middle", "font-size": 52, "font-weight": 650, class: "m-num", fill: BLUE, text: "" }, mn.gauge);
+    el("text", { x: 0, y: 320, "text-anchor": "middle", class: "m-label", fill: INK, text: "velocidad" }, mn.gauge);
+    el("text", { x: 0, y: 360, "text-anchor": "middle", class: "m-label", fill: INK, text: "del procesador" }, mn.gauge);
+    mn.drop = el("g", {}, mn.gauge);
+    el("rect", { x: -110, y: 120, width: 220, height: 84, rx: 14, fill: "none", stroke: FUCH, "stroke-width": 5 }, mn.drop);
+    el("text", { x: 0, y: 178, "text-anchor": "middle", "font-size": 46, "font-weight": 700, class: "m-num", fill: FUCH, text: "−34 %" }, mn.drop);
+    // a crossed-out fan near the chip
+    mn.fanG = el("g", { transform: "translate(810 520)" }, g);
+    for (let i = 0; i < 3; i++) el("ellipse", { cx: 0, cy: -30, rx: 16, ry: 30, fill: "none", stroke: INK2, "stroke-width": 5, transform: `rotate(${i * 120})` }, mn.fanG);
+    el("circle", { r: 10, fill: INK2 }, mn.fanG);
+    el("line", { x1: -60, y1: -60, x2: 60, y2: 60, stroke: FUCH, "stroke-width": 8, "stroke-linecap": "round" }, mn.fanG);
+    el("text", { x: 0, y: 100, "text-anchor": "middle", class: "m-note", fill: MUTED, text: "sin ventilador" }, mn.fanG);
+    // sensors
+    mn.sens = el("g", {}, g);
+    [190, 480].forEach((x) => {
+      el("circle", { cx: x - 72, cy: TY1 + 160, r: 12, fill: MINT }, mn.sens);
+      el("circle", { cx: x - 72, cy: TY1 + 160, r: 22, fill: "none", stroke: MINT, "stroke-width": 3 }, mn.sens);
+      el("text", { x: x - 72, y: TY1 + 214, "text-anchor": "middle", class: "m-note", fill: MINT, text: "sensor" }, mn.sens);
+    });
+  }
+  function setThermo(th, c) {
+    th.col.setAttribute("y", ty(c).toFixed(1));
+    th.col.setAttribute("height", (TY0 + 20 - ty(c)).toFixed(1));
+    th.val.textContent = Math.round(c) + " °C";
+  }
+  function drawMain(t, s, A) {
+    const thr = A.baja.start, rec = A.funda.start;
+    const chip = keys(t, [[s.from, 45], [A.ochenta.start + 0.4, 86], [thr + 0.4, 86], [A.menos.end + 0.3, 74], [rec, 74], [A.solo.end, 52]]);
+    const skin = keys(t, [[s.from, 33], [A.superficie.start, 38], [A.cuarenta.start + 0.6, 44], [thr + 0.6, 44.6], [rec, 44], [A.solo.end, 37]]);
+    const speed = keys(t, [[thr, 100], [A.menos.start, 66], [rec, 66], [A.solo.start, 100]]);
+    setThermo(mn.chip, chip);
+    setThermo(mn.skin, skin);
+    mn.skin.g.setAttribute("opacity", String(ramp(t, A.superficie.start - 0.4, A.superficie.start + 0.2)));
+    mn.limit.setAttribute("opacity", String(ramp(t, A.cuarenta.start - 0.3, A.cuarenta.start + 0.3)));
+    mn.fanG.setAttribute("opacity", String(ramp(t, A.ventilador.start - 0.3, A.ventilador.start + 0.2) * (1 - ramp(t, A.velocidad.start - 0.6, A.velocidad.start - 0.2))));
+    mn.gauge.setAttribute("opacity", String(ramp(t, A.velocidad.start - 0.6, A.velocidad.start)));
+    mn.sens.setAttribute("opacity", String(ramp(t, A.sensores.start - 0.3, A.sensores.start + 0.3)));
+    const a = Math.PI * (1 - speed / 100), R = 120;
+    const ex = -R * Math.cos(Math.PI * speed / 100), ey = -R * Math.sin(Math.PI * speed / 100);
+    mn.arc.setAttribute("d", `M${-R} 0 A${R} ${R} 0 0 1 ${ex.toFixed(1)} ${ey.toFixed(1)}`);
+    mn.needle.setAttribute("x2", (0.8 * ex).toFixed(1)); mn.needle.setAttribute("y2", (0.8 * ey).toFixed(1));
+    mn.speed.textContent = Math.round(speed) + " %";
+    mn.drop.setAttribute("opacity", String(ramp(t, A.estudio.start - 0.2, A.estudio.start + 0.3) * (1 - ramp(t, rec, rec + 0.4))));
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "Juegas un rato, el celular se calienta y de pronto todo se vuelve lento. No es tu imaginación: lo hace a propósito. El procesador, cuando trabaja fuerte, puede pasar de ochenta grados por dentro. Pero tu celular no tiene ventilador, y su superficie no debería pasar de unos cuarenta y cinco grados: más arriba, si lo tienes mucho tiempo en la mano, podría quemarte la piel poco a poco. Así que unos sensores de temperatura vigilan todo el tiempo, y cuando se acerca el límite, el sistema baja la velocidad del procesador. Menos velocidad, menos calor. En un estudio con un celular Android, ese freno le quitó hasta un tercio del rendimiento. Quítale la funda y sácalo del sol: se recupera solo.";
+
+  Mosaic.short({
+    kicker: "El celular por dentro",
+    title: "¿Por qué tu celular se pone lento cuando se calienta?",
+    script: SCRIPT,
+    anchors: {
+      calienta: "calienta",
+      lento: "lento",
+      imaginacion: "imaginacion",
+      procesador: "procesador",
+      ochenta: ["ochenta grados", "80 grados", "80"],
+      ventilador: "ventilador",
+      superficie: "superficie",
+      cuarenta: ["cuarenta y cinco", "45"],
+      piel: "piel",
+      sensores: "sensores",
+      limite: "limite",
+      baja: "baja la velocidad",
+      velocidad: { q: "velocidad", after: "limite" },
+      menos: "menos velocidad",
+      estudio: "estudio",
+      tercio: "tercio",
+      funda: "funda",
+      sol: "sol",
+      solo: "recupera solo",
+    },
+    build() { buildHook(); buildMain(); },
+    scenes: [
+      { el: "#sc-hook", from: 0, to: "procesador-0.4", fadeIn: 0.3, rise: 0, update: drawHook },
+      { el: "#cap-hook", from: "imaginacion-0.4", to: "procesador-0.4", fade: 0.3 },
+      { el: "#sc-main", from: "procesador-0.4", to: "end", rise: 0, update: drawMain },
+      { el: "#cap-chip", from: "procesador-0.3", to: "superficie-0.3", fade: 0.3 },
+      { el: "#cap-skin", from: "superficie-0.3", to: "sensores-0.6", fade: 0.3 },
+      { el: "#cap-throttle", from: "sensores-0.6", to: "estudio-0.3", fade: 0.3 },
+      { el: "#cap-study", from: "estudio-0.3", to: "funda-0.6", fade: 0.3 },
+      { el: "#cap-fix", from: "funda-0.6", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
