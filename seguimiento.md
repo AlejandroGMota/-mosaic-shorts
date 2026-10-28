@@ -53,18 +53,18 @@ Guion: `guiones/shorts-lote-02-2026-10-27.md` · Tomas: `audios/shorts-lote-02-2
 | I11 | ¿Cuánta energía gasta una pregunta a la IA? | ✅ 27 oct | — | — | — | — | — | cifra de Google (may 2025); revisar si hay una más nueva |
 | I12 ⭐ | ¿De verdad la IA gasta agua? | ✅ 27 oct | — | — | — | — | — | Google 0.26 ml vs. UC Riverside: dos cuentas distintas |
 | I13 | ¿Cómo decide TikTok qué video sigue? | ✅ 27 oct | — | — | — | — | — | señales según TikTok (2020) |
-| T1 ⭐ | ¿Cómo sabe tu pantalla dónde la tocas? | ✅ 27 oct | — | — | — | — | — |  |
-| T2 | ¿Cómo sabe tu celular si lo volteas? | ✅ 27 oct | — | — | — | — | — |  |
-| T3 ⭐ | ¿Cómo sabe tu celular dónde estás sin internet? | ✅ 27 oct | — | — | — | — | — |  |
-| T4 ⭐ | ¿Por qué el último 20 % de carga tarda tanto? | ✅ 27 oct | — | — | — | — | — |  |
-| T5 | ¿Por qué la batería de tu celular dura menos cada año? | ✅ 27 oct | — | — | — | — | — |  |
-| T6 | ¿Cómo carga tu celular sin cables? | ✅ 27 oct | — | — | — | — | — |  |
-| T7 ⭐ | ¿Por qué tu celular toma varias fotos con un clic? | ✅ 27 oct | — | — | — | — | — |  |
-| T8 | ¿Por qué una foto de 12 megapíxeles pesa solo 3 MB? | ✅ 27 oct | — | — | — | — | — |  |
-| T9 | ¿Por qué tu celular se pone lento cuando se calienta? | ✅ 27 oct | — | — | — | — | — |  |
-| T10 | ¿Cómo sabe tu celular que lo pegaste a la oreja? | ✅ 27 oct | — | — | — | — | — |  |
-| T11 | ¿Cómo vibra tu celular? | ✅ 27 oct | — | — | — | — | — |  |
-| T12 | ¿Cómo lee tu huella la pantalla del celular? | ✅ 27 oct | — | — | — | — | — | |
+| T1 ⭐ | ¿Cómo sabe tu pantalla dónde la tocas? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
+| T2 | ¿Cómo sabe tu celular si lo volteas? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
+| T3 ⭐ | ¿Cómo sabe tu celular dónde estás sin internet? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
+| T4 ⭐ | ¿Por qué el último 20 % de carga tarda tanto? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
+| T5 | ¿Por qué la batería de tu celular dura menos cada año? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
+| T6 | ¿Cómo carga tu celular sin cables? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
+| T7 ⭐ | ¿Por qué tu celular toma varias fotos con un clic? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
+| T8 | ¿Por qué una foto de 12 megapíxeles pesa solo 3 MB? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
+| T9 | ¿Por qué tu celular se pone lento cuando se calienta? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
+| T10 | ¿Cómo sabe tu celular que lo pegaste a la oreja? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
+| T11 | ¿Cómo vibra tu celular? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
+| T12 | ¿Cómo lee tu huella la pantalla del celular? | ✅ 27 oct | — | — | ✅ 27 oct | — | — | |
 | R1 ⭐ | ¿Cómo llega tu mensaje de WhatsApp a otro país? | ✅ 27 oct | — | — | — | — | — |  |
 | R2 ⭐ | ¿Internet viaja por satélite o por el fondo del mar? | ✅ 27 oct | — | — | — | — | — | conteo de cables cambia rápido |
 | R3 | ¿Por qué toda tu casa comparte una sola IP? | ✅ 27 oct | — | — | — | — | — |  |
