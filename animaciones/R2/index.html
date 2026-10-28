@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>R2 · ¿Internet viaja por satélite o por el fondo del mar?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-side" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-sat" style="top:1300px">¿Por satélite?<small>eso cree mucha gente</small></div>
+    <div class="m-caption scene" id="cap-sea" style="top:1300px">Casi todo va por el fondo del mar</div>
+
+    <svg class="full scene" id="sc-map" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-map" style="top:1300px">Cables submarinos en servicio<small>trazos simplificados · datos de 2025</small></div>
+
+    <svg class="full scene" id="sc-cut" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-cut" style="top:1300px">Por dentro: fibras de vidrio<small>los datos viajan como pulsos de luz</small></div>
+
+    <svg class="full scene" id="sc-geo" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-why" style="top:1300px">¿Por qué no por satélite?<small>por la distancia</small></div>
+    <div class="m-caption scene" id="cap-half" style="top:1300px">Ida y vuelta: ≈ 0.5 s de espera<small>4 tramos de ≈ 36 000 km a la velocidad de la luz</small></div>
+    <div class="m-caption scene" id="cap-cable" style="top:1300px">El cable: una fracción de eso<small>y lleva muchísimos más datos</small></div>
+
+    <svg class="full scene" id="sc-share" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-share" style="top:1300px">Más del 95 %<small>del tráfico entre continentes va por cables</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script src="../_base/redes.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp, clamp } = Mosaic;
+  const { C, op, along, ptsStr, thousands, world } = Redes;
+
+  function satellite(parent, x, y, s) {
+    const g = el("g", { transform: `translate(${x} ${y}) scale(${s})` }, parent);
+    for (const sx of [-1, 1]) {
+      el("line", { x1: sx * 30, y1: 0, x2: sx * 44, y2: 0, stroke: C.ink2, "stroke-width": 4 }, g);
+      el("rect", { x: sx > 0 ? 44 : -124, y: -22, width: 80, height: 44, fill: "#dfe8ee", stroke: C.blue, "stroke-width": 4 }, g);
+      for (let i = 1; i < 4; i++) el("line", { x1: (sx > 0 ? 44 : -124) + i * 20, y1: -22, x2: (sx > 0 ? 44 : -124) + i * 20, y2: 22, stroke: C.blue, "stroke-width": 2 }, g);
+    }
+    el("rect", { x: -30, y: -28, width: 60, height: 56, rx: 6, fill: C.card, stroke: C.ink2, "stroke-width": 4 }, g);
+    el("path", { d: "M-14 28 Q0 52 14 28", fill: "none", stroke: C.ink2, "stroke-width": 4 }, g);
+    return g;
+  }
+  function polyLen(pts) {
+    let L = 0;
+    for (let i = 1; i < pts.length; i++) L += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+    return L;
+  }
+  function draw(line, pts, p) {
+    const L = polyLen(pts);
+    line.setAttribute("stroke-dasharray", `${L} ${L}`);
+    line.setAttribute("stroke-dashoffset", String(L * (1 - p)));
+    line.setAttribute("visibility", p > 0.001 ? "visible" : "hidden");
+  }
+
+  // ---------------------------------------------------------------- side view: satellite vs sea floor
+  let sd = {};
+  const SEABED = [];
+  for (let i = 0; i <= 30; i++) { const u = i / 30; SEABED.push([lerp(300, 780, u), 900 + Math.sin(Math.PI * u) * 230 - 30 * Math.sin(3 * Math.PI * u) * u * (1 - u)]); }
+  const CABLE1 = [[230, 880], [300, 905]].concat(SEABED.slice(1, -1).map(([x, y]) => [x, y - 14])).concat([[780, 905], [850, 880]]);
+  function buildSide() {
+    const g = el("g", {}, $("#sc-side"));
+    el("path", { d: "M300 860 L780 860 L780 905 " + SEABED.slice().reverse().map(([x, y]) => `L${x.toFixed(1)} ${y.toFixed(1)}`).join(" ") + " Z", fill: "#dfe8ee" }, g);
+    el("path", { d: "M80 860 L300 860 L300 905 " + SEABED.map(([x, y]) => `L${x.toFixed(1)} ${y.toFixed(1)}`).join(" ") + " L780 905 L780 860 L1000 860 L1000 1200 L80 1200 Z", fill: C.paper2, stroke: C.line, "stroke-width": 3 }, g);
+    el("text", { x: 190, y: 930, "text-anchor": "middle", class: "m-label", text: "América" }, g);
+    el("text", { x: 890, y: 930, "text-anchor": "middle", class: "m-label", text: "Europa" }, g);
+    el("text", { x: 540, y: 960, "text-anchor": "middle", class: "m-note", "font-style": "italic", text: "océano" }, g);
+    sd.sat = el("g", {}, g);
+    satellite(sd.sat, 540, 540, 1);
+    el("polyline", { points: "230,850 540,580 850,850", fill: "none", stroke: C.fuchsia, "stroke-width": 5, "stroke-dasharray": "14 12" }, sd.sat);
+    sd.cable = el("polyline", { points: ptsStr(CABLE1), fill: "none", stroke: C.mint, "stroke-width": 9, "stroke-linecap": "round", "stroke-linejoin": "round" }, g);
+    sd.lbl = el("text", { x: 540, y: 1180, "text-anchor": "middle", class: "m-label", fill: C.mint, text: "cable submarino" }, g);
+  }
+  function drawSide(t, s, A) {
+    const r = ramp(t, A.realidad.start - 0.2, A.realidad.start + 0.4);
+    op(sd.sat, 1 - 0.75 * r);
+    draw(sd.cable, CABLE1, ramp(t, A.realidad.start, A.fondo.end + 0.3, ease.inOut));
+    op(sd.lbl, ramp(t, A.fondo.start - 0.2, A.fondo.start + 0.3));
+  }
+
+  // ---------------------------------------------------------------- world map + counters
+  let mp = {};
+  const ROUTES = [
+    [[-74, 40], [-40, 46], [-5, 50]],
+    [[-76, 37], [-45, 40], [-9, 43]],
+    [[-80, 26], [-40, 32], [-9, 37]],
+    [[-38, -4], [-25, 8], [-15, 25], [-9, 38]],
+    [[-80, 26], [-60, 12], [-38, -4]],
+    [[-122, 37], [-150, 40], [-185, 38], [-200, 36], [-220, 35]],
+    [[-122, 37], [-158, 21], [-200, 0], [-207, -27]],
+    [[3, 43], [15, 36], [31, 32], [34, 27], [43, 13], [60, 15], [72, 18], [80, 6], [95, 6], [104, 1]],
+    [[104, 1], [115, 10], [122, 23], [140, 35]],
+    [[104, 1], [108, -10], [115, -32]],
+    [[-6, 36], [-18, 15], [-5, 1], [10, -15], [18, -34]],
+    [[43, 13], [52, 0], [42, -20], [32, -30]],
+    [[-77, -12], [-82, 0], [-80, 9]],
+    [[72, 18], [55, 5], [40, -5]],
+  ];
+  function buildMap() {
+    const g = el("g", {}, $("#sc-map"));
+    const W = world(g, { x: 85, y: 470, w: 850 });
+    mp.lines = ROUTES.map((r) => {
+      const pts = r.map(([lo, la]) => W.P(lo < -170 ? lo + 360 : lo, la));
+      // routes that cross the map edge (the Pacific) are split in two
+      const parts = [[]];
+      for (let i = 0; i < pts.length; i++) {
+        if (i && Math.abs(pts[i][0] - pts[i - 1][0]) > 400) parts.push([]);
+        parts[parts.length - 1].push(pts[i]);
+      }
+      return parts.filter((p) => p.length > 1).map((p) => ({ pts: p, line: el("polyline", { points: ptsStr(p), fill: "none", stroke: C.blue, "stroke-width": 3.5, "stroke-linecap": "round", "stroke-linejoin": "round" }, g) }));
+    });
+    mp.c1 = el("text", { x: 540, y: 960, "text-anchor": "middle", "font-size": 120, "font-weight": 700, fill: C.blue, class: "m-num", text: "≈ 570" }, g);
+    mp.l1 = el("text", { x: 540, y: 1012, "text-anchor": "middle", class: "m-label", text: "cables submarinos en servicio" }, g);
+    mp.c2 = el("text", { x: 540, y: 1150, "text-anchor": "middle", "font-size": 84, "font-weight": 700, fill: C.ink, class: "m-num", text: "" }, g);
+    mp.l2 = el("text", { x: 540, y: 1200, "text-anchor": "middle", class: "m-label", text: "de cable en total" }, g);
+  }
+  function drawMap(t, s, A) {
+    const pc = ramp(t, A.hay.start, A.servicio.end, ease.inOut);
+    mp.lines.forEach((parts, i) => parts.forEach((pp) => draw(pp.line, pp.pts, ramp(pc, i / ROUTES.length * 0.6, i / ROUTES.length * 0.6 + 0.4, ease.out))));
+    const n = Math.round(570 * ramp(t, A.quinientos.start - 0.4, A.servicio.end, ease.out));
+    mp.c1.textContent = "≈ " + n;
+    op(mp.c1, ramp(t, A.quinientos.start - 0.5, A.quinientos.start));
+    op(mp.l1, ramp(t, A.quinientos.start - 0.5, A.quinientos.start));
+    const km = 1000000 * ramp(t, A.suman.start, A.millon.end + 0.3, ease.out);
+    mp.c2.textContent = (km >= 999999 ? "> " : "") + thousands(Math.round(km / 1000) * 1000) + " km";
+    op(mp.c2, ramp(t, A.suman.start - 0.3, A.suman.start));
+    op(mp.l2, ramp(t, A.millon.start - 0.3, A.millon.start + 0.2));
+  }
+
+  // ---------------------------------------------------------------- cable cross-section + light pulses
+  let ct = {};
+  const CX = 340, CY = 740;
+  function buildCut() {
+    const g = el("g", {}, $("#sc-cut"));
+    el("circle", { cx: CX, cy: CY, r: 230, fill: "#2b2b2a" }, g);
+    el("circle", { cx: CX, cy: CY, r: 200, fill: "#d9d4c8" }, g);
+    for (let i = 0; i < 26; i++) { const a = (i / 26) * Math.PI * 2; el("circle", { cx: CX + Math.cos(a) * 178, cy: CY + Math.sin(a) * 178, r: 20, fill: "#9a958a", stroke: "#7d786e", "stroke-width": 2 }, g); }
+    el("circle", { cx: CX, cy: CY, r: 150, fill: "#b8733a" }, g);
+    el("circle", { cx: CX, cy: CY, r: 128, fill: C.card }, g);
+    el("circle", { cx: CX, cy: CY, r: 70, fill: "#eef3f1", stroke: C.mint, "stroke-width": 4 }, g);
+    ct.fibers = [];
+    for (let i = 0; i < 8; i++) { const a = (i / 8) * Math.PI * 2; ct.fibers.push(el("circle", { cx: CX + Math.cos(a) * 38, cy: CY + Math.sin(a) * 38, r: 11, fill: C.mint }, g)); }
+    ct.fibers.push(el("circle", { cx: CX, cy: CY, r: 11, fill: C.mint }, g));
+    const labels = [
+      [CY - 200, "plástico protector", C.ink2, 226],
+      [CY - 120, "alambres de acero", C.ink2, 190],
+      [CY - 40, "cobre (energía)", "#9a5a28", 140],
+      [CY + 50, "fibras de vidrio", C.mint, 50],
+    ];
+    ct.labels = labels.map(([y, txt, col, r]) => {
+      const lg = el("g", {}, g);
+      const a = Math.asin(clamp((y - CY) / r, -1, 1));
+      el("line", { x1: CX + Math.cos(a) * r, y1: y, x2: 610, y2: y, stroke: col, "stroke-width": 3 }, lg);
+      el("circle", { cx: CX + Math.cos(a) * r, cy: y, r: 6, fill: col }, lg);
+      el("text", { x: 622, y: y + 11, class: "m-label", fill: col, text: txt }, lg);
+      return lg;
+    });
+    el("text", { x: 622, y: CY + 96, class: "m-note", text: "cada fibra ≈ 0.125 mm" }, ct.labels[3]);
+    // one fibre, stretched out: light pulses
+    ct.fiber = el("g", {}, g);
+    el("rect", { x: 100, y: 1080, width: 840, height: 34, rx: 17, fill: "#eef3f1", stroke: C.mint, "stroke-width": 3 }, ct.fiber);
+    ct.pulses = [];
+    const bits = [1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1];
+    bits.forEach((b, i) => { if (b) ct.pulses.push({ i, r: el("rect", { y: 1086, width: 36, height: 22, rx: 11, fill: C.amber }, ct.fiber) }); });
+    ct.clip = el("clipPath", { id: "fclip" }, el("defs", {}, g));
+    el("rect", { x: 100, y: 1080, width: 840, height: 34, rx: 17 }, ct.clip);
+    ct.pulses.forEach((p) => p.r.setAttribute("clip-path", "url(#fclip)"));
+    el("text", { x: 520, y: 1170, "text-anchor": "middle", class: "m-label", fill: C.amber, text: "pulsos de luz: 1 = luz, 0 = apagado" }, ct.fiber);
+  }
+  function drawCut(t, s, A) {
+    ct.labels.forEach((l, i) => op(l, ramp(t, s.from + 0.2 + i * 0.25, s.from + 0.6 + i * 0.25)));
+    op(ct.labels[3], ramp(t, A.fibras.start - 0.3, A.fibras.start + 0.2));
+    ct.fibers.forEach((f) => f.setAttribute("r", String(11 + 3 * ramp(t, A.fibras.start - 0.3, A.fibras.start + 0.2) * (0.5 + 0.5 * Math.sin(t * 6)))));
+    op(ct.fiber, ramp(t, A.luz.start - 1.2, A.luz.start - 0.4));
+    const off = (t - A.luz.start) * 260;
+    ct.pulses.forEach((p) => p.r.setAttribute("x", String(100 + ((p.i * 52 + off) % 832 + 832) % 832 - 20)));
+  }
+
+  // ---------------------------------------------------------------- geostationary hop vs cable, and the waits
+  let gs = {};
+  const EC = [540, 2650], ER = 1800;
+  const surf = (x) => EC[1] - Math.sqrt(ER * ER - (x - EC[0]) * (x - EC[0]));
+  const MX = [280, surf(280)], ES = [800, surf(800)], SAT = [540, 520];
+  const CABLE2 = [];
+  for (let i = 0; i <= 24; i++) { const x = lerp(MX[0], ES[0], i / 24); CABLE2.push([x, surf(x) + 14 + Math.sin(Math.PI * i / 24) * 40]); }
+  const MSX = 1.25; // px per ms on the bars
+  function buildGeo() {
+    const g = el("g", {}, $("#sc-geo"));
+    el("path", { d: `M80 ${surf(80).toFixed(1)} ` + Array.from({ length: 41 }, (_, i) => { const x = 80 + i * 23; return `L${x} ${surf(x).toFixed(1)}`; }).join(" ") + " L1000 980 L80 980 Z", fill: C.paper2, stroke: C.line, "stroke-width": 3 }, g);
+    for (const [p, txt, sg] of [[MX, "México", -1], [ES, "España", 1]]) {
+      el("circle", { cx: p[0], cy: p[1], r: 10, fill: C.ink }, g);
+      el("text", { x: p[0] + sg * 16, y: p[1] - 16, "text-anchor": sg < 0 ? "end" : "start", class: "m-label", text: txt }, g);
+    }
+    satellite(g, SAT[0], SAT[1], 0.75);
+    gs.path = el("polyline", { points: ptsStr([MX, SAT, ES]), fill: "none", stroke: C.fuchsia, "stroke-width": 4, "stroke-dasharray": "12 10" }, g);
+    gs.dim = el("g", {}, g);
+    const top = SAT[1] + 40, bot = surf(540);
+    el("line", { x1: 540, y1: top, x2: 540, y2: bot, stroke: C.ink2, "stroke-width": 3 }, gs.dim);
+    el("line", { x1: 528, y1: top, x2: 552, y2: top, stroke: C.ink2, "stroke-width": 3 }, gs.dim);
+    el("line", { x1: 528, y1: bot, x2: 552, y2: bot, stroke: C.ink2, "stroke-width": 3 }, gs.dim);
+    el("text", { x: 556, y: 790, class: "m-label", fill: C.ink, text: "35 786 km" }, gs.dim);
+    el("text", { x: 430, y: 530, "text-anchor": "end", class: "m-note", text: "satélite geoestacionario" }, g);
+    el("text", { x: 960, y: 520, "text-anchor": "end", class: "m-note", text: "no a escala" }, g);
+    gs.dot = el("circle", { r: 13, fill: C.fuchsia }, g);
+    gs.cable = el("polyline", { points: ptsStr(CABLE2), fill: "none", stroke: C.mint, "stroke-width": 7, "stroke-linecap": "round" }, g);
+    gs.clbl = el("text", { x: 540, y: 955, "text-anchor": "middle", class: "m-label", fill: C.mint, text: "cable ≈ 9 000 km" }, g);
+    gs.cdot = el("circle", { r: 11, fill: C.mint }, g);
+    // bars: round-trip wait
+    gs.bars = el("g", {}, g);
+    el("text", { x: 90, y: 1030, class: "m-note", text: "espera de ida y vuelta (aprox.)" }, gs.bars);
+    el("text", { x: 90, y: 1072, class: "m-label", fill: C.fuchsia, text: "satélite geoestacionario" }, gs.bars);
+    gs.b1 = el("rect", { x: 90, y: 1086, height: 46, rx: 6, fill: C.fuchsia }, gs.bars);
+    gs.b1r = el("rect", { x: 90, y: 1086, height: 46, rx: 6, fill: C.fuchsia, opacity: 0.35 }, gs.bars);
+    gs.t1 = el("text", { x: 110, y: 1120, "font-size": 32, "font-weight": 700, fill: "#fff", text: "500–600 ms ≈ 0.5 s" }, gs.bars);
+    gs.l2 = el("text", { x: 90, y: 1176, class: "m-label", fill: C.mint, text: "cable México–España" }, gs.bars);
+    gs.b2 = el("rect", { x: 90, y: 1190, height: 46, rx: 6, fill: C.mint }, gs.bars);
+    gs.b2r = el("rect", { x: 90, y: 1190, height: 46, rx: 6, fill: C.mint, opacity: 0.35 }, gs.bars);
+    gs.t2 = el("text", { y: 1224, "font-size": 32, "font-weight": 700, fill: C.mint, text: "90–120 ms ≈ 0.1 s" }, gs.bars);
+  }
+  function drawGeo(t, s, A) {
+    op(gs.path, ramp(t, A.fijo.start - 0.3, A.fijo.start + 0.2));
+    op(gs.dim, ramp(t, A.altura.start - 0.6, A.altura.start));
+    // the signal climbs and drops: 4 legs (request up/down, answer up/down)
+    const legs = [[MX, SAT], [SAT, ES], [ES, SAT], [SAT, MX]];
+    const a = A.subir.start, b = A.medio.end;
+    const u = clamp((t - a) / (b - a)) * 4;
+    const k = Math.min(3, Math.floor(u));
+    const P = along(legs[k], ease.inOutSine(u - k));
+    gs.dot.setAttribute("cx", P[0]); gs.dot.setAttribute("cy", P[1]);
+    op(gs.dot, t > a - 0.2 && t < b + 0.6 ? 1 : 0);
+    op(gs.cable, ramp(t, A.mexico.start - 0.4, A.mexico.start + 0.1));
+    op(gs.clbl, ramp(t, A.mexico.start - 0.4, A.mexico.start + 0.1));
+    const cu = clamp((t - A.mexico.start) / 1.6);
+    const cp = along(CABLE2, cu < 0.5 ? ease.inOutSine(cu * 2) : ease.inOutSine(2 - cu * 2));
+    gs.cdot.setAttribute("cx", cp[0]); gs.cdot.setAttribute("cy", cp[1]);
+    op(gs.cdot, t > A.mexico.start && cu < 1 ? 1 : 0);
+    op(gs.bars, ramp(t, A.medio.start - 0.6, A.medio.start - 0.1));
+    const g1 = ramp(t, A.medio.start - 0.3, A.medio.end + 0.4, ease.out);
+    gs.b1.setAttribute("width", String(500 * MSX * g1));
+    gs.b1r.setAttribute("width", String(600 * MSX * g1));
+    op(gs.t1, ramp(t, A.medio.end, A.medio.end + 0.3));
+    const g2 = ramp(t, A.fraccion.start - 0.3, A.fraccion.end + 0.3, ease.out);
+    gs.b2.setAttribute("width", String(90 * MSX * g2));
+    gs.b2r.setAttribute("width", String(120 * MSX * g2));
+    gs.t2.setAttribute("x", String(90 + 120 * MSX + 18));
+    op(gs.t2, ramp(t, A.fraccion.end, A.fraccion.end + 0.3));
+    op(gs.l2, ramp(t, A.fraccion.start - 0.3, A.fraccion.start));
+  }
+
+  // ---------------------------------------------------------------- > 95 % of the traffic
+  let sh = {};
+  function buildShare() {
+    const g = el("g", {}, $("#sc-share"));
+    sh.sq = [];
+    for (let i = 0; i < 100; i++) {
+      const r = Math.floor(i / 10), c = i % 10;
+      sh.sq.push(el("rect", { x: 254 + c * 58, y: 500 + r * 58, width: 50, height: 50, rx: 6, fill: C.line }, g));
+    }
+    sh.leg = el("g", {}, g);
+    el("rect", { x: 254, y: 1112, width: 34, height: 34, rx: 5, fill: C.mint }, sh.leg);
+    el("text", { x: 300, y: 1140, class: "m-label", text: "cables submarinos" }, sh.leg);
+    el("rect", { x: 640, y: 1112, width: 34, height: 34, rx: 5, fill: C.line }, sh.leg);
+    el("text", { x: 686, y: 1140, class: "m-label", text: "el resto" }, sh.leg);
+  }
+  function drawShare(t, s, A) {
+    const n = Math.round(95 * ramp(t, A.noventa.start - 0.3, A.trafico.end + 0.3, ease.inOut));
+    sh.sq.forEach((q, i) => q.setAttribute("fill", i < n ? C.mint : C.line));
+    op(sh.leg, ramp(t, A.trafico.start - 0.2, A.trafico.start + 0.3));
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "Mucha gente cree que internet entre continentes viaja por satélite. En realidad, casi todo va por el fondo del mar. Hay unos quinientos setenta cables submarinos en servicio, y entre todos suman más de un millón de kilómetros. Por dentro llevan fibras de vidrio, más delgadas que un cabello, por donde los datos viajan como pulsos de luz. ¿Por qué no por satélite? Por la distancia. Un satélite de comunicaciones fijo está a casi treinta y seis mil kilómetros de altura. Subir y bajar, ida y vuelta, suma cerca de medio segundo de espera. Un cable de México a España tarda una fracción de eso, y además transporta muchísimos más datos. Más del noventa y cinco por ciento del tráfico entre continentes va por esos cables.";
+
+  Mosaic.short({
+    kicker: "Internet y redes",
+    title: "¿Internet viaja por satélite o por el fondo del mar?",
+    script: SCRIPT,
+    anchors: {
+      satelite: "satelite",
+      realidad: "realidad",
+      fondo: "fondo del mar",
+      hay: "hay unos",
+      quinientos: ["quinientos setenta", "570"],
+      servicio: "servicio",
+      suman: "suman",
+      millon: ["millon", "1000000"],
+      dentro: "por dentro",
+      fibras: "fibras",
+      cabello: "cabello",
+      luz: "luz",
+      porque: ["por que no", "porque no"],
+      distancia: "distancia",
+      fijo: "fijo",
+      altura: "altura",
+      subir: "subir",
+      medio: "medio segundo",
+      mexico: "mexico a espana",
+      fraccion: "fraccion",
+      datos: "muchisimos",
+      noventa: ["noventa y cinco", "95"],
+      trafico: "trafico",
+    },
+    build() { buildSide(); buildMap(); buildCut(); buildGeo(); buildShare(); },
+    scenes: [
+      { el: "#sc-side", from: 0, to: "hay-0.3", fadeIn: 0.3, rise: 0, update: drawSide },
+      { el: "#cap-sat", from: 0.2, to: "realidad-0.2", fade: 0.3 },
+      { el: "#cap-sea", from: "realidad-0.2", to: "hay-0.3", fade: 0.3 },
+      { el: "#sc-map", from: "hay-0.3", to: "dentro-0.3", rise: 0, update: drawMap },
+      { el: "#cap-map", from: "hay-0.2", to: "dentro-0.3", fade: 0.3 },
+      { el: "#sc-cut", from: "dentro-0.3", to: "porque-0.3", rise: 0, update: drawCut },
+      { el: "#cap-cut", from: "dentro-0.2", to: "porque-0.3", fade: 0.3 },
+      { el: "#sc-geo", from: "porque-0.3", to: "noventa-0.5", rise: 0, update: drawGeo },
+      { el: "#cap-why", from: "porque-0.2", to: "subir-0.3", fade: 0.3 },
+      { el: "#cap-half", from: "subir-0.3", to: "mexico-0.3", fade: 0.3 },
+      { el: "#cap-cable", from: "mexico-0.3", to: "noventa-0.5", fade: 0.3 },
+      { el: "#sc-share", from: "noventa-0.5", to: "end", rise: 0, update: drawShare },
+      { el: "#cap-share", from: "noventa-0.4", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
