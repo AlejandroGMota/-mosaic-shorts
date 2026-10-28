@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>T11 · ¿Cómo vibra tu celular?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-hook" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-hook" style="top:1300px">Vibra sin ruido de motor<small>¿qué se mueve adentro?</small></div>
+
+    <svg class="full scene" id="sc-erm" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-erm" style="top:1300px">Antes: un motorcito con un peso descentrado<small>al girar, el desbalance sacude todo, como una lavadora mal cargada</small></div>
+    <div class="m-caption scene" id="cap-slow" style="top:1300px">Tardaba en arrancar y en frenar</div>
+
+    <svg class="full scene" id="sc-lra" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-lra" style="top:1300px">Ahora: un actuador lineal<small>una masa con resorte que un imán empuja adelante y atrás</small></div>
+    <div class="m-caption scene" id="cap-freq" style="top:1300px">Vibra a la frecuencia en que el resorte rebota solo<small>≈ 170 veces por segundo: gasta poca energía</small></div>
+    <div class="m-caption scene" id="cap-fast" style="top:1300px">Arranca y frena en milésimas de segundo</div>
+    <div class="m-caption scene" id="cap-tap" style="top:1300px">Golpecitos cortos y precisos<small>que se sienten como un botón real</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp, clamp, keys } = Mosaic;
+  const MINT = "#3a9a80", BLUE = "#2f5e8e", AMBER = "#c98a1b", FUCH = "#b3386b", INK = "#1d1d1b", INK2 = "#4a4843", MUTED = "#827e74";
+  const COPPER = "#b8743a", METAL = "#8a8f98";
+
+  // ---------------------------------------------------------------- vibration envelopes (illustrative, in ms)
+  // ERM: a spinning mass needs tens of ms to spin up and to coast down.
+  // LRA: resonant, driven and actively braked: a few ms.
+  const ON = 120;
+  const envERM = (ms) => (ms < ON ? 1 - Math.exp(-ms / 35) : (1 - Math.exp(-ON / 35)) * Math.exp(-(ms - ON) / 35));
+  const envLRA = (ms) => (ms < ON ? 1 - Math.exp(-ms / 4) : Math.exp(-(ms - ON) / 4));
+  const GX0 = 140, GX1 = 940, GMS = 260;
+  const gx = (ms) => GX0 + (GX1 - GX0) * ms / GMS;
+  function wave(env, msMax, y0, amp) {
+    const pts = [];
+    for (let ms = 0; ms <= msMax; ms += 0.25) pts.push(gx(ms).toFixed(1) + "," + (y0 - amp * env(ms) * Math.sin(2 * Math.PI * 0.17 * ms)).toFixed(1));
+    return pts.join(" ");
+  }
+  function graphAxes(g, y0, label) {
+    el("line", { x1: GX0, y1: y0, x2: GX1, y2: y0, stroke: "#d6d1c5", "stroke-width": 3 }, g);
+    el("line", { x1: gx(0), y1: y0 - 90, x2: gx(0), y2: y0 + 90, stroke: "#bdb7aa", "stroke-width": 3, "stroke-dasharray": "6 6" }, g);
+    el("line", { x1: gx(ON), y1: y0 - 90, x2: gx(ON), y2: y0 + 90, stroke: "#bdb7aa", "stroke-width": 3, "stroke-dasharray": "6 6" }, g);
+    el("text", { x: gx(0) + 8, y: y0 - 70, class: "m-note", fill: MUTED, text: "encender" }, g);
+    el("text", { x: gx(ON) + 8, y: y0 - 70, class: "m-note", fill: MUTED, text: "apagar" }, g);
+    if (label) el("text", { x: GX1, y: y0 + 120, "text-anchor": "end", class: "m-note", fill: MUTED, text: label }, g);
+  }
+
+  // ---------------------------------------------------------------- hook
+  let hk = {};
+  function buildHook() {
+    const g = el("g", {}, $("#sc-hook"));
+    hk.phone = el("g", {}, g);
+    el("rect", { x: -150, y: -300, width: 300, height: 600, rx: 44, fill: "#2b2d31" }, hk.phone);
+    el("rect", { x: -134, y: -284, width: 268, height: 568, rx: 32, fill: "#faf8f3" }, hk.phone);
+    el("circle", { cx: 0, cy: -120, r: 44, fill: "#d6d1c5" }, hk.phone);
+    el("rect", { x: -80, y: -50, width: 160, height: 16, rx: 8, fill: "#d6d1c5" }, hk.phone);
+    hk.lines = el("g", {}, g);
+    [-1, 1].forEach((sd) => [0, 1].forEach((k) => el("path", { d: `M${540 + sd * (190 + k * 34)} 740 q${sd * 22} 60 0 120`, fill: "none", stroke: INK2, "stroke-width": 6, "stroke-linecap": "round" }, hk.lines)));
+  }
+  function drawHook(t) {
+    const j = Math.sin(t * 2 * Math.PI * 9) * 6;
+    hk.phone.setAttribute("transform", `translate(${(540 + j).toFixed(1)} 800)`);
+  }
+
+  // ---------------------------------------------------------------- ERM: spinning eccentric weight
+  let er = {};
+  function buildErm() {
+    const g = el("g", {}, $("#sc-erm"));
+    er.body = el("g", {}, g);
+    el("rect", { x: 160, y: 500, width: 760, height: 340, rx: 50, fill: "#faf8f3", stroke: "#2b2d31", "stroke-width": 10 }, er.body);
+    el("text", { x: 190, y: 545, class: "m-note", fill: MUTED, text: "celular (corte)" }, er.body);
+    // motor seen from the end of its shaft
+    el("rect", { x: 300, y: 610, width: 220, height: 120, rx: 30, fill: METAL }, er.body);
+    el("text", { x: 410, y: 790, "text-anchor": "middle", class: "m-label", fill: INK2, text: "motor" }, er.body);
+    el("rect", { x: 520, y: 660, width: 60, height: 20, fill: "#5d5a54" }, er.body);
+    er.weight = el("g", { transform: "translate(620 670)" }, er.body);
+    er.wRot = el("g", {}, er.weight);
+    el("path", { d: "M-46 0 A46 46 0 0 1 46 0 Z", fill: FUCH }, er.wRot);
+    el("circle", { r: 10, fill: INK }, er.weight);
+    el("text", { x: 700, y: 790, "text-anchor": "middle", class: "m-label", fill: FUCH, text: "peso descentrado" }, er.body);
+    er.graph = el("g", {}, g);
+    graphAxes(er.graph, 1070, "tiempo en milésimas de segundo (ilustrativo)");
+    er.trace = el("polyline", { fill: "none", stroke: METAL, "stroke-width": 3 }, er.graph);
+    el("text", { x: GX0, y: 950, class: "m-label", fill: INK2, text: "vibración del motor" }, er.graph);
+  }
+  function drawErm(t, s, A) {
+    // spin starts on "girar"; the graph plays the same spin-up/down, slowed down
+    const t0 = A.girar.start;
+    const ms = clamp((t - t0) / (A.frenar.end + 0.4 - t0)) * GMS;
+    const env = t < t0 ? 0 : envERM(ms);
+    // angle: integrate speed approx. (pure): use env as speed fraction with a smooth phase
+    // angle = integral of the spin speed (speed follows the envelope)
+    const m1 = Math.min(ms, ON);
+    let turn = m1 - 35 * (1 - Math.exp(-m1 / 35));
+    if (ms > ON) turn += envERM(ON) * 35 * (1 - Math.exp(-(ms - ON) / 35));
+    const ang = t < t0 ? 0 : turn * 12;
+    er.wRot.setAttribute("transform", `rotate(${(ang % 360).toFixed(1)})`);
+    const shake = env * 10 * Math.sin((ang * Math.PI) / 180);
+    er.body.setAttribute("transform", `translate(0 ${shake.toFixed(1)})`);
+    er.trace.setAttribute("points", wave(envERM, ms, 1070, 80));
+    er.graph.setAttribute("opacity", String(ramp(t, t0 - 0.3, t0 + 0.2)));
+  }
+
+  // ---------------------------------------------------------------- LRA: mass + spring + magnet + coil
+  let lr = {};
+  function spring(x0, x1, y, n, amp) {
+    const pts = [[x0, y]];
+    for (let i = 0; i < n; i++) pts.push([x0 + (x1 - x0) * (i + 0.5) / n, y + (i % 2 ? amp : -amp)]);
+    pts.push([x1, y]);
+    return pts.map((p) => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ");
+  }
+  function buildLra() {
+    const g = el("g", {}, $("#sc-lra"));
+    el("rect", { x: 160, y: 500, width: 760, height: 300, rx: 24, fill: "#faf8f3", stroke: INK2, "stroke-width": 6 }, g);
+    el("text", { x: 180, y: 480, class: "m-note", fill: MUTED, text: "actuador lineal, en corte" }, g);
+    lr.sL = el("polyline", { fill: "none", stroke: MINT, "stroke-width": 7, "stroke-linejoin": "round" }, g);
+    lr.sR = el("polyline", { fill: "none", stroke: MINT, "stroke-width": 7, "stroke-linejoin": "round" }, g);
+    // fixed coil (cross-section above and below the magnet)
+    el("rect", { x: 450, y: 560, width: 180, height: 26, rx: 6, fill: COPPER }, g);
+    el("rect", { x: 450, y: 714, width: 180, height: 26, rx: 6, fill: COPPER }, g);
+    lr.mass = el("g", {}, g);
+    el("rect", { x: -150, y: -50, width: 90, height: 100, rx: 10, fill: METAL }, lr.mass);
+    el("rect", { x: 60, y: -50, width: 90, height: 100, rx: 10, fill: METAL }, lr.mass);
+    el("rect", { x: -60, y: -40, width: 60, height: 80, fill: "#c0504d" }, lr.mass);
+    el("rect", { x: 0, y: -40, width: 60, height: 80, fill: BLUE }, lr.mass);
+    el("text", { x: -30, y: 12, "text-anchor": "middle", "font-size": 30, "font-weight": 700, fill: "#fff", text: "N" }, lr.mass);
+    el("text", { x: 30, y: 12, "text-anchor": "middle", "font-size": 30, "font-weight": 700, fill: "#fff", text: "S" }, lr.mass);
+    lr.labels = el("g", {}, g);
+    el("text", { x: 540, y: 850, "text-anchor": "middle", class: "m-label", fill: INK2, text: "masa + imán (se mueve)" }, lr.labels);
+    el("text", { x: 540, y: 545, "text-anchor": "middle", class: "m-label", fill: COPPER, text: "bobina (fija)" }, lr.labels);
+    el("text", { x: 250, y: 850, "text-anchor": "middle", class: "m-label", fill: MINT, text: "resorte" }, lr.labels);
+    lr.hz = el("text", { x: 900, y: 480, "text-anchor": "end", class: "m-label m-num", fill: BLUE, text: "≈ 170 Hz (en cámara lenta)" }, g);
+    lr.graph = el("g", {}, g);
+    graphAxes(lr.graph, 1070, "tiempo en milésimas de segundo (ilustrativo)");
+    lr.tErm = el("polyline", { fill: "none", stroke: METAL, "stroke-width": 3, opacity: 0.6 }, lr.graph);
+    lr.tLra = el("polyline", { fill: "none", stroke: BLUE, "stroke-width": 3 }, lr.graph);
+    el("text", { x: GX0, y: 950, class: "m-label", fill: METAL, text: "motor viejo" }, lr.graph);
+    el("text", { x: GX0 + 220, y: 950, class: "m-label", fill: BLUE, text: "actuador lineal" }, lr.graph);
+    lr.taps = el("polyline", { fill: "none", stroke: BLUE, "stroke-width": 3 }, g);
+  }
+  function drawLra(t, s, A) {
+    // mass oscillation, slowed down to ~2.5 Hz so it can be seen; bursts for the "golpecitos"
+    const run = ramp(t, A.iman.start - 0.3, A.iman.start + 0.2);
+    let amp = 34 * run;
+    const tapOn = ramp(t, A.golpecitos.start - 0.3, A.golpecitos.start);
+    if (tapOn > 0) {
+      const ph = ((t - A.golpecitos.start) % 0.8) / 0.8;
+      amp = lerp(amp, ph < 0.25 ? 34 * Math.sin(Math.PI * ph / 0.25) : 0, tapOn);
+    }
+    const x = amp * Math.sin(t * 2 * Math.PI * 2.5);
+    lr.mass.setAttribute("transform", `translate(${(540 + x).toFixed(1)} 650)`);
+    lr.sL.setAttribute("points", spring(166, 390 + x, 650, 9, 30));
+    lr.sR.setAttribute("points", spring(690 + x, 914, 650, 9, 30));
+    lr.labels.setAttribute("opacity", String(ramp(t, A.masa.start - 0.3, A.masa.start + 0.3)));
+    lr.hz.setAttribute("opacity", String(ramp(t, A.ciento.start - 0.3, A.ciento.start + 0.3)));
+    // graph: both traces play out on "milesimas"
+    const g0 = A.milesimas.start - 0.8;
+    const ms = clamp((t - g0) / 2.2) * GMS;
+    lr.tErm.setAttribute("points", wave(envERM, ms, 1070, 80));
+    lr.tLra.setAttribute("points", wave(envLRA, ms, 1070, 80));
+    lr.graph.setAttribute("opacity", String(ramp(t, g0 - 0.3, g0) * (1 - tapOn)));
+    // short taps
+    const pts = [];
+    for (let k = 0; k <= 800; k++) {
+      const msx = (k / 800) * GMS, local = msx % 65;
+      const e = local < 10 ? envLRA(local) * (local < 10 ? 1 : 0) : Math.exp(-(local - 10) / 2.5);
+      pts.push(gx(msx).toFixed(1) + "," + (1070 - 80 * e * Math.sin(2 * Math.PI * 0.17 * local)).toFixed(1));
+    }
+    lr.taps.setAttribute("points", pts.join(" "));
+    lr.taps.setAttribute("opacity", String(tapOn));
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "Tu celular vibra sin hacer ruido de motor. ¿Qué tiene adentro que se mueve? Los celulares viejos usaban un motorcito con un peso descentrado: al girar, el desbalance sacudía todo el teléfono, como una lavadora mal cargada. Funcionaba, pero tardaba en arrancar y en frenar. Los de ahora usan, en su mayoría, un actuador lineal: una pequeña masa sujeta a un resorte, que un imán empuja adelante y atrás. Se mueve justo a la frecuencia en la que el resorte rebota solo, algo así como ciento setenta veces por segundo, y por eso gasta poca energía. Arranca y frena en milésimas de segundo. Por eso puede darte esos golpecitos cortos y precisos que se sienten como un botón real.";
+
+  Mosaic.short({
+    kicker: "El celular por dentro",
+    title: "¿Cómo vibra tu celular?",
+    script: SCRIPT,
+    anchors: {
+      ruido: "ruido de motor",
+      viejos: "viejos",
+      peso: "peso descentrado",
+      girar: "al girar",
+      lavadora: "lavadora",
+      arrancar: "arrancar",
+      frenar: "frenar",
+      ahora: "los de ahora",
+      lineal: "actuador lineal",
+      masa: "masa",
+      iman: "iman",
+      frecuencia: "frecuencia",
+      ciento: ["ciento setenta", "170"],
+      energia: "poca energia",
+      milesimas: "milesimas",
+      golpecitos: "golpecitos",
+      boton: "boton real",
+    },
+    build() { buildHook(); buildErm(); buildLra(); },
+    scenes: [
+      { el: "#sc-hook", from: 0, to: "viejos-0.4", fadeIn: 0.3, rise: 0, update: drawHook },
+      { el: "#cap-hook", from: "ruido-0.3", to: "viejos-0.4", fade: 0.3 },
+      { el: "#sc-erm", from: "viejos-0.4", to: "ahora-0.3", rise: 0, update: drawErm },
+      { el: "#cap-erm", from: "viejos-0.3", to: "arrancar-0.8", fade: 0.3 },
+      { el: "#cap-slow", from: "arrancar-0.8", to: "ahora-0.3", fade: 0.3 },
+      { el: "#sc-lra", from: "ahora-0.3", to: "end", rise: 0, update: drawLra },
+      { el: "#cap-lra", from: "ahora-0.2", to: "frecuencia-0.4", fade: 0.3 },
+      { el: "#cap-freq", from: "frecuencia-0.4", to: "milesimas-1.0", fade: 0.3 },
+      { el: "#cap-fast", from: "milesimas-1.0", to: "golpecitos-0.4", fade: 0.3 },
+      { el: "#cap-tap", from: "golpecitos-0.4", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
