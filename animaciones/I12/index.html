@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>I12 · ¿De verdad la IA gasta agua?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-intro" viewBox="0 0 1080 1920"></svg>
+    <svg class="full scene" id="sc-tower" viewBox="0 0 1080 1920"></svg>
+    <svg class="full scene" id="sc-plant" viewBox="0 0 1080 1920"></svg>
+    <svg class="full scene" id="sc-bars" viewBox="0 0 1080 1920"></svg>
+    <svg class="full scene" id="sc-where" viewBox="0 0 1080 1920"></svg>
+
+    <div class="m-caption scene" id="cap-q" style="top:1300px">¿Usar una IA gasta agua?</div>
+    <div class="m-caption scene" id="cap-two" style="top:1300px">Sí, por dos caminos</div>
+    <div class="m-caption scene" id="cap-1" style="top:1300px">1 · Enfriar los servidores<small>en torres donde el agua se evapora</small></div>
+    <div class="m-caption scene" id="cap-1b" style="top:1300px">El calor se va con el vapor<small>y esa agua ya no regresa</small></div>
+    <div class="m-caption scene" id="cap-2" style="top:1300px">2 · La electricidad<small>muchas plantas también usan agua para enfriarse</small></div>
+    <div class="m-caption scene" id="cap-g" style="top:1300px">Google: un cuarto de mililitro<small>unas 5 gotas por pregunta de texto</small></div>
+    <div class="m-caption scene" id="cap-uc" style="top:1300px">Universidad de California: medio litro<small>por cada 10 a 50 respuestas (modelo de 2020)</small></div>
+    <div class="m-caption scene" id="cap-diff" style="top:1300px">La diferencia está en qué se cuenta</div>
+    <div class="m-caption scene" id="cap-dry" style="top:1300px">En lugares secos y calurosos<small>se evapora mucho más</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp, clamp } = Mosaic;
+
+  // ---------------------------------------------------------------- shared drawings
+  function drop(g, x, y, s, fill = "#2f5e8e") {
+    return el("path", { d: `M${x} ${y - 30 * s} C ${x + 6 * s} ${y - 16 * s}, ${x + 20 * s} ${y - 4 * s}, ${x + 20 * s} ${y + 8 * s} A ${20 * s} ${20 * s} 0 0 1 ${x - 20 * s} ${y + 8 * s} C ${x - 20 * s} ${y - 4 * s}, ${x - 6 * s} ${y - 16 * s}, ${x} ${y - 30 * s} Z`, fill }, g);
+  }
+  function rack(g, x, y, w, h) {
+    const r = el("g", {}, g);
+    el("rect", { x, y, width: w, height: h, rx: 8, fill: "#faf8f3", stroke: "var(--ink)", "stroke-width": 5 }, r);
+    const n = Math.floor((h - 20) / 44);
+    for (let i = 0; i < n; i++) {
+      el("rect", { x: x + 14, y: y + 14 + i * 44, width: w - 28, height: 32, rx: 4, fill: "#e9e5dc" }, r);
+      el("circle", { cx: x + w - 30, cy: y + 30 + i * 44, r: 5, fill: "#3a9a80" }, r);
+    }
+    return r;
+  }
+  // hyperboloid cooling tower: base width bw at y0, waist, top at y1
+  function tower(g, cx, y0, y1, bw) {
+    const t = el("g", {}, g);
+    const tw = bw * 0.62, ww = bw * 0.52, wy = lerp(y0, y1, 0.7);
+    el("path", { d: `M${cx - bw / 2} ${y0} Q ${cx - ww / 2 - 6} ${wy} ${cx - tw / 2} ${y1} L ${cx + tw / 2} ${y1} Q ${cx + ww / 2 + 6} ${wy} ${cx + bw / 2} ${y0} Z`, fill: "#e9e5dc", stroke: "var(--ink)", "stroke-width": 5, "stroke-linejoin": "round" }, t);
+    el("rect", { x: cx - bw / 2 + 10, y: y0 - 26, width: bw - 20, height: 20, fill: "#9cc3e4" }, t);
+    return t;
+  }
+  // vapour: outlined puffs rising and fading, pure function of t
+  function makeVapor(g, n) {
+    return Array.from({ length: n }, () => el("circle", { fill: "#f6f4ef", stroke: "#b9b3a7", "stroke-width": 3 }, g));
+  }
+  function drawVapor(puffs, t, cx, top, w, rise, op = 1, size = 1) {
+    puffs.forEach((p, i) => {
+      const ph = (t * 0.35 + i / puffs.length) % 1;
+      const x = cx + Math.sin(i * 2.3 + ph * 2) * w * (0.15 + 0.35 * ph);
+      const y = top - ph * rise;
+      p.setAttribute("cx", x.toFixed(1)); p.setAttribute("cy", y.toFixed(1));
+      p.setAttribute("r", ((18 + ph * 34) * size).toFixed(1));
+      p.setAttribute("opacity", String(clamp((1 - ph) * 1.4) * op));
+    });
+  }
+
+  // ---------------------------------------------------------------- intro: a drop and two paths
+  let it = {};
+  function buildIntro() {
+    const g = el("g", {}, $("#sc-intro"));
+    it.drop = el("g", {}, g);
+    drop(it.drop, 540, 760, 6);
+    it.paths = el("g", {}, g);
+    [["1", "enfriar servidores", 300], ["2", "generar electricidad", 780]].forEach(([n, txt, x]) => {
+      el("circle", { cx: x, cy: 1080, r: 38, fill: "#2f5e8e" }, it.paths);
+      el("text", { x, y: 1096, "text-anchor": "middle", "font-size": 44, "font-weight": 750, fill: "#faf8f3", text: n }, it.paths);
+      el("text", { x, y: 1170, "text-anchor": "middle", class: "m-label", text: txt }, it.paths);
+      el("line", { x1: 540, y1: 960, x2: x, y2: 1036, stroke: "#2f5e8e", "stroke-width": 4, "stroke-dasharray": "10 8" }, it.paths);
+    });
+  }
+  function drawIntro(t, s, A) {
+    it.paths.setAttribute("opacity", String(ramp(t, A.caminos.start - 0.4, A.caminos.start + 0.2)));
+  }
+
+  // ---------------------------------------------------------------- path 1: servers -> heat -> tower -> vapour
+  let tw = {};
+  function buildTower() {
+    const g = el("g", {}, $("#sc-tower"));
+    rack(g, 120, 700, 180, 330);
+    el("text", { x: 210, y: 1080, "text-anchor": "middle", class: "m-label", text: "servidores" }, g);
+    tw.heat = [770, 850, 930].map((y) => el("path", { d: `M320 ${y} q 30 -18 60 0 t 60 0 t 60 0 t 60 0`, fill: "none", stroke: "#b3386b", "stroke-width": 6, "stroke-linecap": "round", "stroke-dasharray": "14 12" }, g));
+    el("text", { x: 440, y: 720, "text-anchor": "middle", "font-size": 30, "font-weight": 650, fill: "#b3386b", text: "calor" }, g);
+    tw.vap = makeVapor(el("g", {}, g), 9);
+    tower(g, 730, 1030, 700, 300);
+    el("text", { x: 730, y: 1080, "text-anchor": "middle", class: "m-label", text: "torre de enfriamiento" }, g);
+    tw.lbl = el("text", { x: 920, y: 560, "text-anchor": "end", "font-size": 32, "font-weight": 650, fill: "var(--ink-2)", text: "vapor: el agua no regresa" }, g);
+    tw.count = el("text", { x: 540, y: 1170, "text-anchor": "middle", "font-size": 40, "font-weight": 700, fill: "#2f5e8e" }, g);
+  }
+  function drawTower(t, s, A) {
+    const heat = ramp(t, A.calientan.start - 0.3, A.calientan.start + 0.3);
+    tw.heat.forEach((h) => { h.setAttribute("opacity", String(heat)); h.setAttribute("stroke-dashoffset", String(-t * 60)); });
+    const v = ramp(t, A.evapora.start - 0.4, A.evapora.start + 0.4);
+    drawVapor(tw.vap, t, 730, 680, 160, 200, v);
+    tw.lbl.setAttribute("opacity", String(ramp(t, A.regresa.start - 0.3, A.regresa.start + 0.2)));
+    const n = Math.max(0, Math.floor((t - A.evapora.start) * 7));
+    tw.count.textContent = t > A.evapora.start ? `gotas que se van: ${n}` : "";
+  }
+
+  // ---------------------------------------------------------------- path 2: the power plant has its own tower
+  let pl = {};
+  function buildPlant() {
+    const g = el("g", {}, $("#sc-plant"));
+    pl.vap = makeVapor(el("g", {}, g), 8);
+    el("rect", { x: 350, y: 860, width: 200, height: 170, fill: "#faf8f3", stroke: "var(--ink)", "stroke-width": 5 }, g);
+    el("rect", { x: 490, y: 700, width: 36, height: 160, fill: "#faf8f3", stroke: "var(--ink)", "stroke-width": 5 }, g);
+    tower(g, 220, 1030, 760, 220);
+    el("text", { x: 330, y: 1080, "text-anchor": "middle", class: "m-label", text: "planta eléctrica" }, g);
+    el("text", { x: 330, y: 1120, "text-anchor": "middle", class: "m-note", text: "con su propia torre de enfriamiento" }, g);
+    // pylon and wire to the data centre
+    el("path", { d: "M640 1030 L660 820 L680 1030 M650 900 L670 900 M630 840 L690 840", fill: "none", stroke: "var(--ink-2)", "stroke-width": 4 }, g);
+    pl.wire = el("path", { d: "M550 900 Q 600 850 660 840 Q 740 830 800 800", fill: "none", stroke: "#c98a1b", "stroke-width": 6, "stroke-dasharray": "16 12" }, g);
+    rack(g, 790, 780, 150, 250);
+    el("text", { x: 865, y: 1080, "text-anchor": "middle", class: "m-label", text: "centro de datos" }, g);
+  }
+  function drawPlant(t, s, A) {
+    pl.wire.setAttribute("stroke-dashoffset", String(-t * 70));
+    const v = ramp(t, A.plantas.start - 0.3, A.plantas.start + 0.4);
+    drawVapor(pl.vap, t, 220, 740, 120, 190, v);
+  }
+
+  // ---------------------------------------------------------------- the two numbers, log scale
+  const LX0 = 200, DEC = 233.33;
+  const xOf = (ml) => LX0 + (Math.log10(ml) + 1) * DEC;  // 0.1 ml at LX0, 100 ml at LX0 + 3 decades
+  let br = {};
+  function buildBars() {
+    const g = el("g", {}, $("#sc-bars"));
+    // axis
+    el("line", { x1: LX0, y1: 1080, x2: xOf(100), y2: 1080, stroke: "var(--ink-2)", "stroke-width": 4 }, g);
+    [0.1, 1, 10, 100].forEach((v) => {
+      el("line", { x1: xOf(v), y1: 520, x2: xOf(v), y2: 1090, stroke: "#e2ddd2", "stroke-width": 2 }, g);
+      el("text", { x: xOf(v), y: 1128, "text-anchor": "middle", "font-size": 30, "font-weight": 600, fill: "var(--ink-2)", text: String(v).replace(".", ".") + " ml" }, g);
+    });
+    el("text", { x: 540, y: 1180, "text-anchor": "middle", class: "m-note", text: "escala logarítmica: cada marca vale 10 veces la anterior" }, g);
+    // Google
+    br.g = el("g", {}, g);
+    el("text", { x: LX0, y: 560, "font-size": 34, "font-weight": 700, fill: "#2f5e8e", text: "Google · 0.26 ml por pregunta de texto" }, br.g);
+    el("text", { x: LX0, y: 600, "font-size": 28, fill: "var(--ink-2)", text: "solo su propio enfriamiento" }, br.g);
+    br.gBar = el("rect", { x: LX0, y: 630, height: 80, rx: 6, fill: "#2f5e8e" }, br.g);
+    br.drops = el("g", {}, br.g);
+    for (let i = 0; i < 5; i++) drop(br.drops, xOf(0.26) + 40 + i * 44, 680, 0.8, "#6f97bf");
+    br.dropsL = el("text", { x: xOf(0.26) + 40 + 5 * 44, y: 692, "font-size": 30, fill: "var(--ink-2)", text: "≈ 5 gotas" }, br.drops);
+    // UC Riverside
+    br.u = el("g", {}, g);
+    el("text", { x: LX0, y: 800, "font-size": 34, "font-weight": 700, fill: "#b3386b", text: "Estudio UC Riverside · 10 a 50 ml" }, br.u);
+    el("text", { x: LX0, y: 840, "font-size": 28, fill: "var(--ink-2)", text: "por respuesta, modelo de 2020 · incluye plantas de luz" }, br.u);
+    br.uBar = el("rect", { x: LX0, y: 870, height: 80, rx: 6, fill: "#b3386b" }, br.u);
+    br.uRange = el("rect", { x: xOf(10), y: 870, height: 80, fill: "#e7b7c9" }, br.u);
+    br.uL = el("text", { x: xOf(50) + 14, y: 922, "font-size": 30, fill: "var(--ink-2)", text: "" }, br.u);
+    br.bracket = el("g", {}, g);
+    el("text", { x: 540, y: 1010, "text-anchor": "middle", "font-size": 32, "font-weight": 650, fill: "var(--ink)", text: "cuentas distintas, no se contradicen" }, br.bracket);
+  }
+  function drawBars(t, s, A) {
+    const gp = ramp(t, A.google.start - 0.2, A.cuarto.end, ease.out);
+    br.g.setAttribute("opacity", String(ramp(t, A.google.start - 0.4, A.google.start)));
+    br.gBar.setAttribute("width", ((xOf(0.26) - LX0) * gp).toFixed(1));
+    br.drops.setAttribute("opacity", String(ramp(t, A.gotas.start - 0.3, A.gotas.start + 0.2)));
+    br.u.setAttribute("opacity", String(ramp(t, A.estudio.start - 0.4, A.estudio.start)));
+    const up = ramp(t, A.medio.start - 0.2, A.diez.end + 0.3, ease.out);
+    br.uBar.setAttribute("width", ((xOf(10) - LX0) * up).toFixed(1));
+    const rp = ramp(t, A.diez.start, A.diez.end + 0.5, ease.out);
+    br.uRange.setAttribute("width", ((xOf(50) - xOf(10)) * rp).toFixed(1));
+    br.uRange.setAttribute("opacity", String(rp > 0 ? 1 : 0));
+    br.bracket.setAttribute("opacity", String(ramp(t, A.diferencia.start - 0.3, A.diferencia.start + 0.2)));
+  }
+
+  // ---------------------------------------------------------------- where: dry and hot evaporates more
+  let wh = {};
+  function buildWhere() {
+    const g = el("g", {}, $("#sc-where"));
+    el("rect", { x: 100, y: 500, width: 410, height: 640, rx: 18, fill: "#e3eee9" }, g);
+    el("rect", { x: 570, y: 500, width: 410 - 40, height: 640, rx: 18, fill: "#f3e4c4" }, g);
+    wh.v1 = makeVapor(el("g", {}, g), 4);
+    wh.v2 = makeVapor(el("g", {}, g), 10);
+    tower(g, 305, 1060, 830, 220);
+    tower(g, 755, 1060, 830, 220);
+    el("text", { x: 305, y: 1110, "text-anchor": "middle", class: "m-label", text: "lugar fresco" }, g);
+    el("text", { x: 755, y: 1110, "text-anchor": "middle", class: "m-label", text: "seco y caluroso" }, g);
+    el("circle", { cx: 900, cy: 570, r: 30, fill: "#c98a1b" }, g);
+    el("text", { x: 540, y: 1200, "text-anchor": "middle", class: "m-note", text: "esquema: mismo trabajo, distinto clima" }, g);
+  }
+  function drawWhere(t) {
+    drawVapor(wh.v1, t, 305, 810, 90, 150, 1, 0.7);
+    drawVapor(wh.v2, t, 755, 810, 130, 260, 1);
+  }
+
+  const SCRIPT = "Dicen que cada vez que usas una IA se gasta agua. ¿Es cierto? Sí, y por dos caminos. El primero: los servidores se calientan mucho, y muchos centros de datos los enfrían con torres donde el agua se evapora. El calor se va con el vapor, y esa agua ya no regresa. El segundo: la electricidad. Muchas plantas que la generan también usan agua para enfriarse. ¿Cuánta por pregunta? Google calculó un cuarto de mililitro por pregunta de texto a su IA, unas cinco gotas, contando solo su propio enfriamiento. Un estudio de la Universidad de California estimó medio litro por cada diez a cincuenta respuestas de un modelo de dos mil veinte, sumando el agua de las plantas de luz. La diferencia está en qué se cuenta. Y en dónde: en lugares secos y calurosos se evapora mucho más.";
+
+  Mosaic.short({
+    kicker: "IA por dentro",
+    title: "¿De verdad la IA gasta agua?",
+    script: SCRIPT,
+    anchors: {
+      agua: "agua",
+      cierto: "cierto",
+      caminos: "caminos",
+      primero: "el primero",
+      calientan: "calientan",
+      torres: "torres",
+      evapora: "evapora",
+      vapor: "vapor",
+      regresa: "regresa",
+      segundo: "el segundo",
+      electricidad: "electricidad",
+      plantas: "plantas",
+      cuanta: "cuanta por pregunta",
+      google: "google",
+      cuarto: ["cuarto de mililitro", "0.25 mililitros", "0,25 mililitros"],
+      gotas: ["cinco gotas", "5 gotas"],
+      estudio: "estudio",
+      medio: ["medio litro", "0.5 litros"],
+      diez: ["diez a cincuenta", "10 a 50"],
+      anio: ["dos mil veinte", "2020"],
+      diferencia: "diferencia",
+      donde: "donde",
+      secos: "secos",
+    },
+    build() { buildIntro(); buildTower(); buildPlant(); buildBars(); buildWhere(); },
+    scenes: [
+      { el: "#sc-intro", from: 0, to: "primero-0.3", fadeIn: 0.4, rise: 0, update: drawIntro },
+      { el: "#sc-tower", from: "primero-0.3", to: "segundo-0.3", rise: 0, update: drawTower },
+      { el: "#sc-plant", from: "segundo-0.3", to: "cuanta-0.3", rise: 0, update: drawPlant },
+      { el: "#sc-bars", from: "cuanta-0.3", to: "donde-0.3", rise: 0, update: drawBars },
+      { el: "#sc-where", from: "donde-0.3", to: "end", rise: 0, update: drawWhere },
+      { el: "#cap-q", from: 0.2, to: "caminos-0.6", fade: 0.3 },
+      { el: "#cap-two", from: "caminos-0.6", to: "primero-0.3", fade: 0.3 },
+      { el: "#cap-1", from: "primero-0.3", to: "vapor-0.6", fade: 0.3 },
+      { el: "#cap-1b", from: "vapor-0.6", to: "segundo-0.3", fade: 0.3 },
+      { el: "#cap-2", from: "segundo-0.3", to: "cuanta-0.3", fade: 0.3 },
+      { el: "#cap-g", from: "cuanta-0.3", to: "estudio-0.3", fade: 0.3 },
+      { el: "#cap-uc", from: "estudio-0.3", to: "diferencia-0.3", fade: 0.3 },
+      { el: "#cap-diff", from: "diferencia-0.3", to: "donde-0.3", fade: 0.3 },
+      { el: "#cap-dry", from: "donde-0.3", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
