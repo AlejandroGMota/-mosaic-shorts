@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>M1 · ¿Por qué tu disco de 1 TB solo muestra 931 GB?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+  .calc { position: absolute; inset: auto; left: 80px; top: 600px; width: 860px; font-size: 52px; line-height: 1.25; }
+  .calc .row { display: flex; justify-content: flex-end; gap: 22px; padding: 18px 0; border-bottom: 2px solid var(--line); }
+  .calc .op { color: var(--fuchsia); font-weight: 650; margin-right: auto; }
+  .calc .u { color: var(--muted); width: 140px; text-align: left; }
+  .calc .res { font-weight: 720; color: var(--blue); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-intro" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-where" style="top:1300px">¿Dónde quedó el resto?</div>
+    <div class="m-caption scene" id="cap-count" style="top:1300px">No te robaron nada<small>es un problema de cómo se cuenta</small></div>
+
+    <svg class="full scene" id="sc-rules" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-fab" style="top:1300px">El fabricante cuenta de mil en mil<small>como en el súper: base 10</small></div>
+    <div class="m-caption scene" id="cap-win" style="top:1300px">Windows cuenta de 1024 en 1024<small>base 2, la forma natural de una computadora</small></div>
+
+    <div class="calc scene" id="sc-calc">
+      <div class="row" id="r0"><span class="m-num">1 000 000 000 000</span><span class="u">bytes</span></div>
+      <div class="row" id="r1"><span class="op">÷ 1024</span><span class="m-num">976 562 500</span><span class="u">KiB</span></div>
+      <div class="row" id="r2"><span class="op">÷ 1024</span><span class="m-num">953 674.3</span><span class="u">MiB</span></div>
+      <div class="row" id="r3"><span class="op">÷ 1024</span><span class="m-num res">931.3</span><span class="u">GiB</span></div>
+    </div>
+    <div class="m-caption scene" id="cap-calc" style="top:1300px">Tres veces entre 1024<small>Windows lo muestra como «931 GB»</small></div>
+
+    <svg class="full scene" id="sc-bars" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-same" style="top:1300px">Mismo disco, dos reglas para medirlo</div>
+    <div class="m-caption scene" id="cap-big" style="top:1300px">Más grande el disco, más gigas «faltan»<small>siempre cerca del 7 %</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp } = Mosaic;
+  const op = (n, v) => n.setAttribute("opacity", String(v));
+  const fade = (t, a, d = 0.3) => ramp(t, a - d, a + 0.15);
+
+  // ---------------------------------------------------------------- intro: the box says 1 TB, the PC says 931 GB
+  let it = {};
+  function buildIntro() {
+    const g = el("g", {}, $("#sc-intro"));
+    it.box = el("g", {}, g);
+    el("rect", { x: 110, y: 600, width: 340, height: 440, rx: 18, fill: "#faf8f3", stroke: "#2f5e8e", "stroke-width": 6 }, it.box);
+    el("rect", { x: 150, y: 650, width: 260, height: 170, rx: 12, fill: "#2f5e8e" }, it.box);
+    el("text", { x: 280, y: 760, "text-anchor": "middle", "font-size": 78, "font-weight": 750, fill: "#faf8f3", text: "1 TB" }, it.box);
+    el("text", { x: 280, y: 900, "text-anchor": "middle", class: "m-label", text: "disco externo" }, it.box);
+    el("text", { x: 280, y: 990, "text-anchor": "middle", class: "m-note", text: "lo que dice la caja" }, it.box);
+    it.pc = el("g", {}, g);
+    el("rect", { x: 540, y: 600, width: 420, height: 300, rx: 16, fill: "#faf8f3", stroke: "var(--ink)", "stroke-width": 6 }, it.pc);
+    el("rect", { x: 720, y: 900, width: 60, height: 70, fill: "var(--ink-2)" }, it.pc);
+    el("rect", { x: 650, y: 966, width: 200, height: 16, rx: 6, fill: "var(--ink-2)" }, it.pc);
+    el("text", { x: 580, y: 670, class: "m-note", text: "Disco local (D:)" }, it.pc);
+    el("rect", { x: 580, y: 700, width: 340, height: 30, rx: 6, fill: "none", stroke: "var(--line)", "stroke-width": 3 }, it.pc);
+    el("rect", { x: 583, y: 703, width: 60, height: 24, rx: 4, fill: "#2f5e8e" }, it.pc);
+    el("text", { x: 750, y: 830, "text-anchor": "middle", "font-size": 84, "font-weight": 750, fill: "var(--ink)", text: "931 GB" }, it.pc);
+    it.q = el("text", { x: 750, y: 1140, "text-anchor": "middle", "font-size": 150, "font-weight": 700, fill: "#b3386b", text: "?" }, g);
+  }
+  function drawIntro(t, s, A) {
+    op(it.pc, fade(t, A.computadora.start));
+    op(it.q, fade(t, A.resto.start));
+  }
+
+  // ---------------------------------------------------------------- two rulers: x1000 and x1024
+  let ru = {};
+  const XS = [130, 330, 530, 730, 930];
+  function ruler(g, y, names, step, color) {
+    const parts = [];
+    el("line", { x1: XS[0], y1: y, x2: XS[4], y2: y, stroke: color, "stroke-width": 6 }, g);
+    names.forEach((n, i) => {
+      const gg = el("g", {}, g);
+      el("line", { x1: XS[i], y1: y - 20, x2: XS[i], y2: y + 20, stroke: color, "stroke-width": 6 }, gg);
+      el("text", { x: XS[i], y: y + 70, "text-anchor": "middle", "font-size": 40, "font-weight": 700, fill: color, text: n }, gg);
+      if (i > 0) {
+        el("path", { d: `M${XS[i - 1] + 14} ${y - 34} Q${(XS[i - 1] + XS[i]) / 2} ${y - 100} ${XS[i] - 14} ${y - 34}`, fill: "none", stroke: color, "stroke-width": 4 }, gg);
+        el("text", { x: (XS[i - 1] + XS[i]) / 2, y: y - 112, "text-anchor": "middle", "font-size": 34, "font-weight": 600, fill: color, text: step }, gg);
+      }
+      parts.push(gg);
+    });
+    return parts;
+  }
+  function buildRules() {
+    const g = el("g", {}, $("#sc-rules"));
+    ru.topTitle = el("text", { x: 80, y: 480, class: "m-label", fill: "#2f5e8e", text: "Fabricante · base 10" }, g);
+    ru.top = ruler(el("g", {}, g), 690, ["B", "kB", "MB", "GB", "TB"], "×1000", "#2f5e8e");
+    ru.big = el("g", {}, g);
+    el("text", { x: 540, y: 850, "text-anchor": "middle", "font-size": 46, "font-weight": 650, fill: "var(--ink)", text: "1 TB = 1 000 000 000 000 bytes" }, ru.big);
+    ru.zeros = el("text", { x: 540, y: 898, "text-anchor": "middle", class: "m-note", text: "un 1 con 12 ceros" }, ru.big);
+    ru.bot = el("g", {}, g);
+    el("text", { x: 80, y: 990, class: "m-label", fill: "#b3386b", text: "Windows · base 2" }, ru.bot);
+    ru.botParts = ruler(el("g", {}, ru.bot), 1150, ["B", "KiB", "MiB", "GiB", "TiB"], "×1024", "#b3386b");
+  }
+  function drawRules(t, s, A) {
+    const on = [A.fabricante, A.kilo, A.mega, A.giga, A.terabyte2];
+    ru.top.forEach((p, i) => op(p, fade(t, on[i].start)));
+    op(ru.big, fade(t, A.billon.start));
+    op(ru.zeros, fade(t, A.ceros.start));
+    op(ru.bot, fade(t, A.windows.start));
+    ru.botParts.forEach((p, i) => op(p, i === 0 ? 1 : ramp(t, A.escalon.start - 0.3 + i * 0.25, A.escalon.start + i * 0.25 + 0.1)));
+  }
+
+  // ---------------------------------------------------------------- the division, step by step
+  function drawCalc(t, s, A) {
+    const d = A.entre.start + 0.4;
+    ["#r1", "#r2", "#r3"].forEach((id, i) => { $(id).style.opacity = String(ramp(t, d - 0.6 + i * 0.7, d - 0.3 + i * 0.7)); });
+    $("#r3").style.background = `rgba(47,94,142,${(0.1 * ramp(t, A.res931.start - 0.2, A.res931.start + 0.3)).toFixed(3)})`;
+  }
+
+  // ---------------------------------------------------------------- bars: what each rule reports (same scale)
+  let br = {};
+  const BX = 130, BW = 760; // 4000 GB = 760 px
+  const gbPx = (gb) => (gb / 4000) * BW;
+  function barRow(g, y, tb) {
+    const gib = (tb * 1e12) / Math.pow(1024, 3);
+    const gg = el("g", {}, g);
+    el("text", { x: BX, y: y - 24, "font-size": 44, "font-weight": 720, fill: "var(--ink)", text: `Disco de ${tb} TB` }, gg);
+    const full = el("rect", { x: BX, y, height: 56, rx: 6, fill: "#2f5e8e" }, gg);
+    const shown = el("rect", { x: BX, y: y + 80, height: 56, rx: 6, fill: "#b3386b" }, gg);
+    const lblA = el("text", { y: y + 42, "font-size": 34, "font-weight": 600, fill: "#2f5e8e", text: `${(tb * 1000).toLocaleString("en-US").replace(/,/g, " ")} GB (fabricante)` }, gg);
+    const lblB = el("text", { y: y + 122, "font-size": 34, "font-weight": 600, fill: "#b3386b", text: `${Math.round(gib).toLocaleString("en-US").replace(/,/g, " ")} GB (Windows)` }, gg);
+    const gap = el("text", { y: y + 192, "font-size": 36, "font-weight": 700, fill: "var(--ink-2)", text: `«faltan» ${Math.round(tb * 1000 - gib)} GB · −${(100 - gib / (tb * 10)).toFixed(0)} %` }, gg);
+    return { gg, full, shown, lblA, lblB, gap, tb, gib };
+  }
+  function buildBars() {
+    const g = el("g", {}, $("#sc-bars"));
+    br.rows = [barRow(g, 560, 1), barRow(g, 900, 4)];
+    el("text", { x: BX, y: 1200, class: "m-note", text: "misma escala en las dos filas" }, g);
+  }
+  function drawBars(t, s, A) {
+    const starts = [s.from + 0.2, A.grande.start];
+    br.rows.forEach((r, i) => {
+      const p = ramp(t, starts[i], starts[i] + 1.0, ease.out);
+      op(r.gg, ramp(t, starts[i] - 0.3, starts[i] + 0.1));
+      const wa = gbPx(r.tb * 1000) * p, wb = gbPx(r.gib) * ramp(t, starts[i] + 0.5, starts[i] + 1.5, ease.out);
+      r.full.setAttribute("width", Math.max(1, wa).toFixed(1));
+      r.shown.setAttribute("width", Math.max(1, wb).toFixed(1));
+      const la = Math.min(BX + wa + 20, 940 - 380), lb = Math.min(BX + wb + 20, 940 - 380);
+      r.lblA.setAttribute("x", (wa + 420 > BW ? BX + 16 : la).toFixed(1));
+      r.lblA.setAttribute("fill", wa + 420 > BW ? "#faf8f3" : "#2f5e8e");
+      r.lblB.setAttribute("x", (wb + 420 > BW ? BX + 16 : lb).toFixed(1));
+      r.lblB.setAttribute("fill", wb + 420 > BW ? "#faf8f3" : "#b3386b");
+      r.gap.setAttribute("x", BX);
+      op(r.gap, ramp(t, starts[i] + 1.3, starts[i] + 1.7));
+    });
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "Compraste un disco de un terabyte y tu computadora dice que tiene novecientos treinta y uno. ¿Dónde quedó el resto? No te robaron nada. Es un problema de cómo se cuenta. El fabricante cuenta como en el súper: un kilo son mil, un mega son mil kilos, un giga son mil megas. Para él, un terabyte es un billón de bytes, un uno con doce ceros. Pero Windows cuenta en base dos, la forma natural de una computadora: cada escalón vale mil veinticuatro, no mil. Si divides ese billón de bytes entre mil veinticuatro, tres veces seguidas, te da novecientos treinta y uno. Mismo disco, misma capacidad, dos reglas distintas para medirla. Y mientras más grande el disco, más grande parece la diferencia.";
+
+  Mosaic.short({
+    kicker: "Memoria y chips",
+    title: "¿Por qué tu disco de 1 TB solo muestra 931 GB?",
+    script: SCRIPT,
+    anchors: {
+      terabyte1: ["terabyte", "1 tb"],
+      computadora: "computadora",
+      res931a: ["novecientos treinta y uno", "931"],
+      resto: "resto",
+      robaron: "robaron",
+      cuenta: "como se cuenta",
+      fabricante: "fabricante",
+      kilo: "kilo",
+      mega: "mega",
+      giga: "giga",
+      terabyte2: ["terabyte", "tb"],
+      billon: ["billon", "1 billon"],
+      ceros: "ceros",
+      windows: "windows",
+      escalon: "escalon",
+      divides: "divides",
+      entre: { q: ["mil veinticuatro", "1024"], after: "divides" },
+      tres: ["tres veces", "3 veces"],
+      res931: ["novecientos treinta y uno", "931"],
+      mismo: "mismo disco",
+      reglas: "reglas",
+      grande: "mas grande el disco",
+    },
+    build() { buildIntro(); buildRules(); buildBars(); },
+    scenes: [
+      { el: "#sc-intro", from: 0, to: "fabricante-0.3", fadeIn: 0.3, rise: 0, update: drawIntro },
+      { el: "#cap-where", from: "resto-0.4", to: "robaron-0.3", fade: 0.3 },
+      { el: "#cap-count", from: "robaron-0.3", to: "fabricante-0.3", fade: 0.3 },
+      { el: "#sc-rules", from: "fabricante-0.3", to: "divides-0.3", rise: 0, update: drawRules },
+      { el: "#cap-fab", from: "fabricante-0.2", to: "windows-0.3", fade: 0.3 },
+      { el: "#cap-win", from: "windows-0.3", to: "divides-0.3", fade: 0.3 },
+      { el: "#sc-calc", from: "divides-0.3", to: "mismo-0.3", rise: 0, update: drawCalc },
+      { el: "#cap-calc", from: "tres-0.3", to: "mismo-0.3", fade: 0.3 },
+      { el: "#sc-bars", from: "mismo-0.3", to: "end", rise: 0, update: drawBars },
+      { el: "#cap-same", from: "mismo-0.2", to: "grande-0.3", fade: 0.3 },
+      { el: "#cap-big", from: "grande-0.3", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
