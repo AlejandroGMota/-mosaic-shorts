@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>T1 · ¿Cómo sabe tu pantalla dónde la tocas?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-phone" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-hook" style="top:1300px">Sabe exactamente dónde tocaste</div>
+
+    <svg class="full scene" id="sc-cut" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-cut" style="top:1300px">Debajo del vidrio: una rejilla invisible<small>líneas conductoras horizontales y verticales</small></div>
+
+    <svg class="full scene" id="sc-grid" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-cap" style="top:1300px">Cada cruce es un pequeño capacitor<small>un depósito de carga eléctrica</small></div>
+    <div class="m-caption scene" id="cap-body" style="top:1300px">Tu dedo se roba un poquito de carga<small>en los cruces que están debajo</small></div>
+    <div class="m-caption scene" id="cap-scan" style="top:1300px">Un chip revisa cruce por cruce<small>más de 100 veces por segundo</small></div>
+    <div class="m-caption scene" id="cap-multi" style="top:1300px">Cada cruce se mide por separado<small>por eso detecta varios dedos a la vez</small></div>
+    <div class="m-caption scene" id="cap-glove" style="top:1300px">Guante o uña: no conducen<small>no se roban la carga, no pasa nada</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp, clamp } = Mosaic;
+
+  // A fingertip seen from above/side: a capsule with a nail, tip at (0,0), pointing up.
+  function fingertip(g, glove) {
+    const f = el("g", {}, g);
+    const skin = glove ? "#7d8a96" : "#e7c3a6", edge = glove ? "#56616b" : "#b98d6f";
+    el("path", { d: "M-62 420 L-62 40 A62 62 0 0 1 62 40 L62 420 Z", fill: skin, stroke: edge, "stroke-width": 5 }, f);
+    if (!glove) el("path", { d: "M-34 70 L-34 34 A34 30 0 0 1 34 34 L34 70 Q0 84 -34 70 Z", fill: "#f1d9c6", stroke: edge, "stroke-width": 3 }, f);
+    else el("path", { d: "M-62 330 L62 330", stroke: edge, "stroke-width": 5 }, f);
+    return f;
+  }
+
+  // ---------------------------------------------------------------- scene 1: phone + touch
+  let ph = {};
+  function buildPhone() {
+    const g = el("g", {}, $("#sc-phone"));
+    el("rect", { x: 350, y: 480, width: 380, height: 760, rx: 54, fill: "#2b2d31" }, g);
+    el("rect", { x: 368, y: 498, width: 344, height: 724, rx: 40, fill: "#faf8f3" }, g);
+    el("rect", { x: 500, y: 516, width: 80, height: 10, rx: 5, fill: "#cfcac0" }, g);
+    // a few generic app squares
+    for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++) {
+      el("rect", { x: 398 + c * 76, y: 570 + r * 92, width: 56, height: 56, rx: 14, fill: ["#d9e3ec", "#e5dccb", "#d7e8e1", "#ecd9e1"][(r + c) % 4] }, g);
+    }
+    ph.finger = fingertip(g, false);
+    ph.ring = el("circle", { cx: 610, cy: 840, r: 30, fill: "none", stroke: "#b3386b", "stroke-width": 6 }, g);
+    ph.dot = el("circle", { cx: 610, cy: 840, r: 7, fill: "#b3386b" }, g);
+    ph.coord = el("text", { x: 600, y: 770, "text-anchor": "middle", class: "m-label", fill: "#b3386b", text: "x 612 · y 841" }, g);
+  }
+  function drawPhone(t, s, A) {
+    const p = ramp(t, 0.2, A.punta.start + 0.1, ease.inOut);
+    ph.finger.setAttribute("transform", `translate(610 ${lerp(1250, 846, p).toFixed(1)}) rotate(-8)`);
+    const hit = ramp(t, A.punta.start + 0.1, A.exactamente.start + 0.2, ease.out);
+    ph.ring.setAttribute("r", (18 + 30 * hit).toFixed(1));
+    ph.ring.setAttribute("opacity", String(hit > 0 ? 1 - 0.6 * hit : 0));
+    ph.dot.setAttribute("opacity", String(hit > 0 ? 1 : 0));
+    ph.coord.setAttribute("opacity", String(ramp(t, A.exactamente.start, A.exactamente.start + 0.4)));
+  }
+
+  // ---------------------------------------------------------------- scene 2: cross-section
+  let cu = {};
+  function buildCut() {
+    const g = el("g", {}, $("#sc-cut"));
+    el("text", { x: 120, y: 520, class: "m-note", fill: "#827e74", text: "corte de la pantalla (no a escala)" }, g);
+    cu.glass = el("g", {}, g);
+    el("rect", { x: 120, y: 700, width: 840, height: 110, fill: "#d8e6ee", stroke: "#8fb0c4", "stroke-width": 3 }, cu.glass);
+    el("text", { x: 140, y: 768, class: "m-label", text: "vidrio" }, cu.glass);
+    cu.grid = el("g", {}, g);
+    el("rect", { x: 120, y: 836, width: 840, height: 12, fill: "#2f5e8e" }, cu.grid);
+    for (let i = 0; i < 12; i++) el("rect", { x: 146 + i * 70, y: 864, width: 34, height: 16, rx: 2, fill: "#c98a1b" }, cu.grid);
+    el("text", { x: 120, y: 940, class: "m-label", fill: "#2f5e8e", text: "líneas horizontales" }, cu.grid);
+    el("text", { x: 960, y: 940, "text-anchor": "end", class: "m-label", fill: "#c98a1b", text: "líneas verticales" }, cu.grid);
+    cu.panel = el("g", {}, g);
+    el("rect", { x: 120, y: 990, width: 840, height: 90, fill: "#e4e0d6", stroke: "#bdb7aa", "stroke-width": 3 }, cu.panel);
+    for (let i = 0; i < 28; i++) el("rect", { x: 132 + i * 29.6, y: 1004, width: 20, height: 20, rx: 3, fill: ["#c0504d", "#4f9d69", "#4a78c2"][i % 3] }, cu.panel);
+    el("text", { x: 140, y: 1064, class: "m-label", text: "pantalla (píxeles)" }, cu.panel);
+    cu.finger = fingertip(g, false);
+  }
+  function drawCut(t, s, A) {
+    cu.grid.setAttribute("opacity", String(ramp(t, A.rejilla.start - 0.3, A.rejilla.start + 0.3)));
+    cu.finger.setAttribute("transform", `translate(560 ${lerp(600, 698, ramp(t, s.from, s.from + 1.2)).toFixed(1)}) scale(0.6) rotate(180)`);
+  }
+
+  // ---------------------------------------------------------------- scene 3: top view grid
+  const N = 7, X0 = 220, Y0 = 520, STEP = 106;
+  const cx = (i) => X0 + i * STEP, cy = (j) => Y0 + j * STEP;
+  let gr = {};
+  function buildGrid() {
+    const g = el("g", {}, $("#sc-grid"));
+    el("text", { x: 940, y: 445, "text-anchor": "end", class: "m-note", fill: "#827e74", text: "vista desde arriba" }, g);
+    gr.rows = []; gr.cols = []; gr.nodes = [];
+    for (let j = 0; j < N; j++) gr.rows.push(el("line", { x1: 150, y1: cy(j), x2: 930, y2: cy(j), stroke: "#2f5e8e", "stroke-width": 6 }, g));
+    for (let i = 0; i < N; i++) gr.cols.push(el("line", { x1: cx(i), y1: 460, x2: cx(i), y2: 1240, stroke: "#c98a1b", "stroke-width": 6 }, g));
+    for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+      gr.nodes.push({ i, j, c: el("circle", { cx: cx(i), cy: cy(j), r: 16, fill: "#2f5e8e", stroke: "#faf8f3", "stroke-width": 4 }, g) });
+    }
+    gr.scanRow = el("rect", { x: 150, width: 780, height: 40, rx: 20, fill: "none", stroke: "#3a9a80", "stroke-width": 5 }, g);
+    gr.scanRing = el("circle", { r: 30, fill: "none", stroke: "#3a9a80", "stroke-width": 6 }, g);
+    // capacitor callout on one crossing
+    gr.callout = el("g", {}, g);
+    el("circle", { cx: cx(1), cy: cy(5), r: 34, fill: "none", stroke: "#1d1d1b", "stroke-width": 4 }, gr.callout);
+    el("line", { x1: cx(1) + 26, y1: cy(5) + 22, x2: 400, y2: 1103, stroke: "#1d1d1b", "stroke-width": 3 }, gr.callout);
+    el("rect", { x: 400, y: 1078, width: 500, height: 52, rx: 10, fill: "#faf8f3", stroke: "#1d1d1b", "stroke-width": 3 }, gr.callout);
+    el("text", { x: 650, y: 1115, "text-anchor": "middle", class: "m-label", fill: "#1d1d1b", text: "capacitor: guarda carga" }, gr.callout);
+    gr.f1 = el("g", {}, g); gr.f2 = el("g", {}, g); gr.fg = el("g", {}, g);
+    // finger contact patches (seen from above, semi-transparent outline)
+    [gr.f1, gr.f2].forEach((f) => el("ellipse", { rx: 92, ry: 110, fill: "#e7c3a6", "fill-opacity": 0.3, stroke: "#b98d6f", "stroke-width": 5 }, f));
+    el("ellipse", { rx: 92, ry: 110, fill: "#7d8a96", "fill-opacity": 0.55, stroke: "#56616b", "stroke-width": 5 }, gr.fg);
+    gr.cross1 = el("g", {}, g); gr.cross2 = el("g", {}, g);
+    [gr.cross1, gr.cross2].forEach((c) => {
+      el("line", { x1: -40, y1: 0, x2: 40, y2: 0, stroke: "#b3386b", "stroke-width": 6 }, c);
+      el("line", { x1: 0, y1: -40, x2: 0, y2: 40, stroke: "#b3386b", "stroke-width": 6 }, c);
+      el("circle", { r: 14, fill: "none", stroke: "#b3386b", "stroke-width": 5 }, c);
+    });
+    gr.lbl = el("text", { "text-anchor": "middle", class: "m-label", fill: "#b3386b", text: "tu dedo" }, g);
+  }
+  function drawGrid(t, s, A) {
+    // lines draw in on "horizontales" / "verticales"
+    const ph = ramp(t, A.horizontales.start - 0.4, A.horizontales.start + 0.4);
+    const pv = ramp(t, A.verticales.start - 0.4, A.verticales.start + 0.4);
+    gr.rows.forEach((l, j) => l.setAttribute("x2", lerp(150, 930, clamp(ph * 1.6 - j * 0.1)).toFixed(1)));
+    gr.cols.forEach((l, i) => l.setAttribute("y2", lerp(460, 1240, clamp(pv * 1.6 - i * 0.1)).toFixed(1)));
+    const nodesOn = ramp(t, A.cruce.start - 0.2, A.cruce.start + 0.4);
+    gr.callout.setAttribute("opacity", String(ramp(t, A.capacitor.start - 0.2, A.capacitor.start + 0.3) * (1 - ramp(t, A.cuerpo.start - 0.4, A.cuerpo.start))));
+
+    // fingers: positions (stage px) and how close they are (0..1)
+    const f1x = 470, f1y = 760, f2x = 760, f2y = 1040;
+    const near1 = ramp(t, A.acercas.start - 0.2, A.roba.start + 0.2) * (1 - ramp(t, A.guantes.start - 0.5, A.guantes.start - 0.1));
+    const near2 = ramp(t, A.varios.start - 0.4, A.varios.start + 0.3) * (1 - ramp(t, A.guantes.start - 0.5, A.guantes.start - 0.1));
+    const glove = ramp(t, A.guantes.start - 0.1, A.guantes.start + 0.4);
+    gr.f1.setAttribute("transform", `translate(${f1x} ${f1y})`); gr.f1.setAttribute("opacity", String(near1));
+    gr.f2.setAttribute("transform", `translate(${f2x} ${f2y})`); gr.f2.setAttribute("opacity", String(near2));
+    gr.fg.setAttribute("transform", `translate(${f1x} ${f1y})`); gr.fg.setAttribute("opacity", String(glove));
+
+    // charge left in each crossing: 1 = full; a conductive finger takes some away (falls off with distance)
+    const sig = 85;
+    let w1 = 0, x1 = 0, y1 = 0, w2 = 0, x2 = 0, y2 = 0;
+    for (const n of gr.nodes) {
+      const x = cx(n.i), y = cy(n.j);
+      const d1 = near1 * Math.exp(-((x - f1x) ** 2 + (y - f1y) ** 2) / (2 * sig * sig));
+      const d2 = near2 * Math.exp(-((x - f2x) ** 2 + (y - f2y) ** 2) / (2 * sig * sig));
+      const loss = clamp(1.1 * (d1 + d2));
+      // blue (full) -> fuchsia (lost charge)
+      const r = Math.round(lerp(0x2f, 0xb3, loss)), gg = Math.round(lerp(0x5e, 0x38, loss)), b = Math.round(lerp(0x8e, 0x6b, loss));
+      n.c.setAttribute("fill", `rgb(${r},${gg},${b})`);
+      n.c.setAttribute("r", (16 + 6 * loss).toFixed(1));
+      n.c.setAttribute("opacity", String(nodesOn));
+      if (d1 > 0.05) { w1 += d1; x1 += d1 * x; y1 += d1 * y; }
+      if (d2 > 0.05) { w2 += d2; x2 += d2 * x; y2 += d2 * y; }
+    }
+
+    // the scan: one row at a time, one crossing at a time (shown slowed down)
+    const scanOn = ramp(t, A.chip.start - 0.2, A.chip.start + 0.2) * (1 - ramp(t, A.punto.start, A.punto.start + 0.3));
+    const k = Math.max(0, Math.floor((t - A.chip.start) * 14)) % (N * N);
+    const si = k % N, sj = Math.floor(k / N);
+    gr.scanRow.setAttribute("y", cy(sj) - 20); gr.scanRow.setAttribute("opacity", String(scanOn * 0.6));
+    gr.scanRing.setAttribute("cx", cx(si)); gr.scanRing.setAttribute("cy", cy(sj)); gr.scanRing.setAttribute("opacity", String(scanOn));
+
+    // centroid of the lost charge = the finger
+    const c1 = ramp(t, A.bajo.start, A.bajo.start + 0.5) * near1, c2 = ramp(t, A.varios.start, A.varios.start + 0.5) * near2;
+    if (w1) gr.cross1.setAttribute("transform", `translate(${(x1 / w1).toFixed(1)} ${(y1 / w1).toFixed(1)})`);
+    if (w2) gr.cross2.setAttribute("transform", `translate(${(x2 / w2).toFixed(1)} ${(y2 / w2).toFixed(1)})`);
+    gr.cross1.setAttribute("opacity", String(w1 ? c1 : 0));
+    gr.cross2.setAttribute("opacity", String(w2 ? c2 : 0));
+    gr.lbl.setAttribute("x", f1x); gr.lbl.setAttribute("y", f1y - 140);
+    gr.lbl.setAttribute("opacity", String(ramp(t, A.punto.start - 0.2, A.punto.start + 0.3) * (1 - ramp(t, A.separado.start - 0.3, A.separado.start))));
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "Tocas la pantalla con la punta del dedo y el celular sabe exactamente dónde. ¿Cómo? Debajo del vidrio hay una rejilla invisible de líneas conductoras: unas horizontales y otras verticales. Cada cruce forma un pequeño capacitor, una especie de depósito de carga eléctrica. Tu cuerpo conduce electricidad. Cuando acercas el dedo, se roba un poquito de la carga en los cruces que están debajo. Un chip revisa todos los cruces, uno por uno, más de cien veces por segundo, y busca dónde bajó la carga. Ese punto es tu dedo. Como cada cruce se mide por separado, detecta varios dedos a la vez. Por eso no funciona con guantes ni con la uña: no conducen y no se roban la carga.";
+
+  Mosaic.short({
+    kicker: "El celular por dentro",
+    title: "¿Cómo sabe tu pantalla dónde la tocas?",
+    script: SCRIPT,
+    anchors: {
+      punta: "punta",
+      exactamente: "exactamente",
+      debajo: "debajo del vidrio",
+      rejilla: "rejilla",
+      horizontales: "horizontales",
+      verticales: "verticales",
+      cruce: "cada cruce",
+      capacitor: "capacitor",
+      cuerpo: "cuerpo",
+      acercas: "acercas",
+      roba: "roba",
+      chip: "chip",
+      cien: ["cien veces", "100 veces"],
+      bajo: "bajo la carga",
+      punto: "ese punto",
+      separado: "separado",
+      varios: "varios dedos",
+      guantes: "guantes",
+    },
+    build() { buildPhone(); buildCut(); buildGrid(); },
+    scenes: [
+      { el: "#sc-phone", from: 0, to: "debajo-0.2", fadeIn: 0.3, rise: 0, update: drawPhone },
+      { el: "#cap-hook", from: "exactamente-0.2", to: "debajo-0.2", fade: 0.3 },
+      { el: "#sc-cut", from: "debajo-0.2", to: "horizontales-0.3", rise: 0, update: drawCut },
+      { el: "#cap-cut", from: "debajo", to: "cruce-0.3", fade: 0.3 },
+      { el: "#sc-grid", from: "horizontales-0.3", to: "end", rise: 0, update: drawGrid },
+      { el: "#cap-cap", from: "cruce-0.3", to: "cuerpo-0.3", fade: 0.3 },
+      { el: "#cap-body", from: "cuerpo-0.3", to: "chip-0.3", fade: 0.3 },
+      { el: "#cap-scan", from: "chip-0.3", to: "separado-0.6", fade: 0.3 },
+      { el: "#cap-multi", from: "separado-0.6", to: "guantes-0.4", fade: 0.3 },
+      { el: "#cap-glove", from: "guantes-0.4", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
