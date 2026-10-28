@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>M5 · ¿Por qué un SSD es mucho más rápido que un disco duro?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-intro" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-intro" style="top:1300px">Segundos contra minutos<small>¿por qué?</small></div>
+
+    <svg class="full scene" id="sc-hdd" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-hdd" style="top:1300px">Un disco duro es mecánico<small>platos que giran y un brazo, como un tocadiscos</small></div>
+    <div class="m-caption scene" id="cap-seek" style="top:1300px">Moverse y esperar a que gire<small>varios milisegundos por cada dato</small></div>
+
+    <svg class="full scene" id="sc-ssd" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-ssd" style="top:1300px">Un SSD no tiene partes móviles<small>llegar a un dato es mandar una señal eléctrica</small></div>
+
+    <svg class="full scene" id="sc-bars" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-bars" style="top:1300px">Cientos de veces de diferencia</div>
+
+    <svg class="full scene" id="sc-boot" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-boot" style="top:1300px">Al arrancar: miles de archivos<small>pequeños y regados: justo donde el brazo sufre</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp } = Mosaic;
+  const op = (n, v) => n.setAttribute("opacity", String(v));
+  const on = (t, a, d = 0.3) => ramp(t, a - d, a + 0.15);
+  const rnd = (i) => { const x = Math.sin(i * 12.9898 + 78.233) * 43758.5453; return x - Math.floor(x); };
+
+  // ---------------------------------------------------------------- hard disk, top view (slow motion)
+  // The arm pivots around P; its head reaches radius r on the platter. For each read k the arm swings
+  // to a new track, then waits until the target sector rotates under the head.
+  function makeHdd(g, cx, cy, R, seg) {
+    const d = { cx, cy, R, seg };
+    const px = cx + R * 1.3, py = cy + R * 1.05;
+    const dd = Math.hypot(px - cx, py - cy), La = dd * 0.9;
+    d.base = el("rect", { x: cx - R - 40, y: cy - R - 40, width: 2 * R + 160 * R / 250, height: 2 * R + 120 * R / 250, rx: 24, fill: "#e9e5dc", stroke: "var(--ink-2)", "stroke-width": 4 }, g);
+    el("circle", { cx, cy, r: R, fill: "#d9dde2", stroke: "#8a96a3", "stroke-width": 4 }, g);
+    for (let k = 1; k <= 4; k++) el("circle", { cx, cy, r: R * (0.3 + 0.17 * k), fill: "none", stroke: "#b7c0ca", "stroke-width": 2 }, g);
+    d.spin = el("g", {}, g);
+    el("line", { x1: cx, y1: cy, x2: cx + R * 0.97, y2: cy, stroke: "#8a96a3", "stroke-width": 3 }, d.spin);
+    el("circle", { cx, cy, r: R * 0.16, fill: "#8a96a3" }, g);
+    d.old = el("g", {}, d.spin);
+    d.target = el("circle", { r: Math.max(7, R * 0.045), fill: "#b3386b" }, g);
+    d.arm = el("line", { x1: px, y1: py, stroke: "var(--ink)", "stroke-width": Math.max(6, R * 0.045), "stroke-linecap": "round" }, g);
+    d.head = el("rect", { width: R * 0.09, height: R * 0.09, rx: 3, fill: "var(--ink)" }, g);
+    el("circle", { cx: px, cy: py, r: R * 0.11, fill: "var(--ink-2)" }, g);
+    const headAt = (r) => {
+      const ca = Math.max(-1, Math.min(1, (La * La + dd * dd - r * r) / (2 * La * dd)));
+      const base = Math.atan2(cy - py, cx - px);
+      const a = base + Math.acos(ca);
+      return [px + La * Math.cos(a), py + La * Math.sin(a)];
+    };
+    const rOf = (k) => R * (0.3 + 0.62 * rnd(k + 3));
+    const OMEGA = 1.6; // rad/s on screen (real disk: 7200 rpm, about 754 rad/s)
+    d.draw = (t, t0) => {
+      d.spin.setAttribute("transform", `rotate(${((t * OMEGA * 180) / Math.PI) % 360} ${cx} ${cy})`);
+      const e = Math.max(0, t - t0);
+      const k = Math.floor(e / seg), lt = e - k * seg;
+      const r = lerp(k > 0 ? rOf(k - 1) : rOf(-1), rOf(k), ramp(lt, 0, seg * 0.35, ease.inOut));
+      const [hx, hy] = headAt(r);
+      d.arm.setAttribute("x2", hx.toFixed(1)); d.arm.setAttribute("y2", hy.toFixed(1));
+      d.head.setAttribute("x", (hx - R * 0.045).toFixed(1)); d.head.setAttribute("y", (hy - R * 0.045).toFixed(1));
+      // target sector: arrives under the head at the end of the segment
+      const [tx, ty] = headAt(rOf(k));
+      const thH = Math.atan2(ty - cy, tx - cx);
+      const tEnd = t0 + (k + 0.92) * seg;
+      const th = thH - OMEGA * (tEnd - t);
+      d.target.setAttribute("cx", (cx + rOf(k) * Math.cos(th)).toFixed(1));
+      d.target.setAttribute("cy", (cy + rOf(k) * Math.sin(th)).toFixed(1));
+      const hit = lt > seg * 0.92;
+      d.target.setAttribute("fill", hit ? "#3a9a80" : "#b3386b");
+      d.target.setAttribute("r", (hit ? R * 0.07 : Math.max(7, R * 0.045)).toFixed(1));
+      return { k: Math.floor((e + seg * 0.08) / seg), hit };
+    };
+    return d;
+  }
+
+  // ---------------------------------------------------------------- SSD chip
+  function makeSsd(g, x, y, w, h, cols, rows) {
+    const d = { cells: [] };
+    el("rect", { x: x - 30, y: y - 30, width: w + 60, height: h + 60, rx: 18, fill: "#2b2f36" }, g);
+    const cw = w / cols, chh = h / rows;
+    for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
+      d.cells.push(el("rect", { x: x + i * cw + 4, y: y + j * chh + 4, width: cw - 8, height: chh - 8, rx: 4, fill: "#4a525e" }, g));
+    }
+    d.draw = (t, t0, period) => {
+      const e = Math.max(0, t - t0);
+      const k = Math.floor(e / period);
+      d.cells.forEach((c) => c.setAttribute("fill", "#4a525e"));
+      for (let b = 0; b < 3; b++) {
+        const kk = k - b;
+        if (kk < 0 || t < t0) continue;
+        const idx = Math.floor(rnd(kk * 7 + 1) * d.cells.length);
+        const life = 1 - (e - kk * period) / (3 * period);
+        d.cells[idx].setAttribute("fill", life > 0.66 ? "#7fd1b9" : life > 0.33 ? "#5fae98" : "#4f8a7b");
+      }
+      return k;
+    };
+    return d;
+  }
+
+  // ---------------------------------------------------------------- intro: boot progress (illustrative)
+  let it = {};
+  function buildIntro() {
+    const g = el("g", {}, $("#sc-intro"));
+    const row = (y, label, col) => {
+      el("text", { x: 120, y: y - 24, "font-size": 40, "font-weight": 700, fill: col, text: label }, g);
+      el("rect", { x: 120, y, width: 820, height: 60, rx: 10, fill: "#faf8f3", stroke: "var(--line)", "stroke-width": 3 }, g);
+      return el("rect", { x: 124, y: y + 4, width: 0, height: 52, rx: 8, fill: col }, g);
+    };
+    it.ssd = row(640, "Con SSD", "#3a9a80");
+    it.hdd = row(860, "Con disco duro", "#b3386b");
+    it.ssdT = el("text", { x: 940, y: 616, "text-anchor": "end", "font-size": 36, "font-weight": 650, fill: "#3a9a80", text: "listo" }, g);
+    el("text", { x: 120, y: 1000, class: "m-note", text: "arranque, ilustrativo" }, g);
+  }
+  function drawIntro(t, s, A) {
+    it.ssd.setAttribute("width", (812 * ramp(t, 0.3, A.segundos.end, ease.out)).toFixed(1));
+    it.hdd.setAttribute("width", (812 * 0.22 * ramp(t, 0.3, A.mecanico.start, ease.linear)).toFixed(1));
+    op(it.ssdT, ramp(t, A.segundos.end, A.segundos.end + 0.3));
+  }
+
+  // ---------------------------------------------------------------- HDD scene
+  let hd;
+  function buildHdd() {
+    const g = el("g", {}, $("#sc-hdd"));
+    hd = makeHdd(g, 420, 870, 250, 1.6);
+    hd.lbl = el("g", {}, g);
+    el("text", { x: 120, y: 510, class: "m-label", text: "Disco duro visto desde arriba" }, hd.lbl);
+    hd.rpm = el("text", { x: 120, y: 1225, "font-size": 34, "font-weight": 650, fill: "var(--ink)", text: "plato: 7200 vueltas por minuto" }, g);
+    hd.slow = el("text", { x: 120, y: 1262, class: "m-note", text: "aquí en cámara lenta" }, g);
+    hd.ms = el("text", { x: 120, y: 1268, "font-size": 34, "font-weight": 700, fill: "#b3386b", text: "≈ 10 ms por cada dato" }, g);
+    hd.armL = el("text", { x: 870, y: 1000, "text-anchor": "middle", "font-size": 32, "font-weight": 600, fill: "var(--ink)", text: "brazo" }, g);
+  }
+  function drawHdd(t, s, A) {
+    hd.draw(t, A.llegar.start);
+    op(hd.rpm, on(t, A.platos.start));
+    op(hd.slow, on(t, A.platos.start + 0.6));
+    op(hd.armL, on(t, A.brazo.start));
+    op(hd.ms, on(t, A.milisegundos.start));
+    op(hd.slow, on(t, A.platos.start + 0.6) * (1 - on(t, A.milisegundos.start)));
+  }
+
+  // ---------------------------------------------------------------- SSD scene
+  let sd;
+  function buildSsd() {
+    const g = el("g", {}, $("#sc-ssd"));
+    el("text", { x: 120, y: 500, class: "m-label", text: "SSD: chips de memoria flash" }, g);
+    sd = makeSsd(g, 200, 600, 680, 440, 10, 6);
+    sd.us = el("text", { x: 540, y: 1170, "text-anchor": "middle", "font-size": 38, "font-weight": 700, fill: "#3a9a80", text: "decenas de microsegundos (≈ 0.05 ms)" }, g);
+  }
+  function drawSsd(t, s, A) {
+    sd.draw(t, A.chips.start, 0.12);
+    op(sd.us, on(t, A.microsegundos.start));
+  }
+
+  // ---------------------------------------------------------------- log bars
+  let lb = {};
+  const LX = 170, LW = 720; // 0.01 ms .. 100 ms, 4 decades
+  const lx = (ms) => LX + ((Math.log10(ms) + 2) / 4) * LW;
+  function buildBars() {
+    const g = el("g", {}, $("#sc-bars"));
+    el("text", { x: 120, y: 500, class: "m-label", text: "Tiempo por lectura al azar" }, g);
+    [0.01, 0.1, 1, 10, 100].forEach((v) => {
+      el("line", { x1: lx(v), y1: 560, x2: lx(v), y2: 960, stroke: "var(--line)", "stroke-width": 2 }, g);
+      el("text", { x: lx(v), y: 1000, "text-anchor": "middle", "font-size": 28, fill: "var(--ink-2)", text: `${v} ms` }, g);
+    });
+    el("text", { x: 120, y: 1050, class: "m-note", text: "escala logarítmica: cada raya vale 10 veces más" }, g);
+    lb.rows = [["HDD", 8, 12, "#b3386b", 610], ["SSD", 0.02, 0.1, "#3a9a80", 800]].map(([n, a, b, col, y]) => {
+      const gg = el("g", {}, g);
+      el("text", { x: 120, y: y + 50, "text-anchor": "end", "font-size": 34, "font-weight": 700, fill: col, text: n }, gg);
+      const bar = el("rect", { x: LX, y, height: 70, rx: 6, fill: col, opacity: 0.85 }, gg);
+      const rng = el("rect", { x: lx(a), y: y - 12, width: lx(b) - lx(a), height: 94, rx: 6, fill: "none", stroke: col, "stroke-width": 4, "stroke-dasharray": "8 6" }, gg);
+      const lbl = el("text", { y: y + 130, "font-size": 32, "font-weight": 650, fill: col, text: n === "HDD" ? "≈ 8–12 ms" : "≈ 0.02–0.1 ms" }, gg);
+      return { gg, bar, rng, lbl, mid: Math.sqrt(a * b) };
+    });
+    lb.x = el("text", { x: 540, y: 1150, "text-anchor": "middle", "font-size": 44, "font-weight": 750, fill: "var(--ink)", text: "≈ 100 a 500 veces más rápido" }, g);
+  }
+  function drawBars(t, s, A) {
+    lb.rows.forEach((r, i) => {
+      const a = s.from + 0.2 + i * 0.5;
+      const p = ramp(t, a, a + 0.9, ease.out);
+      const w = (lx(r.mid) - LX) * p;
+      r.bar.setAttribute("width", Math.max(1, w).toFixed(1));
+      r.lbl.setAttribute("x", (LX + w - 120).toFixed(1));
+      op(r.gg, ramp(t, a - 0.2, a + 0.2));
+      op(r.rng, ramp(t, a + 0.8, a + 1.1));
+    });
+    op(lb.x, ramp(t, s.from + 1.6, s.from + 2.0));
+  }
+
+  // ---------------------------------------------------------------- boot: many small scattered files
+  let bt = {};
+  function buildBoot() {
+    const g = el("g", {}, $("#sc-boot"));
+    el("text", { x: 120, y: 500, class: "m-label", text: "Archivos leídos al arrancar" }, g);
+    bt.hdd = makeHdd(el("g", {}, g), 300, 760, 150, 1.0);
+    bt.ssd = makeSsd(el("g", {}, g), 640, 640, 260, 240, 6, 5);
+    bt.nh = el("text", { x: 300, y: 1060, "text-anchor": "middle", "font-size": 64, "font-weight": 750, fill: "#b3386b", text: "0" }, g);
+    el("text", { x: 300, y: 1110, "text-anchor": "middle", "font-size": 30, fill: "var(--ink-2)", text: "disco duro" }, g);
+    bt.ns = el("text", { x: 770, y: 1060, "text-anchor": "middle", "font-size": 64, "font-weight": 750, fill: "#3a9a80", text: "0" }, g);
+    el("text", { x: 770, y: 1110, "text-anchor": "middle", "font-size": 30, fill: "var(--ink-2)", text: "SSD" }, g);
+    el("text", { x: 540, y: 1200, "text-anchor": "middle", class: "m-note", text: "cámara lenta: 1 s en pantalla = 10 ms reales · SSD ≈ 200 veces más" }, g);
+  }
+  function drawBoot(t, s, A) {
+    const t0 = s.from + 0.3;
+    bt.hdd.draw(t, t0);
+    bt.ssd.draw(t, t0, 0.09);
+    const e = Math.max(0, t - t0);
+    bt.nh.textContent = String(Math.floor(e / 1.0 + 0.08));
+    bt.ns.textContent = Math.floor(e * 200).toLocaleString("en-US").replace(/,/g, " ");
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "¿Por qué una computadora con SSD prende en segundos y una con disco duro tarda minutos? Un disco duro es mecánico: tiene platos que giran a siete mil doscientas vueltas por minuto y un brazo que se mueve para leer, como un tocadiscos. Para llegar a un dato, el brazo tiene que moverse y luego esperar a que el plato gire hasta el lugar correcto. Eso tarda varios milisegundos. Un SSD no tiene nada que se mueva. Guarda los datos en chips, y llegar a cualquier dato es mandar una señal eléctrica: tarda decenas de microsegundos. La diferencia es de cientos de veces. Y al arrancar, el sistema lee miles de archivos pequeños, regados por todo el disco: justo donde el brazo sufre más.";
+
+  Mosaic.short({
+    kicker: "Memoria y chips",
+    title: "¿Por qué un SSD es mucho más rápido que un disco duro?",
+    script: SCRIPT,
+    anchors: {
+      segundos: "segundos",
+      minutos: "minutos",
+      mecanico: "mecanico",
+      platos: "platos",
+      rpm: ["siete mil doscientas", "7200", "7 200", "7,200"],
+      brazo: "brazo",
+      tocadiscos: "tocadiscos",
+      llegar: "llegar a un dato",
+      milisegundos: "milisegundos",
+      ssd: { q: ["un ssd", "un s s d"], after: "milisegundos" },
+      chips: "chips",
+      senal: "senal",
+      microsegundos: "microsegundos",
+      diferencia: "diferencia",
+      arrancar: "arrancar",
+      miles: "miles",
+      regados: "regados",
+      sufre: "sufre",
+    },
+    build() { buildIntro(); buildHdd(); buildSsd(); buildBars(); buildBoot(); },
+    scenes: [
+      { el: "#sc-intro", from: 0, to: "mecanico-0.4", fadeIn: 0.3, rise: 0, update: drawIntro },
+      { el: "#cap-intro", from: 0.2, to: "mecanico-0.4", fade: 0.3 },
+      { el: "#sc-hdd", from: "mecanico-0.4", to: "ssd-0.3", rise: 0, update: drawHdd },
+      { el: "#cap-hdd", from: "mecanico-0.3", to: "llegar-0.3", fade: 0.3 },
+      { el: "#cap-seek", from: "llegar-0.3", to: "ssd-0.3", fade: 0.3 },
+      { el: "#sc-ssd", from: "ssd-0.3", to: "diferencia-0.4", rise: 0, update: drawSsd },
+      { el: "#cap-ssd", from: "ssd-0.2", to: "diferencia-0.4", fade: 0.3 },
+      { el: "#sc-bars", from: "diferencia-0.4", to: "arrancar-0.4", rise: 0, update: drawBars },
+      { el: "#cap-bars", from: "diferencia-0.3", to: "arrancar-0.4", fade: 0.3 },
+      { el: "#sc-boot", from: "arrancar-0.4", to: "end", rise: 0, update: drawBoot },
+      { el: "#cap-boot", from: "arrancar-0.3", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
