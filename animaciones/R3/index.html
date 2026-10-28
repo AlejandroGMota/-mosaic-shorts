@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>R3 · ¿Por qué toda tu casa comparte una sola IP?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+  .mono { font-family: var(--mono); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-house" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-ip" style="top:1300px">Cada aparato necesita una IP<small>su dirección: así los datos saben a dónde llegar</small></div>
+    <div class="m-caption scene" id="cap-same" style="top:1300px">Hacia afuera, todos usan la misma<small>¿cómo?</small></div>
+
+    <svg class="full scene" id="sc-v4" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-v4" style="top:1300px">IPv4 no alcanza para todos<small>hay más aparatos que direcciones</small></div>
+
+    <svg class="full scene" id="sc-nat" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-priv" style="top:1300px">Adentro: direcciones privadas<small>afuera: una sola dirección pública</small></div>
+    <div class="m-caption scene" id="cap-out" style="top:1300px">El módem anota quién lo pidió</div>
+    <div class="m-caption scene" id="cap-back" style="top:1300px">Revisa la tabla y lo entrega<small>al aparato correcto</small></div>
+    <div class="m-caption scene" id="cap-rec" style="top:1300px">Como una recepcionista<small>que reparte la correspondencia del edificio</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script src="../_base/redes.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp, clamp } = Mosaic;
+  const { C, op, place, phone, rack, along, thousands } = Redes;
+  const PUB = "203.0.113.25";
+
+  // ---------------------------------------------------------------- small device icons (centred, ~120 px wide)
+  function device(parent, kind, x, y, s) {
+    const g = el("g", { transform: `translate(${x} ${y}) scale(${s || 1})` }, parent);
+    const st = { fill: C.card, stroke: C.ink, "stroke-width": 5, "stroke-linejoin": "round" };
+    if (kind === "cel") {
+      el("rect", Object.assign({ x: -30, y: -52, width: 60, height: 104, rx: 10 }, st), g);
+      el("line", { x1: -8, y1: 40, x2: 8, y2: 40, stroke: C.ink, "stroke-width": 4, "stroke-linecap": "round" }, g);
+    } else if (kind === "tele") {
+      el("rect", Object.assign({ x: -64, y: -46, width: 128, height: 78, rx: 6 }, st), g);
+      el("path", { d: "M-24 50 L24 50 M0 32 L0 50", stroke: C.ink, "stroke-width": 5, fill: "none", "stroke-linecap": "round" }, g);
+    } else if (kind === "compu") {
+      el("rect", Object.assign({ x: -48, y: -46, width: 96, height: 64, rx: 6 }, st), g);
+      el("path", Object.assign({ d: "M-64 28 L64 28 L56 44 L-56 44 Z" }, st), g);
+    } else {
+      el("path", Object.assign({ d: "M-50 -18 Q-60 -26 -66 0 L-72 30 Q-70 46 -54 38 L-34 18 L34 18 L54 38 Q70 46 72 30 L66 0 Q60 -26 50 -18 Z" }, st), g);
+      el("path", { d: "M-44 2 L-24 2 M-34 -8 L-34 12", stroke: C.ink, "stroke-width": 5, "stroke-linecap": "round" }, g);
+      el("circle", { cx: 32, cy: -2, r: 6, fill: C.ink }, g);
+      el("circle", { cx: 46, cy: 8, r: 6, fill: C.ink }, g);
+    }
+    return g;
+  }
+  const KINDS = ["cel", "tele", "compu", "consola"];
+  const NAMES = ["celular", "tele", "compu", "consola"];
+
+  // ---------------------------------------------------------------- house: four devices, one address outside
+  let hs = {};
+  const HX = [210, 410, 610, 810];
+  function buildHouse() {
+    const g = el("g", {}, $("#sc-house"));
+    el("path", { d: "M100 640 L510 480 L920 640 L920 960 L100 960 Z", fill: "none", stroke: C.ink2, "stroke-width": 6, "stroke-linejoin": "round" }, g);
+    el("text", { x: 130, y: 680, class: "m-note", text: "tu casa" }, g);
+    hs.dev = KINDS.map((k, i) => device(g, k, HX[i], 790, 0.95));
+    hs.lab = NAMES.map((n, i) => el("text", { x: HX[i], y: 890, "text-anchor": "middle", class: "m-label", text: n }, g));
+    hs.lines = el("g", {}, g);
+    HX.forEach((x) => el("path", { d: `M${x} 910 Q${x} 1010 ${(x + 510) / 2} 1040 T510 1090`, fill: "none", stroke: C.blue, "stroke-width": 4 }, hs.lines));
+    hs.pub = el("g", {}, g);
+    el("rect", { x: 300, y: 1100, width: 420, height: 84, rx: 12, fill: C.blue }, hs.pub);
+    el("text", { x: 510, y: 1155, "text-anchor": "middle", class: "mono", "font-size": 40, "font-weight": 700, fill: "#fff", text: PUB }, hs.pub);
+    el("text", { x: 510, y: 1230, "text-anchor": "middle", class: "m-label", text: "la IP que ve internet" }, hs.pub);
+  }
+  function drawHouse(t, s, A) {
+    const keys = [A.celulares, A.tele, A.compu, A.consola];
+    hs.dev.forEach((d, i) => op(d, 0.25 + 0.75 * ramp(t, keys[i].start - 0.3, keys[i].start + 0.2)));
+    hs.lab.forEach((d, i) => op(d, ramp(t, keys[i].start - 0.3, keys[i].start + 0.2)));
+    op(hs.lines, ramp(t, A.afuera.start - 0.3, A.misma.start));
+    op(hs.pub, ramp(t, A.misma.start - 0.3, A.misma.start + 0.2));
+  }
+
+  // ---------------------------------------------------------------- IPv4: four numbers 0-255, 2^32, exhausted
+  let v4 = {};
+  function buildV4() {
+    const g = el("g", {}, $("#sc-v4"));
+    el("text", { x: 540, y: 520, "text-anchor": "middle", class: "m-label", text: "una dirección IPv4" }, g);
+    const parts = ["203", "0", "113", "25"];
+    parts.forEach((p, i) => {
+      el("rect", { x: 130 + i * 210, y: 550, width: 170, height: 100, rx: 12, fill: C.card, stroke: C.blue, "stroke-width": 5 }, g);
+      el("text", { x: 215 + i * 210, y: 620, "text-anchor": "middle", class: "mono", "font-size": 52, "font-weight": 700, fill: C.blue, text: p }, g);
+      if (i < 3) el("circle", { cx: 320 + i * 210, cy: 630, r: 8, fill: C.ink }, g);
+    });
+    el("text", { x: 540, y: 710, "text-anchor": "middle", class: "m-note", text: "4 números de 0 a 255 → 256 × 256 × 256 × 256 = 2³²" }, g);
+    v4.count = el("text", { x: 540, y: 850, "text-anchor": "middle", "font-size": 96, "font-weight": 700, fill: C.ink, class: "m-num", text: "" }, g);
+    v4.cl = el("text", { x: 540, y: 905, "text-anchor": "middle", class: "m-label", text: "direcciones posibles (≈ 4 300 millones)" }, g);
+    v4.stamp = el("g", { transform: "rotate(-4 540 1060)" }, g);
+    el("rect", { x: 220, y: 1000, width: 640, height: 120, rx: 14, fill: "none", stroke: C.fuchsia, "stroke-width": 8 }, v4.stamp);
+    el("text", { x: 540, y: 1080, "text-anchor": "middle", "font-size": 56, "font-weight": 750, "letter-spacing": "0.05em", fill: C.fuchsia, text: "AGOTADAS · 2011" }, v4.stamp);
+    v4.note = el("text", { x: 540, y: 1180, "text-anchor": "middle", class: "m-note", text: "la reserva mundial (IANA) repartió sus últimos bloques en febrero de 2011" }, g);
+  }
+  function drawV4(t, s, A) {
+    const n = 4294967296 * ramp(t, A.alcanzan.start - 0.2, A.millones.end + 0.2, ease.out);
+    v4.count.textContent = thousands(n);
+    op(v4.count, ramp(t, A.alcanzan.start - 0.4, A.alcanzan.start));
+    op(v4.cl, ramp(t, A.millones.start - 0.3, A.millones.end));
+    const st = ramp(t, A.agoto.start - 0.2, A.agoto.start + 0.25, ease.out);
+    op(v4.stamp, st);
+    v4.stamp.setAttribute("transform", `rotate(-4 540 1060) translate(540 1060) scale(${lerp(1.25, 1, st)}) translate(-540 -1060)`);
+    op(v4.note, ramp(t, A.dosmil.start - 0.2, A.dosmil.end + 0.2));
+  }
+
+  // ---------------------------------------------------------------- NAT: private inside, public outside, a table
+  let nt = {};
+  const PRIV = ["192.168.1.10", "192.168.1.11", "192.168.1.12", "192.168.1.13"];
+  const DX = [190, 400, 610, 820], DY = 590;
+  const MOD = [540, 845], SRV = [210, 1080];
+  const OUT = [[DX[0], DY + 70], [DX[0], 760], [MOD[0], 760], [MOD[0], MOD[1] - 36]];
+  const NET = [[MOD[0], MOD[1] + 36], [MOD[0], 960], [SRV[0], 960], [SRV[0], SRV[1] - 76]];
+  function buildNat() {
+    const g = el("g", {}, $("#sc-nat"));
+    el("rect", { x: 90, y: 480, width: 900, height: 325, rx: 18, fill: "none", stroke: C.ink2, "stroke-width": 5 }, g);
+    el("text", { x: 112, y: 515, class: "m-note", text: "dentro de la casa" }, g);
+    el("text", { x: 112, y: 1250, class: "m-note", "font-style": "italic", text: "internet" }, g);
+    nt.dev = KINDS.map((k, i) => device(g, k, DX[i], DY, 0.75));
+    nt.priv = PRIV.map((p, i) => el("text", { x: DX[i], y: DY + 78, "text-anchor": "middle", class: "mono", "font-size": 24, "font-weight": 600, fill: C.mint, text: p }, g));
+    el("polyline", { points: OUT.map((p) => p.join(",")).join(" "), fill: "none", stroke: C.line, "stroke-width": 5 }, g);
+    el("polyline", { points: NET.map((p) => p.join(",")).join(" "), fill: "none", stroke: C.line, "stroke-width": 5 }, g);
+    // modem on the wall of the house
+    el("rect", { x: MOD[0] - 80, y: MOD[1] - 36, width: 160, height: 72, rx: 12, fill: C.card, stroke: C.blue, "stroke-width": 6 }, g);
+    el("text", { x: MOD[0], y: MOD[1] + 11, "text-anchor": "middle", "font-size": 32, "font-weight": 700, fill: C.blue, text: "módem" }, g);
+    nt.pub = el("g", {}, g);
+    el("text", { x: MOD[0] - 104, y: MOD[1] + 4, "text-anchor": "end", class: "mono", "font-size": 30, "font-weight": 700, fill: C.blue, text: PUB }, nt.pub);
+    el("text", { x: MOD[0] - 104, y: MOD[1] + 38, "text-anchor": "end", class: "m-note", text: "IP pública de la casa" }, nt.pub);
+    nt.srv = el("g", {}, g);
+    rack(nt.srv, SRV[0], SRV[1], 0.7);
+    el("text", { x: SRV[0], y: SRV[1] + 106, "text-anchor": "middle", class: "m-note", text: "página web" }, nt.srv);
+    // the modem's table
+    nt.table = el("g", {}, g);
+    el("text", { x: 420, y: 1010, class: "m-label", fill: C.ink, text: "tabla del módem" }, nt.table);
+    el("rect", { x: 420, y: 1030, width: 520, height: 140, rx: 10, fill: C.card, stroke: C.ink2, "stroke-width": 3 }, nt.table);
+    el("line", { x1: 420, y1: 1080, x2: 940, y2: 1080, stroke: C.line, "stroke-width": 3 }, nt.table);
+    el("text", { x: 440, y: 1066, class: "m-note", text: "aparato" }, nt.table);
+    el("text", { x: 920, y: 1066, "text-anchor": "end", class: "m-note", text: "puerto de salida" }, nt.table);
+    nt.row = el("g", {}, nt.table);
+    nt.rowBg = el("rect", { x: 424, y: 1086, width: 512, height: 78, rx: 6, fill: C.amber, opacity: 0 }, nt.row);
+    el("text", { x: 440, y: 1136, class: "mono", "font-size": 24, "font-weight": 600, fill: C.mint, text: "192.168.1.10 (celular)" }, nt.row);
+    el("text", { x: 920, y: 1136, "text-anchor": "end", class: "mono", "font-size": 30, "font-weight": 700, fill: C.blue, text: "50123" }, nt.row);
+    // the travelling packet and its sender label
+    nt.pk = el("g", {}, g);
+    el("rect", { x: -22, y: -17, width: 44, height: 34, rx: 6, fill: C.amber }, nt.pk);
+    nt.tag = el("g", {}, g);
+    nt.tagBg = el("rect", { y: -26, height: 44, rx: 8, fill: C.card, stroke: C.amber, "stroke-width": 3 }, nt.tag);
+    nt.tagTx = el("text", { x: 0, y: 6, class: "mono", "font-size": 24, "font-weight": 600, fill: C.ink, text: "" }, nt.tag);
+  }
+  function drawNat(t, s, A) {
+    const on = ramp(t, A.privada.start - 0.4, A.privada.start + 0.2);
+    nt.priv.forEach((p) => op(p, on));
+    op(nt.pub, ramp(t, A.publica.start - 0.3, A.publica.start + 0.2));
+    op(nt.srv, ramp(t, A.pide.start - 0.3, A.pide.start + 0.2));
+    op(nt.table, ramp(t, A.tabla.start - 0.4, A.tabla.start + 0.1));
+    op(nt.row, ramp(t, A.pidio.start - 0.3, A.pidio.start + 0.2));
+    // request: celular -> modem -> web; answer: web -> modem -> celular
+    const a0 = A.pide.start, a1 = A.manda.start + 0.2, a2 = A.tabla.start - 0.2, b0 = A.respuesta.start - 0.3, b1 = A.revisa.end, b2 = A.correcto.end;
+    let P = null, label = "", phase = 0;
+    if (t >= a0 && t < a1) { P = along(OUT, ramp(t, a0, a1, ease.inOutSine)); label = "de " + PRIV[0]; phase = 1; }
+    else if (t >= a1 && t < a2) { P = along(NET, ramp(t, a1 + 0.3, a2, ease.inOutSine)); label = "de " + PUB + " : 50123"; phase = 2; }
+    else if (t >= b0 && t < b1) { P = along(NET.slice().reverse(), ramp(t, b0, b0 + 1.2, ease.inOutSine)); label = "para " + PUB + " : 50123"; phase = 3; }
+    else if (t >= b1 && t < b2 + 0.4) { P = along(OUT.slice().reverse(), ramp(t, b1, b2, ease.inOutSine)); label = "para " + PRIV[0]; phase = 4; }
+    op(nt.pk, P ? 1 : 0); op(nt.tag, P ? 1 : 0);
+    if (P) {
+      place(nt.pk, P[0], P[1]);
+      nt.tagTx.textContent = label;
+      const w = label.length * 14.5 + 24;
+      const x = Math.min(P[0] + 34, 960 - w);
+      nt.tagBg.setAttribute("x", "-12"); nt.tagBg.setAttribute("width", String(w));
+      place(nt.tag, x + 12, P[1] + (x < P[0] ? -46 : 0));
+    }
+    const hl = phase === 3 ? ramp(t, b0 + 1.0, b0 + 1.4) : phase === 4 ? 1 - ramp(t, b1 + 0.6, b2) : phase === 2 ? 1 - ramp(t, a1 + 0.6, a2) : phase === 1 ? 0 : 0;
+    nt.rowBg.setAttribute("opacity", String(0.25 * hl));
+    // the device that gets the answer
+    const ring = phase === 4 ? ramp(t, b2 - 0.4, b2) : 0;
+    nt.dev[0].setAttribute("opacity", "1");
+    nt.dev.forEach((d, i) => d.setAttribute("opacity", String(i === 0 ? 1 : 1 - 0.5 * ring)));
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "Cada aparato conectado a internet necesita una dirección, la IP, para que los datos sepan a dónde llegar. Pero en tu casa hay celulares, tele, compu y consola, y hacia afuera todos usan la misma. ¿Cómo? Las direcciones del sistema clásico, IPv4, solo alcanzan para unos cuatro mil trescientos millones. Hay más aparatos que eso, y la reserva mundial de direcciones se agotó en dos mil once. La solución está en tu módem. Dentro de la casa, cada aparato tiene una dirección privada. Cuando tu celular pide algo, el módem lo manda con la dirección pública de la casa y anota en una tabla quién lo pidió. Cuando llega la respuesta, revisa la tabla y se la entrega al aparato correcto. Como una recepcionista que reparte la correspondencia del edificio.";
+
+  Mosaic.short({
+    kicker: "Internet y redes",
+    title: "¿Por qué toda tu casa comparte una sola IP?",
+    script: SCRIPT,
+    anchors: {
+      direccion: "direccion",
+      celulares: "celulares",
+      tele: "tele",
+      compu: "compu",
+      consola: "consola",
+      afuera: "afuera",
+      misma: "misma",
+      clasico: "clasico",
+      ipv4: ["ipv4", "ipvcuatro", "ip version 4"],
+      alcanzan: "alcanzan",
+      millones: ["trescientos millones", "300 millones", "4300 millones", "millones"],
+      aparatos: "mas aparatos",
+      agoto: "agoto",
+      dosmil: ["dos mil once", "2011"],
+      solucion: "solucion",
+      privada: "privada",
+      pide: "pide",
+      manda: "manda",
+      publica: "publica",
+      tabla: "tabla",
+      pidio: "pidio",
+      respuesta: "respuesta",
+      revisa: "revisa",
+      correcto: "correcto",
+      recepcionista: "recepcionista",
+    },
+    build() { buildHouse(); buildV4(); buildNat(); },
+    scenes: [
+      { el: "#sc-house", from: 0, to: "clasico-0.6", fadeIn: 0.3, rise: 0, update: drawHouse },
+      { el: "#cap-ip", from: 0.2, to: "afuera-0.3", fade: 0.3 },
+      { el: "#cap-same", from: "afuera-0.3", to: "clasico-0.6", fade: 0.3 },
+      { el: "#sc-v4", from: "clasico-0.6", to: "solucion-0.3", rise: 0, update: drawV4 },
+      { el: "#cap-v4", from: "aparatos-0.3", to: "solucion-0.3", fade: 0.3 },
+      { el: "#sc-nat", from: "solucion-0.3", to: "end", rise: 0, update: drawNat },
+      { el: "#cap-priv", from: "solucion-0.2", to: "pide-0.3", fade: 0.3 },
+      { el: "#cap-out", from: "pide-0.3", to: "respuesta-0.3", fade: 0.3 },
+      { el: "#cap-back", from: "respuesta-0.3", to: "recepcionista-0.5", fade: 0.3 },
+      { el: "#cap-rec", from: "recepcionista-0.5", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
