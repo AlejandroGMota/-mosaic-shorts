@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>N1 · ¿Una librería de IA puede robarte tus contraseñas?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+  .stamp { position: absolute; inset: auto; left: 580px; top: 1140px; width: 360px; white-space: nowrap; text-align: center; padding: 14px 0;
+           border: 5px solid var(--fuchsia); border-radius: 10px; color: var(--fuchsia); font-size: 46px; font-weight: 720;
+           letter-spacing: 0.04em; transform-origin: 50% 50%; }
+  .todo { position: absolute; inset: auto; left: 80px; top: 500px; width: 860px; }
+  .todo .it { display: flex; gap: 28px; align-items: flex-start; padding: 34px 0; border-bottom: 2px solid var(--line); }
+  .todo .n { flex: 0 0 74px; height: 74px; border-radius: 50%; background: var(--blue); color: #faf8f3; font-size: 42px;
+             font-weight: 720; display: flex; align-items: center; justify-content: center; }
+  .todo .it.b .n { background: var(--fuchsia); }
+  .todo .h { font-size: 48px; font-weight: 650; line-height: 1.15; }
+  .todo .s { font-size: 32px; color: var(--ink-2); margin-top: 12px; line-height: 1.3; }
+  .todo code { font-family: var(--mono); font-size: 36px; background: #e9e5dc; padding: 4px 12px; border-radius: 6px; color: var(--ink); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-term" viewBox="0 0 1080 1920"></svg>
+    <div class="stamp scene" id="stamp">21 oct 2026</div>
+    <div class="m-caption scene" id="cap-spy" style="top:1300px">Durante unas horas venía con un programa espía</div>
+
+    <svg class="full scene" id="sc-what" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-what" style="top:1300px">LiteLLM conecta una app con varias IA<small>una librería que usan muchos programadores</small></div>
+
+    <svg class="full scene" id="sc-pub" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-pub" style="top:1300px">Alguien tomó control de la publicación<small>y subió una versión con trampa</small></div>
+
+    <svg class="full scene" id="sc-pth" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-pth" style="top:1300px">Python ejecuta los .pth cada vez que arranca<small>aunque nunca uses la librería</small></div>
+
+    <svg class="full scene" id="sc-steal" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-steal" style="top:1300px">Busca llaves y contraseñas<small>y las manda a un servidor ajeno</small></div>
+    <div class="m-caption scene" id="cap-door" style="top:1300px">Puerta trasera<small>cada cierto tiempo pide instrucciones nuevas</small></div>
+
+    <div class="todo scene" id="sc-todo">
+      <div class="it" id="todo1"><div class="n">1</div><div><div class="h">Fija la versión exacta</div><div class="s"><code>litellm==1.106.0</code><br>y no actualices el mismo día que sale</div></div></div>
+      <div class="it b" id="todo2"><div class="n">2</div><div><div class="h">¿La instalaste?<br>Cambia todas tus llaves</div><div class="s">nube, acceso remoto y contraseñas</div></div></div>
+    </div>
+    <div class="m-caption scene" id="cap-todo" style="top:1300px">Si haces software</div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp, clamp } = Mosaic;
+  const op = (n, v) => n.setAttribute("opacity", String(v));
+  const fade = (t, a, d = 0.3) => ramp(t, a - d, a + 0.15);
+  const PAPER = "#faf8f3", BLUE = "#2f5e8e", FUCH = "#b3386b", MINT = "#3a9a80", AMBER = "#c98a1b", INK = "#1d1d1b";
+
+  function box(g, x, y, w, h, label, color, sub) {
+    const gg = el("g", {}, g);
+    const r = el("rect", { x, y, width: w, height: h, rx: 14, fill: PAPER, stroke: color, "stroke-width": 5 }, gg);
+    el("text", { x: x + w / 2, y: y + h / 2 + (sub ? -4 : 13), "text-anchor": "middle", "font-size": 38, "font-weight": 680, fill: color, text: label }, gg);
+    if (sub) el("text", { x: x + w / 2, y: y + h / 2 + 38, "text-anchor": "middle", class: "m-note", text: sub }, gg);
+    gg.rect = r;
+    return gg;
+  }
+  // straight arrow from (x1,y1) to (x2,y2); p draws it progressively
+  function arrow(g, x1, y1, x2, y2, color, dash) {
+    const gg = el("g", {}, g);
+    const line = el("line", { x1, y1, x2: x1, y2: y1, stroke: color, "stroke-width": 6, "stroke-linecap": "round" }, gg);
+    if (dash) line.setAttribute("stroke-dasharray", "16 14");
+    const head = el("polygon", { points: "0,0 -26,-14 -26,14", fill: color }, gg);
+    const ang = (Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI;
+    return {
+      g: gg,
+      set(p) {
+        const x = lerp(x1, x2, p), y = lerp(y1, y2, p);
+        line.setAttribute("x2", x.toFixed(1)); line.setAttribute("y2", y.toFixed(1));
+        head.setAttribute("transform", `translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${ang.toFixed(1)})`);
+        op(head, p > 0.02 ? 1 : 0);
+        op(line, p > 0.02 ? 1 : 0);
+      },
+    };
+  }
+
+  // ---------------------------------------------------------------- 1. terminal: pip install litellm
+  const T1 = "$ pip install litellm";
+  const OUT = ["Collecting litellm", "Downloading litellm-1.107.0", "Successfully installed", "  litellm-1.107.0"];
+  let tm = {};
+  function buildTerm() {
+    const g = el("g", {}, $("#sc-term"));
+    el("rect", { x: 80, y: 520, width: 860, height: 560, rx: 18, fill: "#2b2a27" }, g);
+    el("rect", { x: 80, y: 520, width: 860, height: 64, rx: 18, fill: "#3b3a36" }, g);
+    el("rect", { x: 80, y: 560, width: 860, height: 24, fill: "#3b3a36" }, g);
+    [0, 1, 2].forEach((i) => el("circle", { cx: 122 + i * 40, cy: 552, r: 11, fill: "#827e74" }, g));
+    el("text", { x: 510, y: 563, "text-anchor": "middle", "font-size": 26, fill: "#c9c4b8", "font-family": "var(--mono)", text: "terminal" }, g);
+    tm.cmd = el("text", { x: 120, y: 660, "font-size": 40, fill: "#f3f0e9", "font-family": "var(--mono)" }, g);
+    tm.out = OUT.map((s, i) => el("text", { x: 120, y: 740 + i * 62, "font-size": 36, fill: i >= 2 ? "#9fd3c2" : "#c9c4b8", "font-family": "var(--mono)", text: s }, g));
+    tm.spy = el("g", {}, g);
+    el("rect", { x: 120, y: 990, width: 520, height: 60, rx: 8, fill: FUCH }, tm.spy);
+    el("text", { x: 140, y: 1031, "font-size": 34, "font-weight": 650, fill: PAPER, text: "+ un programa espía" }, tm.spy);
+  }
+  function drawTerm(t, s, A) {
+    const a = A.instalo.start - 0.2;
+    const n = Math.round(T1.length * ramp(t, a, a + 1.4, ease.linear));
+    tm.cmd.textContent = T1.slice(0, n);
+    tm.out.forEach((o, i) => op(o, ramp(t, a + 1.6 + i * 0.35, a + 1.75 + i * 0.35)));
+    op(tm.spy, fade(t, A.espia.start));
+  }
+
+  // ---------------------------------------------------------------- 2. what LiteLLM is
+  let wh = {};
+  function buildWhat() {
+    const g = el("g", {}, $("#sc-what"));
+    wh.app = box(g, 80, 760, 220, 150, "tu app", INK);
+    wh.lib = box(g, 390, 745, 300, 180, "LiteLLM", BLUE, "librería");
+    wh.ais = ["IA 1", "IA 2", "IA 3"].map((n, i) => box(g, 780, 560 + i * 200, 160, 140, n, MINT));
+    wh.a1 = arrow(g, 305, 835, 382, 835, INK);
+    wh.a2 = [0, 1, 2].map((i) => arrow(g, 696, 835, 772, 630 + i * 200, MINT));
+  }
+  function drawWhat(t, s, A) {
+    op(wh.lib, 1);
+    op(wh.app, fade(t, A.conectar.start));
+    wh.a1.set(ramp(t, A.conectar.start, A.conectar.start + 0.6));
+    wh.ais.forEach((b, i) => op(b, fade(t, A.varias.start + i * 0.2)));
+    wh.a2.forEach((a, i) => a.set(ramp(t, A.varias.start + i * 0.2, A.varias.start + 0.6 + i * 0.2)));
+  }
+
+  // ---------------------------------------------------------------- 3. publishing pipeline hijacked
+  let pb = {};
+  function buildPub() {
+    const g = el("g", {}, $("#sc-pub"));
+    pb.code = box(g, 80, 520, 380, 150, "código", BLUE, "de los autores");
+    pb.sys = box(g, 80, 790, 380, 150, "publicación", BLUE, "sistema que sube versiones");
+    pb.pkg = box(g, 560, 760, 380, 210, "litellm", INK, " ");
+    pb.ver = el("text", { x: 750, y: 935, "text-anchor": "middle", "font-size": 46, "font-weight": 720, fill: FUCH, "font-family": "var(--mono)", text: "1.107.0" }, pb.pkg);
+    el("text", { x: 750, y: 1010, "text-anchor": "middle", class: "m-note", text: "lo que descarga pip" }, pb.pkg);
+    pb.a1 = arrow(g, 270, 676, 270, 782, BLUE);
+    pb.a2 = arrow(g, 466, 865, 552, 865, FUCH);
+    pb.intr = el("g", {}, g);
+    el("rect", { x: 80, y: 1040, width: 380, height: 110, rx: 14, fill: FUCH }, pb.intr);
+    el("text", { x: 270, y: 1108, "text-anchor": "middle", "font-size": 38, "font-weight": 680, fill: PAPER, text: "alguien ajeno" }, pb.intr);
+    pb.ai = arrow(g, 270, 1034, 270, 948, FUCH);
+    pb.trap = el("g", {}, g);
+    el("rect", { x: 600, y: 1040, width: 300, height: 70, rx: 10, fill: "none", stroke: FUCH, "stroke-width": 4, "stroke-dasharray": "12 8" }, pb.trap);
+    el("text", { x: 750, y: 1087, "text-anchor": "middle", "font-size": 34, "font-weight": 650, fill: FUCH, text: "con trampa" }, pb.trap);
+  }
+  function drawPub(t, s, A) {
+    pb.a1.set(ramp(t, s.from + 0.2, s.from + 0.8));
+    op(pb.intr, fade(t, A.control.start));
+    pb.ai.set(ramp(t, A.control.start, A.control.start + 0.6));
+    const taken = ramp(t, A.control.start + 0.3, A.publicacion.end);
+    pb.sys.rect.setAttribute("stroke", taken > 0.5 ? FUCH : BLUE);
+    op(pb.pkg, fade(t, A.subio.start));
+    pb.a2.set(ramp(t, A.subio.start, A.subio.start + 0.6));
+    op(pb.trap, fade(t, A.trampa.start));
+  }
+
+  // ---------------------------------------------------------------- 4. the .pth file runs at every Python start
+  let pt = {};
+  const FILES = ["litellm/", "litellm-1.107.0.dist-info/", "cook.pth"];
+  function buildPth() {
+    const g = el("g", {}, $("#sc-pth"));
+    el("text", { x: 80, y: 500, class: "m-label", text: "carpeta de Python · site-packages/" }, g);
+    pt.rows = FILES.map((f, i) => {
+      const gg = el("g", {}, g);
+      const bad = i === 2;
+      const r = el("rect", { x: 80, y: 530 + i * 86, width: 860, height: 72, rx: 8, fill: bad ? "#f4e1e9" : "none" }, gg);
+      el("rect", { x: 104, y: 552 + i * 86, width: 34, height: 28, rx: 4, fill: bad ? FUCH : "#827e74" }, gg);
+      el("text", { x: 160, y: 578 + i * 86, "font-size": 38, "font-family": "var(--mono)", "font-weight": bad ? 700 : 450, fill: bad ? FUCH : INK, text: f }, gg);
+      if (bad) el("text", { x: 916, y: 578 + i * 86, "text-anchor": "end", "font-size": 30, "font-weight": 650, fill: FUCH, text: "archivo extra" }, gg);
+      gg.bg = r;
+      return gg;
+    });
+    // Python start-ups: each one runs cook.pth before anything else
+    pt.runs = [0, 1, 2].map((i) => {
+      const gg = el("g", {}, g);
+      const y = 880 + i * 120;
+      el("rect", { x: 80, y, width: 300, height: 90, rx: 12, fill: BLUE }, gg);
+      el("text", { x: 230, y: y + 58, "text-anchor": "middle", "font-size": 36, "font-weight": 680, fill: PAPER, text: "python arranca" }, gg);
+      el("line", { x1: 392, y1: y + 45, x2: 470, y2: y + 45, stroke: INK, "stroke-width": 5 }, gg);
+      el("polygon", { points: `${486},${y + 45} ${462},${y + 32} ${462},${y + 58}`, fill: INK }, gg);
+      el("rect", { x: 500, y: y + 5, width: 230, height: 80, rx: 10, fill: "#f4e1e9", stroke: FUCH, "stroke-width": 4 }, gg);
+      el("text", { x: 615, y: y + 57, "text-anchor": "middle", "font-size": 32, "font-weight": 700, fill: FUCH, "font-family": "var(--mono)", text: "cook.pth" }, gg);
+      el("text", { x: 760, y: y + 57, "font-size": 30, fill: "#827e74", text: "→ tu código" }, gg);
+      return gg;
+    });
+  }
+  function drawPth(t, s, A) {
+    pt.rows.forEach((r, i) => op(r, i < 2 ? ramp(t, s.from + 0.1 + i * 0.25, s.from + 0.5 + i * 0.25) : fade(t, A.archivo.start)));
+    const hi = ramp(t, A.archivo.start, A.archivo.start + 0.5);
+    pt.rows[2].bg.setAttribute("stroke", FUCH);
+    pt.rows[2].bg.setAttribute("stroke-width", (4 * hi).toFixed(1));
+    const a = A.arranca.start - 0.4;
+    pt.runs.forEach((r, i) => op(r, ramp(t, a + i * 0.6, a + 0.35 + i * 0.6)));
+  }
+
+  // ---------------------------------------------------------------- 5. what it steals + backdoor
+  let st = {};
+  const TARGETS = [["~/.aws", "llaves de la nube", "nube"], ["~/.ssh", "acceso remoto", "remoto"], [".env", "contraseñas guardadas", "contrasenas"]];
+  function buildSteal() {
+    const g = el("g", {}, $("#sc-steal"));
+    el("text", { x: 80, y: 500, class: "m-label", text: "en tu computadora" }, g);
+    st.t = TARGETS.map(([p, d], i) => {
+      const gg = el("g", {}, g);
+      const y = 540 + i * 170;
+      const r = el("rect", { x: 80, y, width: 480, height: 140, rx: 14, fill: PAPER, stroke: "#d6d1c5", "stroke-width": 4 }, gg);
+      el("path", { d: `M110 ${y + 40} h40 l10 10 h50 v50 h-100 z`, fill: "#e9e5dc", stroke: "#827e74", "stroke-width": 3 }, gg);
+      el("text", { x: 236, y: y + 66, "font-size": 40, "font-weight": 700, "font-family": "var(--mono)", fill: INK, text: p }, gg);
+      el("text", { x: 236, y: y + 110, "font-size": 28, fill: "#827e74", text: d }, gg);
+      gg.r = r;
+      return gg;
+    });
+    st.srv = el("g", {}, g);
+    el("rect", { x: 700, y: 640, width: 240, height: 260, rx: 14, fill: "#f4e1e9", stroke: FUCH, "stroke-width": 5 }, st.srv);
+    [0, 1, 2].forEach((i) => {
+      el("rect", { x: 730, y: 670 + i * 60, width: 180, height: 40, rx: 6, fill: PAPER, stroke: FUCH, "stroke-width": 3 }, st.srv);
+      el("circle", { cx: 888, cy: 690 + i * 60, r: 6, fill: FUCH }, st.srv);
+    });
+    el("text", { x: 820, y: 620, "text-anchor": "middle", "font-size": 34, "font-weight": 700, fill: FUCH, text: "servidor ajeno" }, st.srv);
+    st.out = [0, 1, 2].map((i) => arrow(g, 570, 610 + i * 170, 692, 700 + i * 40, FUCH));
+    st.door = el("g", {}, g);
+    el("rect", { x: 80, y: 1080, width: 430, height: 120, rx: 14, fill: PAPER, stroke: AMBER, "stroke-width": 5 }, st.door);
+    el("text", { x: 295, y: 1132, "text-anchor": "middle", "font-size": 36, "font-weight": 700, fill: AMBER, text: "puerta trasera" }, st.door);
+    el("text", { x: 295, y: 1174, "text-anchor": "middle", "font-size": 28, fill: "#827e74", text: "se queda en tu equipo" }, st.door);
+    st.ask = arrow(g, 516, 1110, 750, 912, AMBER, true);
+    st.back = arrow(g, 830, 912, 560, 1190, AMBER, true);
+    st.pkt = el("circle", { r: 14, fill: AMBER }, g);
+    st.lbl = el("text", { x: 940, y: 1190, "text-anchor": "end", "font-size": 28, "font-weight": 600, fill: AMBER, text: "«¿qué hago ahora?»" }, g);
+  }
+  function drawSteal(t, s, A) {
+    const on = [A.nube.start, A.remoto.start, A.contrasenas.start];
+    st.t.forEach((g, i) => {
+      op(g, ramp(t, s.from + i * 0.15, s.from + 0.4 + i * 0.15));
+      const lit = ramp(t, on[i] - 0.2, on[i] + 0.3);
+      g.r.setAttribute("stroke", lit > 0.5 ? FUCH : "#d6d1c5");
+      g.r.setAttribute("fill", lit > 0.5 ? "#f4e1e9" : PAPER);
+    });
+    op(st.srv, fade(t, A.servidor.start));
+    st.out.forEach((a, i) => a.set(ramp(t, A.servidor.start + i * 0.15, A.servidor.start + 0.7 + i * 0.15)));
+    const d = A.puerta.start;
+    op(st.door, fade(t, d));
+    st.ask.set(ramp(t, d + 0.4, d + 1.0));
+    st.back.set(ramp(t, A.instrucciones.start, A.instrucciones.start + 0.6));
+    op(st.lbl, fade(t, A.instrucciones.start));
+    // a packet travels back and forth every 1.6 s ("cada cierto tiempo")
+    const k = t - A.instrucciones.start - 0.6;
+    if (k > 0) {
+      const ph = (k % 1.6) / 1.6;
+      const up = ph < 0.5;
+      const q = ease.inOut(up ? ph * 2 : (ph - 0.5) * 2);
+      const x = up ? lerp(516, 750, q) : lerp(830, 560, q), y = up ? lerp(1110, 912, q) : lerp(912, 1190, q);
+      st.pkt.setAttribute("cx", x.toFixed(1)); st.pkt.setAttribute("cy", y.toFixed(1));
+      op(st.pkt, 1);
+    } else op(st.pkt, 0);
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "El veintiuno de octubre, quien instaló cierta librería de inteligencia artificial durante unas horas se llevó algo extra: un programa espía. La librería se llama LiteLLM, y muchos programadores la usan para conectar sus apps con varias IA a la vez. Alguien tomó control de su sistema de publicación y subió una versión con trampa. El truco: dejaba un archivo que Python ejecuta solo cada vez que arranca, aunque nunca uses la librería. Ese programa buscaba llaves de servicios en la nube, llaves de acceso remoto y contraseñas guardadas, y las mandaba a un servidor ajeno. Además dejaba una puerta trasera que pedía instrucciones nuevas. Si haces software: fija las versiones exactas y no actualices el mismo día que sale una. Y si la instalaste, cambia todas tus llaves.";
+
+  Mosaic.short({
+    kicker: "Noticias · 21 oct 2026",
+    title: "¿Una librería de IA puede robarte tus contraseñas?",
+    script: SCRIPT,
+    anchors: {
+      octubre: ["veintiuno de octubre", "21 de octubre", "octubre"],
+      instalo: "instalo",
+      espia: "espia",
+      programadores: "programadores",
+      conectar: "conectar",
+      varias: "varias",
+      control: "control",
+      publicacion: "publicacion",
+      subio: "subio",
+      trampa: "trampa",
+      truco: "truco",
+      archivo: "archivo",
+      arranca: "arranca",
+      buscaba: "buscaba",
+      nube: "nube",
+      remoto: "remoto",
+      contrasenas: "contrasenas",
+      servidor: "servidor",
+      puerta: "puerta trasera",
+      instrucciones: "instrucciones",
+      software: "software",
+      exactas: "exactas",
+      instalaste: "instalaste",
+      llaves: "todas tus llaves",
+    },
+    build() { buildTerm(); buildWhat(); buildPub(); buildPth(); buildSteal(); },
+    scenes: [
+      { el: "#sc-term", from: 0, to: "programadores-1.2", fadeIn: 0.3, rise: 0, update: drawTerm },
+      { el: "#stamp", from: "octubre-0.2", to: "programadores-1.2", fade: 0.3, rise: 0,
+        update(t, s) { const p = ramp(t, s.from, s.from + 0.4, ease.out); $("#stamp").style.transform = `rotate(-6deg) scale(${lerp(1.25, 1, p).toFixed(3)})`; } },
+      { el: "#cap-spy", from: "espia-0.3", to: "programadores-1.2", fade: 0.3 },
+      { el: "#sc-what", from: "programadores-1.2", to: "control-0.3", rise: 0, update: drawWhat },
+      { el: "#cap-what", from: "programadores-1.0", to: "control-0.3", fade: 0.3 },
+      { el: "#sc-pub", from: "control-0.3", to: "truco-0.3", rise: 0, update: drawPub },
+      { el: "#cap-pub", from: "control-0.2", to: "truco-0.3", fade: 0.3 },
+      { el: "#sc-pth", from: "truco-0.3", to: "buscaba-0.3", rise: 0, update: drawPth },
+      { el: "#cap-pth", from: "arranca-0.4", to: "buscaba-0.3", fade: 0.3 },
+      { el: "#sc-steal", from: "buscaba-0.3", to: "software-0.3", rise: 0, update: drawSteal },
+      { el: "#cap-steal", from: "buscaba-0.2", to: "puerta-0.3", fade: 0.3 },
+      { el: "#cap-door", from: "puerta-0.3", to: "software-0.3", fade: 0.3 },
+      { el: "#sc-todo", from: "software-0.3", to: "end", rise: 0,
+        update(t, s, A) {
+          $("#todo1").style.opacity = String(ramp(t, A.exactas.start - 0.4, A.exactas.start));
+          $("#todo2").style.opacity = String(ramp(t, A.instalaste.start - 0.4, A.instalaste.start));
+        } },
+      { el: "#cap-todo", from: "software-0.2", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
