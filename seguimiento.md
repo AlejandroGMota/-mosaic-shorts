@@ -41,18 +41,18 @@ Guion: `guiones/shorts-lote-02-2026-10-27.md` · Tomas: `audios/shorts-lote-02-2
 | M10 | ¿Cómo hace tu compu muchas cosas a la vez? | ✅ 27 oct | — | — | ✅ 27 oct | — | — | 6 ms es de CFS; Linux 6.6+ usa EEVDF |
 | M11 | ¿Qué pasa en tu compu desde que la prendes? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
 | I1 | ¿Por qué una IA de 7B apenas cabe en una Mac de 8 GB? | ✅ 27 oct | ✗ 27 oct | — | — | — | — | descartado por Enrique (27 oct) |
-| I2 ⭐ | ¿Cómo escribe una IA como ChatGPT? | ✅ 27 oct | — | — | — | — | — |  |
-| I3 ⭐ | ¿Por qué la IA no sabe contar letras? | ✅ 27 oct | — | — | — | — | — | confirmar en un tokenizer cómo se corta «ferrocarril» |
-| I4 ⭐ | ¿Por qué la IA inventa cosas con tanta seguridad? | ✅ 27 oct | — | — | — | — | — |  |
-| I5 | ¿Cómo aprende una IA a reconocer un gato? | ✅ 27 oct | — | — | — | — | — |  |
-| I6 | ¿Por qué la IA necesita tarjetas de video? | ✅ 27 oct | — | — | — | — | — |  |
-| I7 | ¿Cómo convierte una IA tu voz en texto? | ✅ 27 oct | — | — | — | — | — |  |
-| I8 | ¿Cómo dibuja una IA una imagen a partir de ruido? | ✅ 27 oct | — | — | — | — | — |  |
-| I9 | ¿Por qué la IA olvida lo que le dijiste antes? | ✅ 27 oct | — | — | — | — | — |  |
-| I10 | ¿Cómo sabe la IA que «rey» y «reina» se parecen? | ✅ 27 oct | — | — | — | — | — |  |
-| I11 | ¿Cuánta energía gasta una pregunta a la IA? | ✅ 27 oct | — | — | — | — | — | cifra de Google (may 2025); revisar si hay una más nueva |
-| I12 ⭐ | ¿De verdad la IA gasta agua? | ✅ 27 oct | — | — | — | — | — | Google 0.26 ml vs. UC Riverside: dos cuentas distintas |
-| I13 | ¿Cómo decide TikTok qué video sigue? | ✅ 27 oct | — | — | — | — | — | señales según TikTok (2020) |
+| I2 ⭐ | ¿Cómo escribe una IA como ChatGPT? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
+| I3 ⭐ | ¿Por qué la IA no sabe contar letras? | ✅ 27 oct | — | — | ✅ 27 oct | — | — | confirmar en un tokenizer cómo se corta «ferrocarril» |
+| I4 ⭐ | ¿Por qué la IA inventa cosas con tanta seguridad? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
+| I5 | ¿Cómo aprende una IA a reconocer un gato? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
+| I6 | ¿Por qué la IA necesita tarjetas de video? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
+| I7 | ¿Cómo convierte una IA tu voz en texto? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
+| I8 | ¿Cómo dibuja una IA una imagen a partir de ruido? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
+| I9 | ¿Por qué la IA olvida lo que le dijiste antes? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
+| I10 | ¿Cómo sabe la IA que «rey» y «reina» se parecen? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
+| I11 | ¿Cuánta energía gasta una pregunta a la IA? | ✅ 27 oct | — | — | ✅ 27 oct | — | — | cifra de Google (may 2025); revisar si hay una más nueva |
+| I12 ⭐ | ¿De verdad la IA gasta agua? | ✅ 27 oct | — | — | ✅ 27 oct | — | — | Google 0.26 ml vs. UC Riverside: dos cuentas distintas |
+| I13 | ¿Cómo decide TikTok qué video sigue? | ✅ 27 oct | — | — | ✅ 27 oct | — | — | señales según TikTok (2020) |
 | T1 ⭐ | ¿Cómo sabe tu pantalla dónde la tocas? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
 | T2 | ¿Cómo sabe tu celular si lo volteas? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
 | T3 ⭐ | ¿Cómo sabe tu celular dónde estás sin internet? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
