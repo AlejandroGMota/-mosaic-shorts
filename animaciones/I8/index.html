@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>I8 · ¿Cómo dibuja una IA una imagen a partir de ruido?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+  canvas.px { position: absolute; image-rendering: pixelated; border-radius: 8px; box-shadow: 0 0 0 3px var(--line); }
+  .lbl { position: absolute; font-size: 30px; color: var(--ink-2); text-align: center; font-weight: 560; }
+  .sym { position: absolute; font-size: 64px; color: var(--ink-2); font-weight: 600; text-align: center; }
+  .prompt { position: absolute; inset: auto; left: 80px; width: 920px; top: 470px; text-align: center; font-size: 40px; color: var(--ink); font-weight: 600; }
+  .prompt span { display: inline-block; padding: 10px 26px; border-radius: 14px; background: #faf8f3; border: 3px solid var(--mint); color: var(--mint); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <div class="scene" id="sc-static"></div>
+    <div class="scene" id="sc-train"></div>
+    <div class="scene" id="sc-gen"></div>
+    <div class="scene" id="sc-two"></div>
+
+    <div class="m-caption scene" id="cap-noise" style="top:1300px">No empieza con un lienzo en blanco<small>empieza con ruido, como la estática de una tele</small></div>
+    <div class="m-caption scene" id="cap-train" style="top:1300px">Al entrenar, a millones de fotos<small>se les agrega ruido hasta volverlas estática</small></div>
+    <div class="m-caption scene" id="cap-rev" style="top:1300px">La IA aprende lo contrario<small>adivinar qué parte de la imagen es ruido</small></div>
+    <div class="m-caption scene" id="cap-gen" style="top:1300px">Quita un poco de ruido en cada paso<small>guiada por tu descripción</small></div>
+    <div class="m-caption scene" id="cap-steps" style="top:1300px">De 20 a 50 pasos<small>manchas → formas → un gato con sombrero</small></div>
+    <div class="m-caption scene" id="cap-two" style="top:1300px">Misma descripción, distinta estática<small>imágenes distintas</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp, clamp, keys } = Mosaic;
+  const rnd = (i) => { const x = Math.sin(i * 12.9898 + 78.233) * 43758.5453; return x - Math.floor(x); };
+  const N = 64;
+
+  // ---------------------------------------------------------------- images as functions of (x, y) in [0, 1]
+  function inTri(x, y, a, b, c) {
+    const s = (p, q, r) => (p[0] - r[0]) * (q[1] - r[1]) - (q[0] - r[0]) * (p[1] - r[1]);
+    const d1 = s([x, y], a, b), d2 = s([x, y], b, c), d3 = s([x, y], c, a);
+    return !((d1 < 0 || d2 < 0 || d3 < 0) && (d1 > 0 || d2 > 0 || d3 > 0));
+  }
+  // cat with a hat; v = 0 or 1 gives two different cats for the same description
+  function catImg(x, y, v) {
+    const dx = v ? 0.05 : 0;
+    x -= dx;
+    const fur = v ? [128, 128, 138] : [217, 155, 80];
+    const hat = v ? [179, 56, 107] : [47, 94, 142];
+    const band = v ? [201, 138, 27] : [201, 138, 27];
+    const bg = v ? [214, 234, 226] : [207, 224, 238];
+    const e = (cx, cy, rx, ry) => ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 < 1;
+    const tilt = v ? (y - 0.4) * 0.25 : 0;
+    const hx = x + tilt;
+    if (hx > 0.36 && hx < 0.64 && y > 0.13 && y < 0.41) return y > 0.33 && y < 0.38 ? band : hat;
+    if (hx > 0.27 && hx < 0.73 && y > 0.39 && y < 0.44) return hat;
+    if (e(0.41, 0.6, 0.032, 0.04) || e(0.59, 0.6, 0.032, 0.04)) return [40, 38, 35];
+    if (e(0.5, 0.685, 0.022, 0.016)) return [179, 56, 107];
+    if (inTri(x, y, [0.24, 0.55], [0.27, 0.36], [0.37, 0.47]) || inTri(x, y, [0.76, 0.55], [0.73, 0.36], [0.63, 0.47])) return fur;
+    if (e(0.5, 0.62, 0.27, 0.21)) return fur;
+    if (e(0.5, 1.02, 0.36, 0.2)) return fur;
+    return bg.map((c) => c - 14 * y);
+  }
+  function landImg(x, y) {
+    if ((x - 0.72) ** 2 + (y - 0.25) ** 2 < 0.012) return [224, 165, 58];
+    const hill = 0.62 + 0.09 * Math.sin(x * 8) + 0.04 * Math.cos(x * 19);
+    if (y > 0.86) return [138, 106, 68];
+    if (y > hill) return [58, 154, 128];
+    return [156 + 60 * y, 195 + 30 * y, 228];
+  }
+  function noiseAt(seed, i) {
+    const g = rnd(seed * 7919 + i * 3) * 255;
+    return [g * 0.7 + rnd(seed * 31 + i * 5 + 1) * 77, g * 0.7 + rnd(seed * 37 + i * 7 + 2) * 77, g * 0.7 + rnd(seed * 41 + i * 11 + 3) * 77];
+  }
+  /** a = amount of noise (0 clean .. 1 pure static), res = detail of the clean part (coarse shapes first). */
+  function paint(cv, img, a, seed, res = N) {
+    const ctx = cv.getContext("2d");
+    const d = ctx.createImageData(N, N);
+    for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+      const bs = N / res;
+      const sx = (Math.floor(i / bs) + 0.5) * bs / N, sy = (Math.floor(j / bs) + 0.5) * bs / N;
+      const c = img(sx, sy);
+      const n = noiseAt(seed, j * N + i);
+      const k = (j * N + i) * 4;
+      for (let ch = 0; ch < 3; ch++) d.data[k + ch] = clamp(lerp(c[ch], n[ch], a), 0, 255);
+      d.data[k + 3] = 255;
+    }
+    ctx.putImageData(d, 0, 0);
+  }
+  function canvas(parent, x, y, size) {
+    return el("canvas", { class: "px", width: N, height: N, style: `left:${x}px;top:${y}px;width:${size}px;height:${size}px` }, parent);
+  }
+  function label(parent, x, y, w, text, extra = "") {
+    return el("div", { class: "lbl", style: `left:${x}px;top:${y}px;width:${w}px;${extra}`, text }, parent);
+  }
+  function sym(parent, x, y, text) {
+    return el("div", { class: "sym", style: `left:${x - 40}px;top:${y}px;width:80px`, text }, parent);
+  }
+
+  // ---------------------------------------------------------------- static
+  let st = {};
+  function buildStatic() {
+    st.cv = canvas($("#sc-static"), 290, 520, 500);
+    label($("#sc-static"), 290, 1050, 500, "estática: puro ruido al azar");
+  }
+
+  // ---------------------------------------------------------------- training: add noise, learn to remove it
+  const LEVELS = [0, 0.35, 0.7, 1];
+  let tr = {};
+  function buildTrain() {
+    const p = $("#sc-train");
+    label(p, 110, 490, 820, "entrenamiento (una foto de ejemplo)", "text-align:left;font-weight:650;color:var(--ink)");
+    tr.fwd = LEVELS.map((a, i) => {
+      const c = canvas(p, 110 + i * 215, 560, 170);
+      paint(c, landImg, a, 11);
+      return c;
+    });
+    tr.fwdL = [1, 2, 3].map((i) => label(p, 110 + i * 215 - 45, 750, 90, "+ ruido", "font-size:26px;color:var(--fuchsia)"));
+    tr.rev = el("div", {}, p);
+    label(tr.rev, 110, 820, 820, "la IA aprende a adivinar qué parte es ruido", "text-align:left;font-weight:650;color:var(--ink)");
+    const a = canvas(tr.rev, 110, 890, 190), b = canvas(tr.rev, 425, 890, 190), c = canvas(tr.rev, 740, 890, 190);
+    paint(a, landImg, 0.6, 11);
+    paint(b, () => [128, 128, 128], 0.6, 11);
+    paint(c, landImg, 0.25, 11);
+    sym(tr.rev, 362, 940, "−");
+    sym(tr.rev, 678, 940, "=");
+    label(tr.rev, 110, 1090, 190, "con ruido");
+    label(tr.rev, 425, 1090, 190, "ruido que adivina");
+    label(tr.rev, 740, 1090, 190, "más limpia");
+  }
+  function drawTrain(t, s, A) {
+    tr.fwd.forEach((c, i) => { c.style.opacity = String(ramp(t, A.agrego.start + i * 0.45 - 0.3, A.agrego.start + i * 0.45 + 0.1)); });
+    tr.fwdL.forEach((l, i) => { l.style.opacity = String(ramp(t, A.agrego.start + (i + 1) * 0.45 - 0.3, A.agrego.start + (i + 1) * 0.45)); });
+    tr.rev.style.opacity = String(ramp(t, A.contrario.start - 0.3, A.contrario.start + 0.3));
+  }
+
+  // ---------------------------------------------------------------- generation, step by step
+  const STRIP = [0, 6, 12, 20, 30];
+  let gn = {};
+  function buildGen() {
+    const p = $("#sc-gen");
+    gn.prompt = el("div", { class: "prompt" }, p);
+    el("span", { text: "«un gato con sombrero»" }, gn.prompt);
+    gn.cv = canvas(p, 340, 560, 400);
+    gn.step = label(p, 340, 975, 400, "", "font-size:36px;font-weight:650;color:var(--blue)");
+    gn.strip = STRIP.map((k, i) => {
+      const c = canvas(p, 140 + i * 165, 1050, 140);
+      paint(c, (x, y) => catImg(x, y, 0), noiseOf(k), 5, resOf(k));
+      return { c, k, l: label(p, 140 + i * 165, 1196, 140, "paso " + k, "font-size:24px") };
+    });
+  }
+  function noiseOf(k) { return Math.pow(1 - k / 30, 1.2); }
+  function resOf(k) { return Math.max(2, Math.round(Math.pow(2, 1 + 5 * Math.pow(k / 30, 0.8)))); }
+  function stepAt(t, A) {
+    return Math.floor(keys(t, [
+      [A.quita.start - 0.1, 0], [A.descripcion.end, 5], [A.otro.start - 0.1, 5], [A.otro.end + 0.3, 9],
+      [A.yotro.start - 0.1, 9], [A.yotro.end + 0.3, 12], [A.veinte.start, 12], [A.gato.start, 30],
+    ], ease.linear) + 1e-6);
+  }
+  let lastK = -1;
+  function drawGen(t, s, A) {
+    const k = stepAt(t, A);
+    if (k !== lastK) { paint(gn.cv, (x, y) => catImg(x, y, 0), noiseOf(k), 5, resOf(k)); lastK = k; }
+    gn.step.textContent = `paso ${k} de 30`;
+    gn.prompt.style.opacity = String(ramp(t, A.descripcion.start - 0.3, A.descripcion.start + 0.2));
+    gn.strip.forEach((x) => {
+      const on = k >= x.k && t >= A.quita.start - 0.1 ? 1 : 0;
+      x.c.style.opacity = String(on);
+      x.l.style.opacity = String(on);
+    });
+  }
+
+  // ---------------------------------------------------------------- two seeds, two cats
+  function buildTwo() {
+    const p = $("#sc-two");
+    const pr = el("div", { class: "prompt" }, p);
+    el("span", { text: "«un gato con sombrero»" }, pr);
+    [0, 1].forEach((v) => {
+      const y = 570 + v * 340;
+      const a = canvas(p, 150, y, 270), b = canvas(p, 660, y, 270);
+      paint(a, () => [0, 0, 0], 1, v ? 23 : 5);
+      paint(b, (x, yy) => catImg(x, yy, v), 0, 5);
+      label(p, 150, y + 280, 270, v ? "estática B" : "estática A", "font-size:26px");
+      label(p, 660, y + 280, 270, v ? "gato B" : "gato A", "font-size:26px");
+      sym(p, 540, y + 95, "→");
+    });
+  }
+
+  const SCRIPT = "Las IA que dibujan no empiezan con un lienzo en blanco: empiezan con ruido, como la estática de una tele vieja. ¿Cómo sale una imagen de ahí? Durante el entrenamiento, a millones de fotos se les agregó ruido poco a poco, hasta volverlas pura estática. La IA aprendió a hacer lo contrario: ver una imagen con ruido y adivinar qué parte de ella es ruido. Para crear una imagen nueva, parte de estática al azar. Quita un poco del ruido, guiada por tu descripción. Luego otro poco. Y otro. En unos veinte a cincuenta pasos, las manchas se vuelven formas, y las formas, un gato con sombrero. Por eso dos imágenes con la misma descripción salen distintas: empiezan con estática diferente.";
+
+  Mosaic.short({
+    kicker: "IA por dentro",
+    title: "¿Cómo dibuja una IA una imagen a partir de ruido?",
+    script: SCRIPT,
+    anchors: {
+      ruido: "empiezan con ruido",
+      estatica: "estatica",
+      entrenamiento: "entrenamiento",
+      agrego: "agrego",
+      pura: "pura estatica",
+      contrario: "contrario",
+      adivinar: "adivinar",
+      crear: "crear",
+      azar: "azar",
+      quita: "quita",
+      descripcion: "descripcion",
+      otro: "otro poco",
+      yotro: "y otro",
+      veinte: ["veinte a cincuenta", "20 a 50", "veinte", "20"],
+      manchas: "manchas",
+      gato: "un gato con",
+      sombrero: "sombrero",
+      poreso: "por eso",
+      diferente: "diferente",
+    },
+    build() { buildStatic(); buildTrain(); buildGen(); buildTwo(); },
+    scenes: [
+      { el: "#sc-static", from: 0, to: "entrenamiento-0.3", fadeIn: 0.4, rise: 0, update(t) { paint(st.cv, () => [0, 0, 0], 1, Math.floor(t * 12)); } },
+      { el: "#sc-train", from: "entrenamiento-0.3", to: "crear-0.3", rise: 0, update: drawTrain },
+      { el: "#sc-gen", from: "crear-0.3", to: "poreso-0.3", rise: 0, update: drawGen },
+      { el: "#sc-two", from: "poreso-0.3", to: "end", rise: 0 },
+      { el: "#cap-noise", from: 0.2, to: "entrenamiento-0.3", fade: 0.3 },
+      { el: "#cap-train", from: "entrenamiento-0.3", to: "contrario-0.4", fade: 0.3 },
+      { el: "#cap-rev", from: "contrario-0.4", to: "crear-0.3", fade: 0.3 },
+      { el: "#cap-gen", from: "crear-0.3", to: "veinte-0.3", fade: 0.3 },
+      { el: "#cap-steps", from: "veinte-0.3", to: "poreso-0.3", fade: 0.3 },
+      { el: "#cap-two", from: "poreso-0.3", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
