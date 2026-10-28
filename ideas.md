@@ -3,7 +3,8 @@
 Última actualización: 2026-10-27. Copia de trabajo para la nube; el original vive en la bóveda de Enrique (`Videos/Estilo.md`, `Videos/Estado.md`).
 
 ## La idea de un Short
-- **Cómo funciona algo que la gente usa a diario**, explicado en 40–55 s (110–130 palabras) para **público general curioso** (México y Latam), sin jerga.
+- **Cómo funciona algo que la gente usa a diario**, explicado para **público general curioso** (México y Latam), sin jerga.
+- **Duración (cambio del 27 oct):** menos de 3 minutos (≈ 450 palabras como tope a ~3 palabras por segundo). La longitud la decide el contenido: si explicarlo bien pide más tiempo, se alarga; si cabe en 45 s, se queda en 45 s. Ya no hay que recortar un buen guion para que quepa en 130 palabras.
 - Título en forma de **pregunta**, de 60 caracteres o menos.
 - Estructura: gancho (la pregunta, en los primeros 2 s) → mecanismo → un número o comparación concreta → remate. Cada Short se entiende solo; nada de «te lo explico en el siguiente» (el orden de publicación puede cambiar).
 - **Mecanismo antes que marca:** la marca solo como ejemplo cuando ayuda. Sin rumores ni patentes como gancho. Nada de contenido fanboy.
