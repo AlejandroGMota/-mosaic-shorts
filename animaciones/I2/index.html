@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>I2 · ¿Cómo escribe una IA como ChatGPT?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+  .answer { position: absolute; inset: auto; left: 80px; top: 470px; width: 900px; }
+  .answer .who { font-size: 28px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+  .answer .txt { font-size: 56px; line-height: 1.3; font-weight: 520; color: var(--ink); min-height: 150px; }
+  .answer .tok { border-bottom: 7px solid transparent; padding-bottom: 2px; border-radius: 2px; }
+  .answer .cur { display: inline-block; width: 26px; height: 54px; margin-left: 6px; vertical-align: -6px; background: var(--ink); }
+  .counter { position: absolute; inset: auto; left: 80px; top: 760px; width: 900px; text-align: center; }
+  .counter .n { font-size: 220px; line-height: 1; font-weight: 680; letter-spacing: -0.03em; color: var(--blue); font-variant-numeric: tabular-nums; }
+  .counter .u { font-size: 48px; font-weight: 560; color: var(--ink-2); margin-top: 10px; }
+  .counter .s { font-size: 32px; color: var(--muted); margin-top: 26px; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <div class="answer scene" id="sc-text"><div class="who">Respuesta de la IA</div><div class="txt" id="txt"></div><div class="m-note" id="tnote" style="margin-top:12px">cortes en tokens ilustrativos</div></div>
+
+    <svg class="full scene" id="sc-bars" viewBox="0 0 1080 1920"></svg>
+    <div class="counter scene" id="sc-count"><div class="n" id="cnt">0</div><div class="u">vueltas del ciclo</div><div class="s">100 palabras ÷ ¾ ≈ 133 tokens</div></div>
+
+    <div class="m-caption scene" id="cap-slow" style="top:1300px">La respuesta aparece poco a poco</div>
+    <div class="m-caption scene" id="cap-real" style="top:1300px">No es un efecto<small>así es como la escribe</small></div>
+    <div class="m-caption scene" id="cap-next" style="top:1300px">Una sola tarea: predecir el siguiente pedazo</div>
+    <div class="m-caption scene" id="cap-tok" style="top:1300px">A esos pedazos se les llama tokens<small>en inglés, 1 token ≈ ¾ de palabra</small></div>
+    <div class="m-caption scene" id="cap-prob" style="top:1300px">Calcula qué tan probable es cada token</div>
+    <div class="m-caption scene" id="cap-loop" style="top:1300px">Elige uno, lo agrega y vuelve a empezar</div>
+    <div class="m-caption scene" id="cap-many" style="top:1300px">100 palabras: más de 100 vueltas</div>
+    <div class="m-caption scene" id="cap-end" style="top:1300px">No tiene la respuesta completa<small>la construye token por token</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp, clamp } = Mosaic;
+
+  // Illustrative tokenization and probabilities (real ones depend on the model).
+  const TOKENS = ["El", " cielo", " es", " azul", " porque", " el", " aire", " disp", "ersa", " más", " la", " luz", " azul", " del", " sol", "."];
+  const PROMPT_TOKENS = 3; // the loop starts from "El cielo es"
+  const STEPS = [
+    [["azul", 62], ["gris", 15], ["despejado", 9], ["hermoso", 6]],
+    [["porque", 38], ["y", 24], [".", 21], ["durante", 7]],
+    [["el", 55], ["la", 20], ["los", 9], ["hay", 5]],
+    [["aire", 47], ["sol", 26], ["agua", 6], ["mar", 4]],
+    [["disp", 41], ["refleja", 18], ["tiene", 12], ["filtra", 9]],
+  ];
+  const COLORS = ["#2f5e8e", "#c98a1b"];
+
+  // ---------------------------------------------------------------- text
+  let tx = {};
+  function buildText() {
+    const box = $("#txt");
+    tx.spans = TOKENS.map((s) => {
+      const w = el("span", {}, box);
+      if (s[0] === " ") w.appendChild(document.createTextNode(" "));
+      w.tok = el("span", { class: "tok", text: s.trim() }, w);
+      return w;
+    });
+    tx.cur = el("span", { class: "cur" }, box);
+  }
+  /** shown: number of visible tokens (fractional part = highlight of the newest); underline: 0..1 */
+  function setText(t, shown, underline, fresh) {
+    const n = Math.floor(shown);
+    tx.spans.forEach((sp, i) => {
+      sp.style.display = i < n ? "inline" : "none";
+      const c = COLORS[i % 2];
+      sp.tok.style.borderBottomColor = underline > 0 ? hexA(c, underline) : "transparent";
+      const hi = i === n - 1 ? fresh : 0;
+      sp.tok.style.background = hi > 0 ? hexA("#3a9a80", 0.28 * hi) : "transparent";
+    });
+    tx.cur.style.opacity = String(Math.floor(t * 2.2) % 2 ? 0.25 : 1);
+  }
+  function hexA(hex, a) {
+    const v = parseInt(hex.slice(1), 16);
+    return `rgba(${v >> 16},${(v >> 8) & 255},${v & 255},${a.toFixed(3)})`;
+  }
+
+  // ---------------------------------------------------------------- probability panel
+  const BX = 360, BW = 520, ROW0 = 860, ROWH = 100;
+  let br = {};
+  function buildBars() {
+    const g = el("g", {}, $("#sc-bars"));
+    el("text", { x: 80, y: 770, class: "m-label", text: "¿Qué token sigue?" }, g);
+    br.loop = el("text", { x: 940, y: 770, "text-anchor": "end", class: "m-label", fill: "#2f5e8e", text: "vuelta 1" }, g);
+    el("line", { x1: 80, y1: 800, x2: 940, y2: 800, stroke: "var(--line)", "stroke-width": 3 }, g);
+    br.rows = [0, 1, 2, 3].map((i) => {
+      const y = ROW0 + i * ROWH;
+      const r = {};
+      r.label = el("text", { x: BX - 30, y: y + 44, "text-anchor": "end", "font-size": 46, "font-weight": 600, fill: "var(--ink)" }, g);
+      el("rect", { x: BX, y: y + 6, width: BW, height: 52, rx: 6, fill: "#e9e5dc" }, g);
+      r.bar = el("rect", { x: BX, y: y + 6, width: 0, height: 52, rx: 6, fill: "#2f5e8e" }, g);
+      r.pct = el("text", { x: BX + 16, y: y + 46, "font-size": 34, "font-weight": 650, fill: "#faf8f3" }, g);
+      return r;
+    });
+    br.pick = el("rect", { x: 90, y: ROW0 - 10, width: 840, height: 84, rx: 12, fill: "none", stroke: "#3a9a80", "stroke-width": 6 }, g);
+    el("text", { x: 940, y: 1300 - 40, "text-anchor": "end", class: "m-note", text: "probabilidades ilustrativas" }, g);
+  }
+  function drawBars(k, grow, pick, p) {
+    const step = STEPS[Math.min(k, STEPS.length - 1)];
+    br.loop.textContent = "vuelta " + (k + 1);
+    br.rows.forEach((r, i) => {
+      const [word, pc] = step[i];
+      r.label.textContent = "«" + word + "»";
+      const w = (BW * pc / 100) * grow;
+      r.bar.setAttribute("width", Math.min(BW, w).toFixed(1));
+      r.bar.setAttribute("fill", i === 0 && pick > 0.5 ? "#3a9a80" : "#2f5e8e");
+      r.bar.setAttribute("opacity", i === 0 ? 1 : String(1 - 0.45 * pick));
+      r.pct.textContent = pc + " %";
+      const inside = w > 150;
+      r.pct.setAttribute("x", (inside ? BX + 16 : BX + w + 14).toFixed(1));
+      r.pct.setAttribute("fill", inside ? "#faf8f3" : "var(--ink-2)");
+      r.pct.setAttribute("opacity", String(ramp(grow, 0.5, 1)));
+    });
+    br.pick.setAttribute("opacity", String(pick));
+  }
+
+  // ---------------------------------------------------------------- loop schedule
+  function loops(A) {
+    const out = [{ a: A.lee.start - 0.2, b: A.agrega.end + 0.5 }];
+    const s = A.vuelve.start, e = A.cien.start - 0.3, d = (e - s) / 4;
+    for (let k = 1; k < 5; k++) out.push({ a: s + (k - 1) * d, b: s + k * d });
+    return out;
+  }
+  /** {k, grow, pick, add}: loop index and its three phases (bars grow, best picked, token appended). */
+  function loopAt(t, A) {
+    const L = loops(A);
+    if (t < L[1].a) {
+      return { k: 0, grow: ramp(t, A.calcula.start, A.probable.end, ease.out),
+        pick: ramp(t, A.elige.start, A.elige.start + 0.3, ease.out), add: t >= A.agrega.start ? 1 : 0,
+        fresh: 1 - 0.6 * ramp(t, A.agrega.start + 0.6, L[1].a) };
+    }
+    for (let k = L.length - 1; k >= 1; k--) {
+      if (t >= L[k].a) {
+        const p = clamp((t - L[k].a) / (L[k].b - L[k].a));
+        return { k, grow: ramp(p, 0, 0.4, ease.out), pick: ramp(p, 0.5, 0.62, ease.out), add: p >= 0.75 ? 1 : 0,
+          fresh: 1 - 0.6 * ramp(p, 0.85, 1) };
+      }
+    }
+  }
+
+  function drawTextScene(t, s, A) {
+    const u = ramp(t, A.tokens.start - 0.2, A.tokens.start + 0.4);
+    $("#tnote").style.opacity = String(u);
+    if (t < A.estos.start - 0.1) {
+      // intro: the whole answer streams in at a steady pace
+      const shown = lerp(0, TOKENS.length, ramp(t, 0.4, A.efecto.start, ease.linear));
+      setText(t, shown, 0, 0);
+      return;
+    }
+    if (t < A.lee.start - 0.2) { setText(t, PROMPT_TOKENS, u, 0); return; }
+    if (t < A.cien.start - 0.3) {
+      const L = loopAt(t, A);
+      setText(t, PROMPT_TOKENS + L.k + L.add, u, L.add ? L.fresh : 0);
+      return;
+    }
+    // fast loops: the rest of the sentence appears
+    const shown = lerp(PROMPT_TOKENS + 5, TOKENS.length, ramp(t, A.cien.start - 0.3, A.ciclo.end, ease.linear));
+    setText(t, shown, u, 0);
+  }
+
+  const SCRIPT = "Cuando le preguntas algo a una IA como ChatGPT, la respuesta aparece poco a poco. No es un efecto: así es como la escribe. Estos modelos hacen una sola cosa, una y otra vez: predecir el siguiente pedazo de texto. A esos pedazos se les llama tokens; en inglés, un token es más o menos tres cuartos de una palabra. El modelo lee todo lo que va de la conversación y calcula, para cada token posible, qué tan probable es que siga. Elige uno, lo agrega al final, y vuelve a empezar con el texto ya un poco más largo. Una respuesta de cien palabras son más de cien vueltas de ese ciclo. No tiene la respuesta completa en la cabeza: la va construyendo token por token.";
+
+  Mosaic.short({
+    kicker: "IA por dentro",
+    title: "¿Cómo escribe una IA como ChatGPT?",
+    script: SCRIPT,
+    anchors: {
+      poco: "poco a poco",
+      efecto: "efecto",
+      estos: "estos modelos",
+      predecir: "predecir",
+      tokens: "tokens",
+      cuartos: ["tres cuartos", "3/4", "3 cuartos"],
+      lee: "lee todo",
+      calcula: "calcula",
+      probable: "probable",
+      elige: "elige",
+      agrega: "agrega",
+      vuelve: "vuelve a empezar",
+      cien: ["cien palabras", "100 palabras"],
+      ciclo: "ciclo",
+      completa: "completa",
+      construyendo: "construyendo",
+    },
+    build() { buildText(); buildBars(); },
+    scenes: [
+      { el: "#sc-text", from: 0, to: "end", fadeIn: 0.4, rise: 0, update: drawTextScene },
+      { el: "#sc-bars", from: "lee-0.3", to: "cien-0.2", rise: 0, update(t, s, A) { const L = loopAt(t, A); drawBars(L.k, L.grow, L.pick); } },
+      { el: "#sc-count", from: "cien-0.2", to: "completa-0.3", rise: 0, update(t, s, A) {
+        $("#cnt").textContent = String(Math.round(lerp(5, 133, ramp(t, A.cien.start, A.ciclo.end, ease.out))));
+      } },
+      { el: "#cap-slow", from: 0.2, to: "efecto-0.3", fade: 0.3 },
+      { el: "#cap-real", from: "efecto-0.3", to: "estos-0.2", fade: 0.3 },
+      { el: "#cap-next", from: "estos-0.2", to: "tokens-0.5", fade: 0.3 },
+      { el: "#cap-tok", from: "tokens-0.5", to: "lee-0.3", fade: 0.3 },
+      { el: "#cap-prob", from: "lee-0.3", to: "elige-0.3", fade: 0.3 },
+      { el: "#cap-loop", from: "elige-0.3", to: "cien-0.3", fade: 0.3 },
+      { el: "#cap-many", from: "cien-0.3", to: "completa-0.3", fade: 0.3 },
+      { el: "#cap-end", from: "completa-0.3", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
