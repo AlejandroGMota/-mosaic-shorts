@@ -29,17 +29,17 @@ Guion: `guiones/shorts-lote-02-2026-10-27.md` · Tomas: `audios/shorts-lote-02-2
 
 | ID | Short | Guion | Grabado | Audio | Animación | Render | Publicado | Notas |
 |---|---|---|---|---|---|---|---|---|
-| M1 ⭐ | ¿Por qué tu disco de 1 TB solo muestra 931 GB? | ✅ 27 oct | — | — | — | — | — |  |
-| M2 ⭐ | ¿Borrar un archivo lo borra de verdad? | ✅ 27 oct | — | — | — | — | — |  |
-| M3 ⭐ | ¿Por qué apagar y prender arregla casi todo? | ✅ 27 oct | — | — | — | — | — |  |
-| M4 | ¿Qué es la memoria caché del procesador? | ✅ 27 oct | — | — | — | — | — |  |
-| M5 | ¿Por qué un SSD es mucho más rápido que un disco duro? | ✅ 27 oct | — | — | — | — | — |  |
-| M6 | ¿Cómo guarda datos una memoria USB sin pila? | ✅ 27 oct | — | — | — | — | — |  |
-| M7 | ¿Por qué un SSD se desgasta con el uso? | ✅ 27 oct | — | — | — | — | — | revisar TBW en 2–3 fichas técnicas |
-| M8 | ¿Qué es un transistor y por qué hay miles de millones? | ✅ 27 oct | — | — | — | — | — |  |
-| M9 | ¿Qué significan los «3 nanómetros» de un chip? | ✅ 27 oct | — | — | — | — | — |  |
-| M10 | ¿Cómo hace tu compu muchas cosas a la vez? | ✅ 27 oct | — | — | — | — | — | 6 ms es de CFS; Linux 6.6+ usa EEVDF |
-| M11 | ¿Qué pasa en tu compu desde que la prendes? | ✅ 27 oct | — | — | — | — | — |  |
+| M1 ⭐ | ¿Por qué tu disco de 1 TB solo muestra 931 GB? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
+| M2 ⭐ | ¿Borrar un archivo lo borra de verdad? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
+| M3 ⭐ | ¿Por qué apagar y prender arregla casi todo? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
+| M4 | ¿Qué es la memoria caché del procesador? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
+| M5 | ¿Por qué un SSD es mucho más rápido que un disco duro? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
+| M6 | ¿Cómo guarda datos una memoria USB sin pila? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
+| M7 | ¿Por qué un SSD se desgasta con el uso? | ✅ 27 oct | — | — | ✅ 27 oct | — | — | revisar TBW en 2–3 fichas técnicas |
+| M8 | ¿Qué es un transistor y por qué hay miles de millones? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
+| M9 | ¿Qué significan los «3 nanómetros» de un chip? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
+| M10 | ¿Cómo hace tu compu muchas cosas a la vez? | ✅ 27 oct | — | — | ✅ 27 oct | — | — | 6 ms es de CFS; Linux 6.6+ usa EEVDF |
+| M11 | ¿Qué pasa en tu compu desde que la prendes? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
 | I1 | ¿Por qué una IA de 7B apenas cabe en una Mac de 8 GB? | ✅ 27 oct | ✗ 27 oct | — | — | — | — | descartado por Enrique (27 oct) |
 | I2 ⭐ | ¿Cómo escribe una IA como ChatGPT? | ✅ 27 oct | — | — | — | — | — |  |
 | I3 ⭐ | ¿Por qué la IA no sabe contar letras? | ✅ 27 oct | — | — | — | — | — | confirmar en un tokenizer cómo se corta «ferrocarril» |
