@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>I3 · ¿Por qué la IA no sabe contar letras?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-tok" viewBox="0 0 1080 1920"></svg>
+    <svg class="full scene" id="sc-spell" viewBox="0 0 1080 1920"></svg>
+
+    <div class="m-caption scene" id="cap-q" style="top:1300px">¿Cuántas erres tiene «ferrocarril»?<small>a veces la IA se equivoca</small></div>
+    <div class="m-caption scene" id="cap-see" style="top:1300px">La IA no ve letras</div>
+    <div class="m-caption scene" id="cap-cut" style="top:1300px">Corta tu mensaje en tokens<small>y cada token se vuelve un número</small></div>
+    <div class="m-caption scene" id="cap-split" style="top:1300px">«ferrocarril» → «ferro» + «carril»<small>el corte exacto depende del modelo</small></div>
+    <div class="m-caption scene" id="cap-num" style="top:1300px">Trabaja con esos números<small>no con las letras de adentro</small></div>
+    <div class="m-caption scene" id="cap-dom" style="top:1300px">Como contar letras en fichas de dominó<small>sin voltear las fichas</small></div>
+    <div class="m-caption scene" id="cap-good" style="top:1300px">Buena redactando, mala deletreando</div>
+    <div class="m-caption scene" id="cap-fix" style="top:1300px">Pídele que la escriba letra por letra<small>y luego que cuente</small></div>
+    <div class="m-caption scene" id="cap-ans" style="top:1300px">La respuesta correcta: 4</div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp } = Mosaic;
+
+  // ---------------------------------------------------------------- word -> tokens -> numbers
+  // Illustrative split and IDs: the real split and IDs depend on each model's tokenizer.
+  const PIECES = [
+    { text: "ferro", id: "37126", x0: 160, x1: 520, home: 160 },
+    { text: "carril", id: "80455", x0: 520, x1: 920, home: 560 },
+  ];
+  const TY = 660, TH = 170;
+  let tk = {};
+  function buildTok() {
+    const g = el("g", {}, $("#sc-tok"));
+    tk.q = el("text", { x: 540, y: 600, "text-anchor": "middle", class: "m-label", text: "¿cuántas «r»?" }, g);
+    tk.tiles = PIECES.map((p) => {
+      const w = p.x1 - p.x0 - 40;
+      const outer = el("g", {}, g);
+      const inner = el("g", {}, outer);
+      const front = el("g", {}, inner);
+      el("rect", { x: -w / 2, y: -TH / 2, width: w, height: TH, rx: 18, fill: "#faf8f3", stroke: "#2f5e8e", "stroke-width": 6 }, front);
+      el("text", { x: 0, y: 30, "text-anchor": "middle", "font-size": 92, "font-weight": 650, fill: "var(--ink)", text: p.text }, front);
+      const back = el("g", {}, inner);
+      el("rect", { x: -w / 2, y: -TH / 2, width: w, height: TH, rx: 18, fill: "#2b2a27" }, back);
+      el("text", { x: 0, y: 30, "text-anchor": "middle", "font-size": 84, "font-weight": 650, fill: "#f3f0e9", "font-family": "var(--mono)", text: p.id }, back);
+      const idl = el("text", { x: 0, y: TH / 2 + 70, "text-anchor": "middle", "font-size": 46, "font-weight": 600, fill: "#2f5e8e", "font-family": "var(--mono)", text: "→ " + p.id }, outer);
+      return { p, w, outer, inner, front, back, idl };
+    });
+    // one tile holding the whole word, before the cut
+    tk.whole = el("g", {}, g);
+    el("rect", { x: 140, y: TY, width: 800, height: TH, rx: 18, fill: "#faf8f3", stroke: "#2f5e8e", "stroke-width": 6 }, tk.whole);
+    el("text", { x: 540, y: TY + TH / 2 + 32, "text-anchor": "middle", "font-size": 92, "font-weight": 650, fill: "var(--ink)", text: "ferrocarril" }, tk.whole);
+    tk.wrong = el("g", {}, g);
+    el("text", { x: 540, y: 1010, "text-anchor": "middle", "font-size": 52, "font-weight": 600, fill: "#b3386b", text: "IA: «tiene 3» ✗" }, tk.wrong);
+    tk.blade = el("line", { x1: 540, x2: 540, y1: TY - 60, y2: TY - 60, stroke: "#b3386b", "stroke-width": 8, "stroke-linecap": "round" }, g);
+    tk.note = el("text", { x: 540, y: 1000, "text-anchor": "middle", class: "m-note", text: "corte y números ilustrativos" }, g);
+    tk.arrow = el("text", { x: 540, y: 1110, "text-anchor": "middle", class: "m-label", fill: "#2f5e8e", text: "el modelo solo ve: 37126 · 80455" }, g);
+  }
+  function drawTok(t, s, A) {
+    tk.q.setAttribute("opacity", String(1 - ramp(t, A.corta.start - 0.3, A.corta.start)));
+    tk.wrong.setAttribute("opacity", String(ramp(t, A.equivoca.start - 0.2, A.equivoca.start + 0.3) * (1 - ramp(t, A.letras.start, A.letras.start + 0.4))));
+    // blade sweeps down through the word on "corta", then the two pieces appear
+    const cut = ramp(t, A.corta.start - 0.1, A.corta.start + 0.5, ease.inOut);
+    tk.blade.setAttribute("y2", String(lerp(TY - 60, TY + TH + 60, cut)));
+    tk.blade.setAttribute("opacity", String(ramp(t, A.corta.start - 0.2, A.corta.start) * (1 - ramp(t, A.corta.start + 0.6, A.corta.start + 1.0))));
+    const split = ramp(t, A.corta.start + 0.4, A.corta.start + 1.0, ease.inOut);
+    tk.whole.setAttribute("opacity", split > 0 ? "0" : "1");
+    // each piece gets its number on "un número"; on "trabaja" the tiles flip: only the number is left,
+    // dark like a face-down domino
+    const idOn = ramp(t, A.numero.start - 0.2, A.numero.start + 0.3);
+    const flip = ramp(t, A.trabaja.start - 0.2, A.trabaja.start + 0.6, ease.inOut);
+    tk.tiles.forEach((tile, i) => {
+      const gap = lerp(0, i ? 30 : -30, split);
+      const cx = (tile.p.x0 + tile.p.x1) / 2 + gap;
+      // tiny wobble on "voltear" without flipping back
+      const peek = Math.sin(Math.PI * ramp(t, A.voltear.start, A.voltear.start + 0.8)) * 0.25;
+      const ang = Math.PI * flip - peek;
+      const c = Math.cos(ang);
+      tile.outer.setAttribute("transform", `translate(${cx.toFixed(1)} ${TY + TH / 2})`);
+      tile.inner.setAttribute("transform", `scale(1 ${Math.max(0.02, Math.abs(c)).toFixed(3)})`);
+      tile.front.setAttribute("opacity", c >= 0 ? "1" : "0");
+      tile.back.setAttribute("opacity", c < 0 ? "1" : "0");
+      tile.outer.setAttribute("opacity", split > 0 ? "1" : "0");
+      tile.idl.setAttribute("opacity", String(idOn * (1 - flip)));
+      const hl = i === 0 ? ramp(t, A.ferro.start - 0.1, A.ferro.start + 0.2) * (1 - ramp(t, A.carril.start - 0.1, A.carril.start + 0.2))
+        : ramp(t, A.carril.start - 0.1, A.carril.start + 0.2) * (1 - ramp(t, A.trabaja.start - 0.3, A.trabaja.start));
+      tile.front.firstChild.setAttribute("fill", hl > 0.5 ? "#e3ecf4" : "#faf8f3");
+    });
+    tk.note.setAttribute("opacity", String(ramp(t, A.quedar.start - 0.2, A.quedar.start + 0.3)));
+    tk.arrow.setAttribute("opacity", String(ramp(t, A.trabaja.start - 0.2, A.trabaja.start + 0.4)));
+  }
+
+  // ---------------------------------------------------------------- spelled out, count the r's
+  const WORD = "ferrocarril".split("");
+  const LW = 70, LG = 8, LX0 = 540 - (WORD.length * (LW + LG) - LG) / 2, LY = 760;
+  let sp = {};
+  function buildSpell() {
+    const g = el("g", {}, $("#sc-spell"));
+    sp.boxes = WORD.map((ch, i) => {
+      const gg = el("g", {}, g);
+      const r = el("rect", { x: LX0 + i * (LW + LG), y: LY, width: LW, height: 100, rx: 10, fill: "#faf8f3", stroke: "#2f5e8e", "stroke-width": 4 }, gg);
+      const tx = el("text", { x: LX0 + i * (LW + LG) + LW / 2, y: LY + 68, "text-anchor": "middle", "font-size": 56, "font-weight": 650, fill: "var(--ink)", text: ch }, gg);
+      return { gg, r, tx, isR: ch === "r" };
+    });
+    sp.count = el("text", { x: 540, y: 1060, "text-anchor": "middle", "font-size": 150, "font-weight": 700, fill: "#b3386b" }, g);
+    el("text", { x: 540, y: 1130, "text-anchor": "middle", class: "m-label", text: "erres" }, g);
+  }
+  function drawSpell(t, s, A) {
+    const a0 = A.letra.start - 0.2, a1 = A.contar.start;
+    sp.boxes.forEach((b, i) => {
+      const on = ramp(t, a0 + (i * (a1 - a0)) / WORD.length, a0 + ((i + 1) * (a1 - a0)) / WORD.length);
+      b.gg.setAttribute("opacity", String(on));
+    });
+    // count the four r's, one by one, finishing on "cuatro"
+    const rs = sp.boxes.filter((b) => b.isR);
+    const c0 = A.contar.start, c1 = A.cuatro.start;
+    let n = 0;
+    rs.forEach((b, j) => {
+      const tj = lerp(c0, c1, j / (rs.length - 1));
+      const hit = ramp(t, tj - 0.15, tj + 0.15);
+      if (t >= tj) n = j + 1;
+      b.r.setAttribute("fill", hit > 0.5 ? "#f4dde6" : "#faf8f3");
+      b.r.setAttribute("stroke", hit > 0.5 ? "#b3386b" : "#2f5e8e");
+      b.tx.setAttribute("fill", hit > 0.5 ? "#b3386b" : "var(--ink)");
+    });
+    sp.count.textContent = String(n);
+  }
+
+  const SCRIPT = "Pregúntale a una IA cuántas erres tiene la palabra «ferrocarril», y a veces se equivoca. ¿Cómo puede fallar algo tan fácil? Porque la IA no ve letras. Antes de leer tu mensaje, lo corta en pedazos llamados tokens, y cada pedazo se convierte en un número. «Ferrocarril» puede quedar como dos o tres pedazos, por ejemplo «ferro» y «carril». El modelo trabaja con esos números, no con las letras que hay dentro de cada pedazo. Es como si te dieran la palabra escrita en fichas de dominó y te pidieran contar las letras sin voltear las fichas. Por eso es buena redactando y mala deletreando. La salida fácil es pedirle que escriba la palabra letra por letra antes de contar. La respuesta correcta, por cierto, es cuatro.";
+
+  Mosaic.short({
+    kicker: "IA por dentro",
+    title: "¿Por qué la IA no sabe contar letras?",
+    script: SCRIPT,
+    anchors: {
+      equivoca: "equivoca",
+      facil: "facil",
+      letras: "no ve letras",
+      corta: "corta",
+      tokens: "tokens",
+      numero: "un numero",
+      quedar: "puede quedar",
+      ferro: "ferro",
+      carril: "carril",
+      trabaja: "trabaja",
+      domino: "domino",
+      voltear: "voltear",
+      redactando: "redactando",
+      salida: "salida",
+      letra: "letra por letra",
+      contar: "contar",
+      correcta: "correcta",
+      cuatro: ["cuatro", "4"],
+    },
+    build() { buildTok(); buildSpell(); },
+    scenes: [
+      { el: "#sc-tok", from: 0, to: "salida-0.3", fadeIn: 0.4, rise: 0, update: drawTok },
+      { el: "#sc-spell", from: "salida-0.3", to: "end", rise: 0, update: drawSpell },
+      { el: "#cap-q", from: 0.2, to: "letras-0.3", fade: 0.3 },
+      { el: "#cap-see", from: "letras-0.3", to: "corta-0.3", fade: 0.3 },
+      { el: "#cap-cut", from: "corta-0.3", to: "quedar-0.3", fade: 0.3 },
+      { el: "#cap-split", from: "quedar-0.3", to: "trabaja-0.3", fade: 0.3 },
+      { el: "#cap-num", from: "trabaja-0.3", to: "domino-0.6", fade: 0.3 },
+      { el: "#cap-dom", from: "domino-0.6", to: "redactando-0.8", fade: 0.3 },
+      { el: "#cap-good", from: "redactando-0.8", to: "salida-0.3", fade: 0.3 },
+      { el: "#cap-fix", from: "salida-0.3", to: "correcta-0.3", fade: 0.3 },
+      { el: "#cap-ans", from: "correcta-0.3", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
