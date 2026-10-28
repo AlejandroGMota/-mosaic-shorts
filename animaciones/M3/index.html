@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>M3 · ¿Por qué apagar y prender arregla casi todo?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-power" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-power" style="top:1300px">«Apágalo y vuélvelo a prender»<small>¿por qué funciona tan seguido?</small></div>
+
+    <svg class="full scene" id="sc-ram" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-ram" style="top:1300px">La RAM es la memoria de trabajo<small>se borra cuando se queda sin energía</small></div>
+    <div class="m-caption scene" id="cap-junk" style="top:1300px">Los programas acumulan cosas<small>datos sin liberar, procesos atorados, configuraciones a medias</small></div>
+    <div class="m-caption scene" id="cap-leak" style="top:1300px">Fuga de memoria<small>un programa pide espacio y nunca lo devuelve</small></div>
+    <div class="m-caption scene" id="cap-reboot" style="top:1300px">Al reiniciar, todo eso desaparece<small>tus archivos siguen en el almacenamiento</small></div>
+    <div class="m-caption scene" id="cap-clean" style="top:1300px">Arranca desde cero<small>y carga solo lo necesario</small></div>
+    <div class="m-caption scene" id="cap-end" style="top:1300px">No arregla el error de fondo<small>pero borra el desorden que lo provocaba</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp } = Mosaic;
+  const op = (n, v) => n.setAttribute("opacity", String(v));
+  const on = (t, a, d = 0.3) => ramp(t, a - d, a + 0.15);
+
+  function powerIcon(g, cx, cy, r, color) {
+    const gg = el("g", {}, g);
+    el("circle", { cx, cy: cy - r * 0.1, r: r * 1.45, fill: "#f3f0e9" }, gg);
+    const a0 = -Math.PI / 2 + 0.6, a1 = -Math.PI / 2 - 0.6 + 2 * Math.PI;
+    el("path", { d: `M${cx + r * Math.cos(a0)} ${cy + r * Math.sin(a0)} A${r} ${r} 0 1 1 ${cx + r * Math.cos(a1)} ${cy + r * Math.sin(a1)}`, fill: "none", stroke: color, "stroke-width": r * 0.18, "stroke-linecap": "round" }, gg);
+    el("line", { x1: cx, y1: cy - r * 1.15, x2: cx, y2: cy - r * 0.2, stroke: color, "stroke-width": r * 0.18, "stroke-linecap": "round" }, gg);
+    return gg;
+  }
+
+  // ---------------------------------------------------------------- intro: the power button
+  let pw = {};
+  function buildPower() {
+    const g = el("g", {}, $("#sc-power"));
+    pw.ring = el("circle", { cx: 540, cy: 830, r: 230, fill: "#faf8f3", stroke: "var(--line)", "stroke-width": 8 }, g);
+    pw.icon = powerIcon(g, 540, 850, 120, "#1d1d1b");
+  }
+  function drawPower(t, s, A) {
+    const press = Math.sin(Math.PI * ramp(t, A.apagalo.start, A.apagalo.start + 0.5));
+    const lit = ramp(t, A.prender.start, A.prender.start + 0.3);
+    pw.icon.setAttribute("transform", `translate(540 850) scale(${(1 - 0.08 * press).toFixed(3)}) translate(-540 -850)`);
+    pw.icon.querySelectorAll("path,line").forEach((n) => n.setAttribute("stroke", lit > 0.5 ? "#3a9a80" : "#1d1d1b"));
+    pw.ring.setAttribute("stroke", lit > 0.5 ? "#3a9a80" : "#d6d1c5");
+  }
+
+  // ---------------------------------------------------------------- RAM column, storage and reboot
+  const RX = 130, RW = 240, RTOP = 470, RBOT = 1190;
+  const BLOCKS = [
+    { label: "sistema", h: 130, color: "#2f5e8e", at: "usas", d: 0 },
+    { label: "navegador", h: 100, color: "#4f7aa6", at: "usas", d: 0.4 },
+    { label: "música", h: 70, color: "#7095bb", at: "usas", d: 0.8 },
+    { label: "datos que ya no se usan", h: 90, color: "#a9a397", at: "datos", d: 0 },
+    { label: "proceso atorado", h: 80, color: "#c98a1b", at: "atorados", d: 0 },
+    { label: "configuración a medias", h: 70, color: "#dcae5a", at: "configuraciones", d: 0 },
+    { label: "fuga de memoria", h: 40, grow: 120, color: "#b3386b", at: "fuga", d: 0 },
+  ];
+  const FRESH = [
+    { label: "sistema", h: 130, color: "#2f5e8e", at: "cero", d: 0.6 },
+    { label: "apps", h: 90, color: "#7095bb", at: "necesario", d: 0 },
+  ];
+  let rm = {};
+  function stack(g, list) {
+    return list.map((b) => {
+      const gg = el("g", {}, g);
+      const r = el("rect", { x: RX + 8, width: RW - 16, rx: 6, fill: b.color }, gg);
+      const lead = el("line", { x1: RX + RW + 6, x2: RX + RW + 34, stroke: "var(--ink-2)", "stroke-width": 3 }, gg);
+      const tx = el("text", { x: RX + RW + 44, "font-size": 32, "font-weight": 600, fill: b.color === "#a9a397" ? "#6f6a60" : b.color, text: b.label }, gg);
+      return Object.assign({ gg, r, lead, tx }, b);
+    });
+  }
+  function layout(list, t, A, alpha) {
+    let y = RBOT - 8;
+    list.forEach((b) => {
+      const a0 = A[b.at].start + b.d;
+      const p = ramp(t, a0 - 0.2, a0 + 0.4, ease.out);
+      let h = b.h * p;
+      if (b.grow) h += b.grow * ramp(t, a0 + 0.4, A.reiniciar.start - 0.2, ease.inOutSine);
+      y -= h;
+      b.r.setAttribute("y", y.toFixed(1));
+      b.r.setAttribute("height", Math.max(0, h - 6).toFixed(1));
+      const cy = y + h / 2 + 10;
+      b.lead.setAttribute("y1", cy - 10); b.lead.setAttribute("y2", cy - 10);
+      b.tx.setAttribute("y", cy.toFixed(1));
+      op(b.gg, p * alpha);
+    });
+  }
+  function buildRam() {
+    const g = el("g", {}, $("#sc-ram"));
+    el("text", { x: RX, y: RTOP - 26, class: "m-label", text: "RAM" }, g);
+    el("rect", { x: RX, y: RTOP, width: RW, height: RBOT - RTOP, rx: 14, fill: "#faf8f3", stroke: "var(--ink)", "stroke-width": 6 }, g);
+    rm.old = stack(el("g", {}, g), BLOCKS);
+    rm.fresh = stack(el("g", {}, g), FRESH);
+    // storage keeps the files
+    rm.disk = el("g", {}, g);
+    el("rect", { x: 640, y: 980, width: 300, height: 210, rx: 14, fill: "#faf8f3", stroke: "var(--ink)", "stroke-width": 6 }, rm.disk);
+    el("text", { x: 790, y: 1170, "text-anchor": "middle", "font-size": 28, "font-weight": 600, fill: "var(--ink-2)", text: "almacenamiento" }, rm.disk);
+    for (let i = 0; i < 3; i++) {
+      const x = 680 + i * 80;
+      el("path", { d: `M${x} 1010 h40 l16 16 v74 h-56 Z`, fill: "#faf8f3", stroke: "#3a9a80", "stroke-width": 4 }, rm.disk);
+    }
+    rm.diskOk = el("text", { x: 790, y: 950, "text-anchor": "middle", "font-size": 30, "font-weight": 700, fill: "#3a9a80", text: "tus archivos siguen aquí" }, g);
+    rm.load = el("path", { d: "M640 1010 C540 1010 480 860 388 860", fill: "none", stroke: "#3a9a80", "stroke-width": 6, "stroke-dasharray": "14 10" }, g);
+    rm.loadHead = el("polygon", { points: "380,860 404,848 404,872", fill: "#3a9a80" }, g);
+    rm.energy = el("text", { x: RX, y: RBOT + 60, "font-size": 30, "font-weight": 600, fill: "#b3386b", text: "sin energía = se borra" }, g);
+    // reboot: power icon and the boot chain
+    rm.power = powerIcon(el("g", {}, g), RX + RW / 2, 850, 90, "#b3386b");
+    rm.chain = el("g", {}, g);
+    rm.steps = ["firmware", "sistema", "apps"].map((n, i) => {
+      const gg = el("g", {}, rm.chain);
+      const x = 470 + i * 165;
+      el("rect", { x, y: 560, width: 130, height: 64, rx: 10, fill: "#faf8f3", stroke: "#3a9a80", "stroke-width": 4 }, gg);
+      el("text", { x: x + 65, y: 603, "text-anchor": "middle", "font-size": 27, "font-weight": 600, fill: "#3a9a80", text: n }, gg);
+      if (i < 2) el("text", { x: x + 148, y: 605, "text-anchor": "middle", "font-size": 30, fill: "#3a9a80", text: "›" }, gg);
+      return gg;
+    });
+  }
+  function drawRam(t, s, A) {
+    const wipe = ramp(t, A.reiniciar.start, A.desaparece.start + 0.3, ease.inOut);
+    layout(rm.old, t, A, 1 - wipe);
+    layout(rm.fresh, t, A, 1);
+    op(rm.energy, on(t, A.energia.start) * (1 - ramp(t, A.usas.start, A.usas.start + 0.4)));
+    op(rm.disk, on(t, A.ram.start + 0.6));
+    op(rm.diskOk, ramp(t, A.desaparece.start, A.desaparece.start + 0.4) * (1 - ramp(t, A.cero.start - 0.4, A.cero.start)) + on(t, A.archivos.start) * (1 - ramp(t, A.arregla.start - 0.4, A.arregla.start)));
+    const ld = on(t, A.almacenamiento.start, 0.5) * (1 - ramp(t, A.arregla.start - 0.4, A.arregla.start));
+    op(rm.load, ld); op(rm.loadHead, ld);
+    rm.load.setAttribute("stroke-dashoffset", (-(t * 40) % 24).toFixed(1));
+    op(rm.power, ramp(t, A.reiniciar.start - 0.3, A.reiniciar.start) * (1 - ramp(t, A.cero.start - 0.5, A.cero.start - 0.1)));
+    op(rm.chain, ramp(t, A.cero.start - 0.3, A.cero.start) * (1 - ramp(t, A.arregla.start - 0.4, A.arregla.start)));
+    const st = [A.cero.start, A.cero.start + 0.6, A.necesario.start];
+    rm.steps.forEach((g, i) => op(g, ramp(t, st[i] - 0.2, st[i] + 0.2)));
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "¿Por qué el clásico «apágalo y vuélvelo a prender» funciona tan seguido? Porque la memoria RAM, la memoria de trabajo de tu equipo, se borra cuando se queda sin energía. Mientras usas el celular o la compu, los programas van acumulando cosas en esa memoria: datos que ya no necesitan pero nunca liberaron, procesos atorados esperando algo que no llega, configuraciones a medio aplicar. Los programadores le llaman fuga de memoria cuando un programa pide espacio y nunca lo devuelve. Al reiniciar, todo eso desaparece. El sistema arranca desde cero, con la RAM limpia, y vuelve a cargar solo lo necesario desde el almacenamiento, que sí guarda tus archivos. No arregla el error de fondo, pero borra el desorden que lo estaba provocando.";
+
+  Mosaic.short({
+    kicker: "Memoria y chips",
+    title: "¿Por qué apagar y prender arregla casi todo?",
+    script: SCRIPT,
+    anchors: {
+      apagalo: "apagalo",
+      prender: "prender",
+      ram: "memoria ram",
+      energia: "energia",
+      usas: "usas",
+      acumulando: "acumulando",
+      datos: "datos",
+      atorados: "atorados",
+      configuraciones: "configuraciones",
+      fuga: "fuga",
+      devuelve: "devuelve",
+      reiniciar: "reiniciar",
+      desaparece: "desaparece",
+      cero: "desde cero",
+      necesario: "necesario",
+      almacenamiento: "almacenamiento",
+      archivos: "archivos",
+      arregla: "arregla",
+      desorden: "desorden",
+    },
+    build() { buildPower(); buildRam(); },
+    scenes: [
+      { el: "#sc-power", from: 0, to: "ram-0.5", fadeIn: 0.3, rise: 0, update: drawPower },
+      { el: "#cap-power", from: 0.2, to: "ram-0.5", fade: 0.3 },
+      { el: "#sc-ram", from: "ram-0.5", to: "end", rise: 0, update: drawRam },
+      { el: "#cap-ram", from: "ram-0.4", to: "usas-0.3", fade: 0.3 },
+      { el: "#cap-junk", from: "usas-0.3", to: "fuga-0.6", fade: 0.3 },
+      { el: "#cap-leak", from: "fuga-0.6", to: "reiniciar-0.3", fade: 0.3 },
+      { el: "#cap-reboot", from: "reiniciar-0.3", to: "cero-0.5", fade: 0.3 },
+      { el: "#cap-clean", from: "cero-0.5", to: "arregla-0.3", fade: 0.3 },
+      { el: "#cap-end", from: "arregla-0.3", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
