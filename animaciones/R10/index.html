@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>R10 · ¿Cómo sabe YouTube bajar la calidad del video?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-play" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-slow" style="top:1300px">Tu internet se pone lento…<small>y en vez de detenerse, se ve más borroso</small></div>
+    <div class="m-caption scene" id="cap-how" style="top:1300px">¿Cómo lo decide?</div>
+
+    <svg class="full scene" id="sc-abr" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-ladder" style="top:1300px">El mismo video, en varias calidades<small>cortado en pedacitos de unos segundos</small></div>
+    <div class="m-caption scene" id="cap-ask" style="top:1300px">Pide pedacito por pedacito<small>y antes de cada uno mide la velocidad y lo guardado</small></div>
+    <div class="m-caption scene" id="cap-good" style="top:1300px">Va bien: el siguiente en alta calidad</div>
+    <div class="m-caption scene" id="cap-bad" style="top:1300px">Va mal: baja la calidad<small>para no quedarse sin video</small></div>
+
+    <svg class="full scene" id="sc-pick" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-pick" style="top:1300px">Mejor borroso unos segundos<small>que el circulito de carga</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script src="../_base/redes.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp, clamp } = Mosaic;
+  const { C, op, place } = Redes;
+
+  // ---------------------------------------------------------------- a simple picture, as vector and as coarse pixels
+  const SKY = "#cfe0ea", SUN = "#e3b448", M1 = "#2f5e8e", M2 = "#3a9a80", GROUND = "#a9c98a";
+  const MTN1 = [[0, 0.78], [0.3, 0.32], [0.55, 0.78]], MTN2 = [[0.35, 0.78], [0.68, 0.22], [1, 0.78]];
+  function inTri(x, y, t) {
+    const [a, b, c] = t;
+    const s = (p, q, r) => (p[0] - r[0]) * (q[1] - r[1]) - (q[0] - r[0]) * (p[1] - r[1]);
+    const d1 = s([x, y], a, b), d2 = s([x, y], b, c), d3 = s([x, y], c, a);
+    return !((d1 < 0 || d2 < 0 || d3 < 0) && (d1 > 0 || d2 > 0 || d3 > 0));
+  }
+  function colorAt(x, y) {
+    if (y > 0.78) return GROUND;
+    if (inTri(x, y, MTN2)) return M2;
+    if (inTri(x, y, MTN1)) return M1;
+    if (Math.hypot(x - 0.18, y - 0.22) < 0.09) return SUN;
+    return SKY;
+  }
+  function picture(parent, x, y, w, h) {
+    const g = el("g", {}, parent);
+    const P = (pts) => pts.map(([u, v]) => `${x + u * w},${y + v * h}`).join(" ");
+    const sharp = el("g", {}, g);
+    el("rect", { x, y, width: w, height: h, fill: SKY }, sharp);
+    el("circle", { cx: x + 0.18 * w, cy: y + 0.22 * h, r: 0.09 * h, fill: SUN }, sharp);
+    el("polygon", { points: P(MTN1), fill: M1 }, sharp);
+    el("polygon", { points: P(MTN2), fill: M2 }, sharp);
+    el("rect", { x, y: y + 0.78 * h, width: w, height: 0.22 * h, fill: GROUND }, sharp);
+    const blocky = el("g", {}, g);
+    const cs = w / 16;
+    for (let i = 0; i < 16; i++) for (let j = 0; j < Math.ceil(h / cs); j++) {
+      const ch = Math.min(cs, h - j * cs);
+      el("rect", { x: x + i * cs, y: y + j * cs, width: cs + 0.5, height: ch + 0.5, fill: colorAt((i + 0.5) / 16, ((j + 0.5) * cs) / h) }, blocky);
+    }
+    return { g, sharp, blocky };
+  }
+  function spinner(parent, x, y, r) {
+    const g = el("g", { transform: `translate(${x} ${y})` }, parent);
+    el("circle", { r, fill: "none", stroke: "#fff", "stroke-width": r * 0.22, opacity: 0.35 }, g);
+    const arc = el("path", { d: `M0 ${-r} A${r} ${r} 0 0 1 ${r} 0`, fill: "none", stroke: "#fff", "stroke-width": r * 0.22, "stroke-linecap": "round" }, g);
+    return { g, arc };
+  }
+
+  // ---------------------------------------------------------------- the player getting slow
+  let pl = {};
+  function buildPlay() {
+    const g = el("g", {}, $("#sc-play"));
+    el("rect", { x: 170, y: 520, width: 740, height: 470, rx: 18, fill: C.ink }, g);
+    pl.pic = picture(g, 180, 530, 720, 405);
+    el("rect", { x: 200, y: 955, width: 680, height: 10, rx: 5, fill: "#555" }, g);
+    pl.prog = el("rect", { x: 200, y: 955, height: 10, rx: 5, fill: "#e0473c" }, g);
+    pl.q = el("text", { x: 880, y: 575, "text-anchor": "end", "font-size": 30, "font-weight": 700, fill: "#fff", text: "1080p" }, g);
+    pl.meter = el("g", {}, g);
+    el("text", { x: 170, y: 1080, class: "m-label", text: "tu conexión" }, pl.meter);
+    el("rect", { x: 380, y: 1052, width: 530, height: 36, rx: 18, fill: C.paper2 }, pl.meter);
+    pl.bar = el("rect", { x: 380, y: 1052, height: 36, rx: 18, fill: C.mint }, pl.meter);
+    pl.speed = el("text", { x: 910, y: 1140, "text-anchor": "end", class: "m-label", text: "" }, pl.meter);
+  }
+  function drawPlay(t, s, A) {
+    const slow = ramp(t, A.lento.start - 0.3, A.lento.end + 0.3);
+    const blur = ramp(t, A.borrosa.start - 0.3, A.borrosa.start + 0.2);
+    op(pl.pic.blocky, blur);
+    op(pl.pic.sharp, 1 - blur * 0.999);
+    pl.q.textContent = blur > 0.5 ? "360p" : "1080p";
+    pl.prog.setAttribute("width", String(680 * clamp(0.2 + t * 0.02)));
+    pl.bar.setAttribute("width", String(530 * lerp(0.85, 0.15, slow)));
+    pl.bar.setAttribute("fill", slow > 0.5 ? C.fuchsia : C.mint);
+    pl.speed.textContent = slow > 0.5 ? "lenta" : "rápida";
+  }
+
+  // ---------------------------------------------------------------- quality ladder and the player's choices
+  let ab = {};
+  const Q = ["240p", "480p", "720p", "1080p", "4K"];
+  const LX = 230, LW = 700, NCH = 10, CW = LW / NCH, RY = (r) => 1000 - r * 76; // row 0 = 240p at the bottom
+  function buildAbr() {
+    const g = el("g", {}, $("#sc-abr"));
+    ab.rows = Q.map((q, r) => {
+      const rg = el("g", {}, g);
+      el("text", { x: LX - 20, y: RY(r) + 40, "text-anchor": "end", "font-size": 32, "font-weight": 700, fill: C.ink2, text: q }, rg);
+      el("rect", { x: LX, y: RY(r), width: LW, height: 56, rx: 8, fill: C.card, stroke: C.line, "stroke-width": 3 }, rg);
+      return rg;
+    });
+    ab.cuts = el("g", {}, g);
+    for (let r = 0; r < Q.length; r++) for (let k = 1; k < NCH; k++) el("line", { x1: LX + k * CW, y1: RY(r) + 6, x2: LX + k * CW, y2: RY(r) + 50, stroke: C.ink2, "stroke-width": 2 }, ab.cuts);
+    ab.secs = el("text", { x: LX + CW / 2, y: RY(4) - 14, "text-anchor": "middle", class: "m-note", text: "≈ 6 s" }, ab.cuts);
+    ab.cells = [];
+    for (let k = 0; k < NCH; k++) {
+      ab.cells.push(el("rect", { width: CW - 6, height: 50, rx: 6, fill: C.blue }, g));
+    }
+    ab.cur = el("text", { x: 540, y: 600, "text-anchor": "middle", "font-size": 46, "font-weight": 700, fill: C.ink, text: "" }, g);
+    ab.path = el("polyline", { fill: "none", stroke: C.amber, "stroke-width": 5, "stroke-linejoin": "round" }, g);
+    // measured speed and buffer
+    ab.hud = el("g", {}, g);
+    el("text", { x: LX - 20, y: 1150, "text-anchor": "end", class: "m-label", "font-size": 28, text: "velocidad" }, ab.hud);
+    el("rect", { x: LX, y: 1122, width: LW, height: 36, rx: 18, fill: C.paper2 }, ab.hud);
+    ab.spd = el("rect", { x: LX, y: 1122, height: 36, rx: 18, fill: C.mint }, ab.hud);
+    el("text", { x: LX - 20, y: 1220, "text-anchor": "end", class: "m-label", "font-size": 28, text: "guardado" }, ab.hud);
+    el("rect", { x: LX, y: 1192, width: LW, height: 36, rx: 18, fill: C.paper2 }, ab.hud);
+    ab.buf = el("rect", { x: LX, y: 1192, height: 36, rx: 18, fill: C.blue }, ab.hud);
+    ab.bufT = el("text", { x: LX + LW, y: 1260, "text-anchor": "end", class: "m-note", text: "" }, ab.hud);
+  }
+  function plan(A) {
+    // chunk k is requested at time tk; quality depends on how the connection is going then
+    const t0 = A.pidiendo.start, t1 = A.quedarse.end;
+    const tk = (k) => lerp(t0, t1, k / (NCH - 1));
+    const qOf = (time) => (time < A.mal.start - 0.2 ? (time < A.bien.start - 0.2 ? 3 : 4) : time < A.quedarse.end - 0.6 ? 1 : 0);
+    return { tk, qOf };
+  }
+  function drawAbr(t, s, A) {
+    ab.rows.forEach((r, i) => op(r, ramp(t, A.calidades.start - 0.4 + i * 0.12, A.calidades.start - 0.1 + i * 0.12)));
+    op(ab.cuts, ramp(t, A.pedacitos.start - 0.3, A.pedacitos.start + 0.2));
+    const { tk, qOf } = plan(A);
+    const pts = [];
+    let speed = 0.8, buf = 0.6, lastQ = 3;
+    for (let k = 0; k < NCH; k++) {
+      const q = qOf(tk(k));
+      const on = ramp(t, tk(k) - 0.15, tk(k) + 0.2);
+      const c = ab.cells[k];
+      c.setAttribute("x", LX + k * CW + 3); c.setAttribute("y", RY(q) + 3);
+      c.setAttribute("fill", q >= 3 ? C.mint : q >= 2 ? C.blue : C.fuchsia);
+      op(c, on);
+      if (t >= tk(k) - 0.15) { pts.push([LX + k * CW + CW / 2, RY(q) + 28]); lastQ = q; }
+    }
+    ab.cur.textContent = pts.length ? "el reproductor pide: " + Q[lastQ] : "";
+    ab.cur.setAttribute("fill", lastQ >= 3 ? C.mint : lastQ >= 2 ? C.blue : C.fuchsia);
+    ab.path.setAttribute("points", pts.length > 1 ? pts.map((p) => p.join(",")).join(" ") : "0,0 0,0");
+    op(ab.path, pts.length > 1 ? 1 : 0);
+    // speed falls on "va mal"; buffer dips but never empties
+    const bad = ramp(t, A.mal.start - 0.4, A.mal.start + 0.2) * (1 - ramp(t, A.quedarse.end - 0.4, A.quedarse.end + 0.4));
+    speed = lerp(0.85, 0.14, bad);
+    buf = clamp(0.62 - 0.3 * bad + 0.05 * Math.sin(t * 1.3));
+    ab.spd.setAttribute("width", String(LW * speed));
+    ab.spd.setAttribute("fill", bad > 0.5 ? C.fuchsia : C.mint);
+    ab.buf.setAttribute("width", String(LW * buf));
+    ab.bufT.textContent = "video guardado por adelantado: " + Math.round(buf * 40) + " s";
+    op(ab.hud, ramp(t, A.mide.start - 0.3, A.mide.start + 0.2));
+  }
+
+  // ---------------------------------------------------------------- blurry beats the spinner
+  let pk = {};
+  function buildPick() {
+    const g = el("g", {}, $("#sc-pick"));
+    el("rect", { x: 110, y: 560, width: 400, height: 225, fill: C.ink }, g);
+    const pic = picture(g, 110, 560, 400, 225);
+    op(pic.sharp, 0);
+    el("text", { x: 310, y: 840, "text-anchor": "middle", class: "m-label", fill: C.mint, text: "borroso unos segundos" }, g);
+    pk.ok = el("text", { x: 310, y: 940, "text-anchor": "middle", "font-size": 80, "font-weight": 700, fill: C.mint, text: "✓" }, g);
+    el("rect", { x: 570, y: 560, width: 400, height: 225, fill: C.ink }, g);
+    pk.sp = spinner(g, 770, 672, 46);
+    el("text", { x: 770, y: 840, "text-anchor": "middle", class: "m-label", fill: C.fuchsia, text: "circulito de carga" }, g);
+    pk.no = el("text", { x: 770, y: 940, "text-anchor": "middle", "font-size": 80, "font-weight": 700, fill: C.fuchsia, text: "✗" }, g);
+    pk.cross = el("g", {}, g);
+    el("line", { x1: 590, y1: 580, x2: 950, y2: 765, stroke: C.fuchsia, "stroke-width": 10, "stroke-linecap": "round" }, pk.cross);
+  }
+  function drawPick(t, s, A) {
+    pk.sp.arc.setAttribute("transform", `rotate(${(t * 300) % 360})`);
+    op(pk.ok, ramp(t, A.borroso.start - 0.3, A.borroso.start + 0.2));
+    op(pk.no, ramp(t, A.circulito.start - 0.3, A.circulito.start + 0.2));
+    op(pk.cross, ramp(t, A.circulito.start, A.circulito.end + 0.2));
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "Estás viendo un video, tu internet se pone lento y, en vez de detenerse, la imagen se ve más borrosa unos segundos. ¿Cómo lo decide? Cada video está guardado varias veces, en distintas calidades: desde baja hasta 4K. Y cada versión está cortada en pedacitos de unos pocos segundos. Tu reproductor no descarga el video completo: va pidiendo pedacito por pedacito. Antes de cada uno, mide qué tan rápido llegó el anterior y cuánto video tiene ya guardado por adelantado. Si la conexión va bien, pide el siguiente en alta calidad. Si va mal, lo pide en una más baja para no quedarse sin video. Por eso cambia de calidad a media escena: prefiere verse borroso unos segundos a que veas el circulito de carga.";
+
+  Mosaic.short({
+    kicker: "Internet y redes",
+    title: "¿Cómo sabe YouTube bajar la calidad del video?",
+    script: SCRIPT,
+    anchors: {
+      lento: "lento",
+      detenerse: "detenerse",
+      borrosa: "borrosa",
+      decide: "decide",
+      guardado: "guardado varias",
+      calidades: "calidades",
+      cuatrok: ["4k", "cuatro k", "cuatro ka"],
+      pedacitos: "pedacitos de unos",
+      reproductor: "reproductor",
+      pidiendo: "pidiendo",
+      mide: "mide",
+      adelantado: "adelantado",
+      bien: "va bien",
+      mal: "va mal",
+      quedarse: "quedarse sin video",
+      poreso: "por eso",
+      borroso: "borroso",
+      circulito: "circulito",
+    },
+    build() { buildPlay(); buildAbr(); buildPick(); },
+    scenes: [
+      { el: "#sc-play", from: 0, to: "guardado-0.5", fadeIn: 0.3, rise: 0, update: drawPlay },
+      { el: "#cap-slow", from: "lento-0.3", to: "decide-0.4", fade: 0.3 },
+      { el: "#cap-how", from: "decide-0.4", to: "guardado-0.5", fade: 0.3 },
+      { el: "#sc-abr", from: "guardado-0.5", to: "poreso-0.3", rise: 0, update: drawAbr },
+      { el: "#cap-ladder", from: "guardado-0.4", to: "reproductor-0.3", fade: 0.3 },
+      { el: "#cap-ask", from: "reproductor-0.3", to: "bien-0.4", fade: 0.3 },
+      { el: "#cap-good", from: "bien-0.4", to: "mal-0.4", fade: 0.3 },
+      { el: "#cap-bad", from: "mal-0.4", to: "poreso-0.3", fade: 0.3 },
+      { el: "#sc-pick", from: "poreso-0.3", to: "end", rise: 0, update: drawPick },
+      { el: "#cap-pick", from: "poreso-0.2", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
