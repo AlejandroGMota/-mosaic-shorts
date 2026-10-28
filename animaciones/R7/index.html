@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>R7 · ¿Por qué tus «100 megas» nunca bajan a 100?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-ad" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-rob" style="top:1300px">¿Te están robando?</div>
+    <div class="m-caption scene" id="cap-no" style="top:1300px">Casi seguro que no<small>son dos unidades distintas que suenan igual</small></div>
+
+    <svg class="full scene" id="sc-units" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-units" style="top:1300px">b minúscula ≠ B mayúscula</div>
+    <div class="m-caption scene" id="cap-byte" style="top:1300px">1 byte = 8 bits</div>
+
+    <svg class="full scene" id="sc-math" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-math" style="top:1300px">100 ÷ 8 = 12.5<small>megabytes por segundo</small></div>
+    <div class="m-caption scene" id="cap-tags" style="top:1300px">Lo que falta: las etiquetas<small>que acompañan a cada paquete de datos</small></div>
+
+    <svg class="full scene" id="sc-tips" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-tips" style="top:1300px">¿Ves mucho menos?<small>revisa el wifi o prueba con cable</small></div>
+
+    <svg class="full scene" id="sc-end" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-end" style="top:1300px">Mismo internet<small>dos maneras de contarlo</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script src="../_base/redes.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp, clamp } = Mosaic;
+  const { C, op, place, phone } = Redes;
+
+  // ---------------------------------------------------------------- the ad vs the download window
+  let ad = {};
+  function buildAd() {
+    const g = el("g", {}, $("#sc-ad"));
+    ad.card = el("g", { transform: "rotate(-3 330 660)" }, g);
+    el("rect", { x: 110, y: 520, width: 440, height: 280, rx: 20, fill: C.blue }, ad.card);
+    el("text", { x: 150, y: 590, "font-size": 34, "font-weight": 600, fill: "#fff", opacity: 0.85, text: "Internet en casa" }, ad.card);
+    el("text", { x: 150, y: 700, "font-size": 110, "font-weight": 800, fill: "#fff", text: "100" }, ad.card);
+    el("text", { x: 150, y: 760, "font-size": 44, "font-weight": 700, fill: "#fff", text: "Mbps" }, ad.card);
+    ad.win = el("g", {}, g);
+    el("rect", { x: 380, y: 830, width: 590, height: 330, rx: 16, fill: C.card, stroke: C.ink2, "stroke-width": 5 }, ad.win);
+    el("line", { x1: 380, y1: 880, x2: 970, y2: 880, stroke: C.ink2, "stroke-width": 4 }, ad.win);
+    el("text", { x: 410, y: 866, "font-size": 26, fill: C.ink2, text: "Descargas" }, ad.win);
+    el("text", { x: 410, y: 940, "font-size": 32, "font-weight": 600, fill: C.ink, text: "pelicula.mp4" }, ad.win);
+    el("rect", { x: 410, y: 970, width: 530, height: 26, rx: 13, fill: C.paper2 }, ad.win);
+    ad.prog = el("rect", { x: 410, y: 970, width: 0, height: 26, rx: 13, fill: C.mint }, ad.win);
+    ad.speed = el("text", { x: 410, y: 1090, "font-size": 86, "font-weight": 750, fill: C.ink, class: "m-num", text: "12 MB/s" }, ad.win);
+    ad.q = el("text", { x: 880, y: 1100, "text-anchor": "middle", "font-size": 120, "font-weight": 700, fill: C.fuchsia, text: "?" }, g);
+  }
+  function drawAd(t, s, A) {
+    op(ad.card, ramp(t, 0.1, 0.6));
+    op(ad.win, ramp(t, A.archivo.start - 0.4, A.archivo.start + 0.1));
+    ad.prog.setAttribute("width", String(530 * clamp((t - A.archivo.start) / 14) ));
+    op(ad.speed, ramp(t, A.doce1.start - 0.3, A.doce1.start + 0.1));
+    op(ad.q, ramp(t, A.robando.start - 0.3, A.robando.start + 0.2));
+  }
+
+  // ---------------------------------------------------------------- b vs B, and 8 bits
+  let un = {};
+  function buildUnits() {
+    const g = el("g", {}, $("#sc-units"));
+    un.left = el("g", {}, g);
+    un.lt = el("text", { x: 300, y: 650, "text-anchor": "middle", "font-size": 120, "font-weight": 700, fill: C.blue, text: "Mb/s" }, un.left);
+    un.lm = el("g", {}, un.left);
+    el("circle", { cx: -6, cy: -40, r: 52, fill: "none", stroke: C.blue, "stroke-width": 6 }, un.lm);
+    el("line", { x1: 32, y1: -2, x2: 72, y2: 38, stroke: C.blue, "stroke-width": 12, "stroke-linecap": "round" }, un.lm);
+    el("text", { x: 300, y: 770, "text-anchor": "middle", class: "m-label", fill: C.blue, text: "megabits" }, un.left);
+    el("text", { x: 300, y: 812, "text-anchor": "middle", class: "m-note", text: "lo que anuncia tu compañía" }, un.left);
+    un.right = el("g", {}, g);
+    un.rt = el("text", { x: 780, y: 650, "text-anchor": "middle", "font-size": 120, "font-weight": 700, fill: C.fuchsia, text: "MB/s" }, un.right);
+    un.rm = el("g", {}, un.right);
+    el("circle", { cx: -6, cy: -40, r: 52, fill: "none", stroke: C.fuchsia, "stroke-width": 6 }, un.rm);
+    el("line", { x1: 32, y1: -2, x2: 72, y2: 38, stroke: C.fuchsia, "stroke-width": 12, "stroke-linecap": "round" }, un.rm);
+    el("text", { x: 780, y: 770, "text-anchor": "middle", class: "m-label", fill: C.fuchsia, text: "megabytes" }, un.right);
+    el("text", { x: 780, y: 812, "text-anchor": "middle", class: "m-note", text: "lo que muestra la descarga" }, un.right);
+    // one byte = eight bits
+    un.byte = el("g", {}, g);
+    el("rect", { x: 160, y: 900, width: 760, height: 150, rx: 16, fill: "none", stroke: C.fuchsia, "stroke-width": 5 }, un.byte);
+    el("text", { x: 540, y: 1100, "text-anchor": "middle", class: "m-label", fill: C.fuchsia, text: "1 byte" }, un.byte);
+    un.bits = [];
+    const v = [0, 1, 0, 0, 1, 1, 0, 1];
+    for (let i = 0; i < 8; i++) {
+      const bg = el("g", {}, un.byte);
+      el("rect", { x: 180 + i * 90, y: 920, width: 80, height: 110, rx: 8, fill: v[i] ? C.blue : C.card, stroke: C.blue, "stroke-width": 4 }, bg);
+      el("text", { x: 220 + i * 90, y: 990, "text-anchor": "middle", "font-size": 44, "font-weight": 700, fill: v[i] ? "#fff" : C.blue, text: String(v[i]) }, bg);
+      un.bits.push(bg);
+    }
+    el("text", { x: 540, y: 1150, "text-anchor": "middle", class: "m-note", text: "cada cuadrito es 1 bit" }, un.byte);
+  }
+  function centerOf(textEl, i) {
+    try { const b = textEl.getExtentOfChar(i); return b.x + b.width / 2; } catch (e) { return +textEl.getAttribute("x"); }
+  }
+  function drawUnits(t, s, A) {
+    place(un.lm, centerOf(un.lt, 1), 650, 1);
+    place(un.rm, centerOf(un.rt, 1), 650, 1);
+    op(un.lm, ramp(t, A.minuscula.start - 0.3, A.minuscula.start + 0.1));
+    op(un.rm, ramp(t, A.mayuscula.start - 0.3, A.mayuscula.start + 0.1));
+    op(un.left, ramp(t, A.megabits.start - 0.4, A.megabits.start + 0.1));
+    op(un.right, ramp(t, A.megabytes.start - 0.4, A.megabytes.start + 0.1));
+    op(un.byte, ramp(t, A.byte.start - 0.4, A.byte.start));
+    un.bits.forEach((b, i) => op(b, ramp(t, A.ocho.start - 0.4 + i * 0.07, A.ocho.start - 0.2 + i * 0.07)));
+  }
+
+  // ---------------------------------------------------------------- 100 / 8 = 12.5, and the overhead
+  let mt = {};
+  const BX = 110, BW = 860, U = BW / 12.5; // px per MB/s
+  function buildMath() {
+    const g = el("g", {}, $("#sc-math"));
+    mt.eq = el("text", { x: 540, y: 640, "text-anchor": "middle", "font-size": 84, "font-weight": 700, fill: C.ink, class: "m-num" }, g);
+    el("tspan", { fill: C.blue, text: "100 Mb/s" }, mt.eq);
+    el("tspan", { fill: C.ink2, text: " ÷ 8" }, mt.eq);
+    mt.res = el("text", { x: 540, y: 790, "text-anchor": "middle", "font-size": 120, "font-weight": 750, fill: C.fuchsia, class: "m-num", text: "" }, g);
+    mt.bar = el("g", {}, g);
+    el("text", { x: BX, y: 930, class: "m-label", text: "de cada 12.5 MB/s que llegan" }, mt.bar);
+    mt.useful = el("rect", { x: BX, y: 950, height: 90, rx: 8, fill: C.mint }, mt.bar);
+    mt.over = el("rect", { y: 950, height: 90, rx: 8, fill: C.amber }, mt.bar);
+    mt.uT = el("text", { x: BX + 24, y: 1008, "font-size": 36, "font-weight": 700, fill: "#fff", text: "≈ 11.7 MB/s: tu archivo" }, mt.bar);
+    mt.oT = el("g", {}, mt.bar);
+    el("path", { d: `M${BX + 11.7 * U + 30} 1050 L${BX + 11.7 * U + 30} 1100 L${BX + 11.7 * U - 20} 1100`, fill: "none", stroke: C.amber, "stroke-width": 4 }, mt.oT);
+    el("text", { x: BX + 11.7 * U - 34, y: 1112, "text-anchor": "end", class: "m-label", fill: C.amber, text: "≈ 6 %: etiquetas de los paquetes" }, mt.oT);
+    el("text", { x: BX, y: 1190, class: "m-note", text: "aproximado: depende de la conexión" }, mt.oT);
+  }
+  function drawMath(t, s, A) {
+    const r = ramp(t, A.docepunto.start - 0.6, A.docepunto.end, ease.out);
+    mt.res.textContent = "= " + (12.5 * r).toFixed(1) + " MB/s";
+    op(mt.res, ramp(t, A.docepunto.start - 0.8, A.docepunto.start - 0.4));
+    op(mt.bar, ramp(t, A.once.start - 0.4, A.once.start + 0.1));
+    const sp = ramp(t, A.falta.start - 0.2, A.falta.start + 0.6, ease.inOut);
+    mt.useful.setAttribute("width", String(lerp(12.5, 11.7, sp) * U));
+    mt.over.setAttribute("x", String(BX + 11.7 * U + 4));
+    mt.over.setAttribute("width", String(Math.max(0, 0.8 * U * sp - 4)));
+    op(mt.uT, ramp(t, A.once.start, A.once.start + 0.3));
+    op(mt.oT, ramp(t, A.etiquetas.start - 0.3, A.etiquetas.start + 0.2));
+  }
+
+  // ---------------------------------------------------------------- tips: far wifi vs cable
+  let tp = {};
+  function buildTips() {
+    const g = el("g", {}, $("#sc-tips"));
+    // left: phone far from the modem through walls
+    tp.wifi = el("g", {}, g);
+    el("rect", { x: 110, y: 520, width: 400, height: 600, rx: 20, fill: C.card, stroke: C.fuchsia, "stroke-width": 5 }, tp.wifi);
+    el("rect", { x: 160, y: 560, width: 90, height: 40, rx: 8, fill: C.card, stroke: C.ink, "stroke-width": 4 }, tp.wifi);
+    el("text", { x: 265, y: 590, class: "m-note", text: "módem" }, tp.wifi);
+    for (const y of [700, 840]) el("line", { x1: 110, y1: y, x2: 420, y2: y, stroke: C.ink, "stroke-width": 8 }, tp.wifi);
+    phone(tp.wifi, 400, 1000, 0.55);
+    for (const r of [70, 140, 210, 280]) el("path", { d: `M${205 + r} 600 A${r} ${r} 0 0 1 ${205 + r * 0.2} ${600 + r * 0.98}`, fill: "none", stroke: C.fuchsia, "stroke-width": 6, "stroke-linecap": "round", opacity: Math.max(0.12, 1 - r / 300) }, tp.wifi);
+    el("text", { x: 310, y: 1170, "text-anchor": "middle", class: "m-label", fill: C.fuchsia, text: "wifi lejos del módem" }, tp.wifi);
+    // right: cable
+    tp.cable = el("g", {}, g);
+    el("rect", { x: 570, y: 520, width: 400, height: 600, rx: 20, fill: C.card, stroke: C.mint, "stroke-width": 5 }, tp.cable);
+    el("rect", { x: 620, y: 560, width: 90, height: 40, rx: 8, fill: C.card, stroke: C.ink, "stroke-width": 4 }, tp.cable);
+    el("text", { x: 725, y: 590, class: "m-note", text: "módem" }, tp.cable);
+    el("path", { d: "M665 600 C665 800 860 760 860 900", fill: "none", stroke: C.mint, "stroke-width": 9, "stroke-linecap": "round" }, tp.cable);
+    el("rect", { x: 790, y: 900, width: 140, height: 90, rx: 8, fill: C.card, stroke: C.ink, "stroke-width": 5 }, tp.cable);
+    el("path", { d: "M770 990 L950 990 L938 1010 L782 1010 Z", fill: C.card, stroke: C.ink, "stroke-width": 5 }, tp.cable);
+    el("text", { x: 770, y: 1170, "text-anchor": "middle", class: "m-label", fill: C.mint, text: "prueba con cable" }, tp.cable);
+  }
+  function drawTips(t, s, A) {
+    op(tp.wifi, ramp(t, A.wifi.start - 0.4, A.wifi.start + 0.1));
+    op(tp.cable, ramp(t, A.wifi.end + 0.4, A.wifi.end + 0.9));
+  }
+
+  // ---------------------------------------------------------------- same internet, two ways to count
+  function buildEnd() {
+    const g = el("g", {}, $("#sc-end"));
+    el("text", { x: 540, y: 760, "text-anchor": "middle", "font-size": 120, "font-weight": 750, fill: C.blue, class: "m-num", text: "100 Mb/s" }, g);
+    el("text", { x: 540, y: 880, "text-anchor": "middle", "font-size": 90, "font-weight": 700, fill: C.ink2, text: "=" }, g);
+    el("text", { x: 540, y: 1020, "text-anchor": "middle", "font-size": 120, "font-weight": 750, fill: C.fuchsia, class: "m-num", text: "12.5 MB/s" }, g);
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "Contrataste internet de cien megas, descargas un archivo y la velocidad dice doce. ¿Te están robando? Casi seguro que no. Son dos unidades distintas que suenan igual. Las compañías de internet miden en megabits por segundo, con be minúscula. Las descargas se miden en megabytes, con be mayúscula. Y un byte son ocho bits. Cien megabits entre ocho dan doce punto cinco megabytes por segundo. Si ves once o doce, estás recibiendo lo que pagaste: lo que falta se va en las etiquetas que acompañan a cada paquete de datos. Si ves mucho menos, revisa si estás por wifi lejos del módem, o haz la prueba con cable. Mismo internet, dos maneras de contarlo.";
+
+  Mosaic.short({
+    kicker: "Internet y redes",
+    title: "¿Por qué tus «100 megas» nunca bajan a 100?",
+    script: SCRIPT,
+    anchors: {
+      cien: ["cien megas", "100 megas"],
+      archivo: "archivo",
+      doce1: ["dice doce", "dice 12"],
+      robando: "robando",
+      casi: "casi seguro",
+      unidades: "unidades",
+      megabits: ["megabits", "mega bits"],
+      minuscula: "minuscula",
+      megabytes: ["megabytes", "mega bytes", "megabaits"],
+      mayuscula: "mayuscula",
+      byte: ["un byte", "un bait", "1 byte"],
+      ocho: ["ocho bits", "8 bits"],
+      entre: ["entre ocho", "entre 8"],
+      docepunto: ["doce punto cinco", "12.5", "125"],
+      once: ["once o doce", "11 o 12"],
+      pagaste: "pagaste",
+      falta: "lo que falta",
+      etiquetas: "etiquetas",
+      menos: "mucho menos",
+      wifi: "wifi",
+      cable: "cable",
+      mismo: "mismo internet",
+    },
+    build() { buildAd(); buildUnits(); buildMath(); buildTips(); buildEnd(); },
+    scenes: [
+      { el: "#sc-ad", from: 0, to: "unidades.end+0.3", fadeIn: 0.3, rise: 0, update: drawAd },
+      { el: "#cap-rob", from: "robando-0.4", to: "casi-0.2", fade: 0.3 },
+      { el: "#cap-no", from: "casi-0.2", to: "unidades.end+0.3", fade: 0.3 },
+      { el: "#sc-units", from: "unidades.end+0.3", to: "entre-1.2", rise: 0, update: drawUnits },
+      { el: "#cap-units", from: "minuscula-0.3", to: "byte-0.4", fade: 0.3 },
+      { el: "#cap-byte", from: "byte-0.4", to: "entre-1.2", fade: 0.3 },
+      { el: "#sc-math", from: "entre-1.2", to: "menos-0.3", rise: 0, update: drawMath },
+      { el: "#cap-math", from: "docepunto-0.4", to: "falta-0.3", fade: 0.3 },
+      { el: "#cap-tags", from: "falta-0.3", to: "menos-0.3", fade: 0.3 },
+      { el: "#sc-tips", from: "menos-0.3", to: "mismo-0.3", rise: 0, update: drawTips },
+      { el: "#cap-tips", from: "menos-0.2", to: "mismo-0.3", fade: 0.3 },
+      { el: "#sc-end", from: "mismo-0.3", to: "end", rise: 0 },
+      { el: "#cap-end", from: "mismo-0.3", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
