@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>M2 · ¿Borrar un archivo lo borra de verdad?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-trash" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-trash" style="top:1300px">Borras y vacías la papelera<small>¿de verdad desaparece?</small></div>
+
+    <svg class="full scene" id="sc-hdd" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-index" style="top:1300px">El sistema guarda un índice<small>dice en qué parte del disco está cada archivo</small></div>
+    <div class="m-caption scene" id="cap-strike" style="top:1300px">Al borrar solo tacha la entrada<small>y marca ese espacio como libre</small></div>
+    <div class="m-caption scene" id="cap-still" style="top:1300px">Los datos siguen ahí<small>hasta que algo nuevo los escriba encima</small></div>
+    <div class="m-caption scene" id="cap-recover" style="top:1300px">Programas de recuperación<small>leen lo que el índice ya olvidó</small></div>
+
+    <svg class="full scene" id="sc-ssd" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-ssd" style="top:1300px">En un SSD es distinto<small>el sistema le avisa qué quedó libre (TRIM)</small></div>
+    <div class="m-caption scene" id="cap-clean" style="top:1300px">El disco limpia esas celdas solo<small>a veces en segundos</small></div>
+
+    <svg class="full scene" id="sc-sell" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-sell" style="top:1300px">¿Vas a vender tu compu?<small>no basta con borrar: restablécela de fábrica</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp } = Mosaic;
+  const op = (n, v) => n.setAttribute("opacity", String(v));
+  const on = (t, a, d = 0.3) => ramp(t, a - d, a + 0.15);
+
+  const FILES = [
+    { name: "tarea.docx", from: 3, to: 5, color: "#2f5e8e" },
+    { name: "foto.jpg", from: 13, to: 16, color: "#b3386b" },
+    { name: "música.mp3", from: 21, to: 24, color: "#c98a1b" },
+  ];
+  const NEW = { name: "nota.txt", from: 13, to: 14, color: "#3a9a80" };
+  const GX = 470, GY = 560, CELL = 78, COLS = 6, ROWS = 5;
+  const cellXY = (n) => [GX + ((n - 1) % COLS) * CELL, GY + Math.floor((n - 1) / COLS) * CELL];
+
+  // ---------------------------------------------------------------- index + block grid (shared by HDD and SSD scenes)
+  function diagram(svg, title) {
+    const g = el("g", { transform: "translate(0 60)" }, svg);
+    const d = { g, cells: [], rows: [] };
+    el("text", { x: 90, y: 500, class: "m-label", text: title }, g);
+    el("rect", { x: 90, y: 530, width: 340, height: 470, rx: 12, fill: "#faf8f3", stroke: "var(--ink-2)", "stroke-width": 4 }, g);
+    el("line", { x1: 120, y1: 530, x2: 120, y2: 1000, stroke: "#b3386b", "stroke-width": 2, opacity: 0.5 }, g);
+    el("text", { x: 140, y: 590, "font-size": 34, "font-weight": 700, fill: "var(--ink)", text: "Índice" }, g);
+    [...FILES, NEW].forEach((f, i) => {
+      const y = 650 + i * 85;
+      const r = el("g", {}, g);
+      el("rect", { x: 140, y: y - 22, width: 18, height: 18, rx: 3, fill: f.color }, r);
+      el("text", { x: 170, y, "font-size": 29, "font-weight": 600, fill: "var(--ink)", text: f.name }, r);
+      el("text", { x: 170, y: y + 34, "font-size": 25, fill: "var(--muted)", text: `bloques ${f.from}–${f.to}` }, r);
+      const strike = el("line", { x1: 135, y1: y - 10, x2: 135, y2: y - 10, opacity: 0, stroke: "#b3386b", "stroke-width": 5, "stroke-linecap": "round" }, g);
+      d.rows.push({ g: r, strike, y });
+    });
+    el("text", { x: GX, y: 500, class: "m-label", text: "Bloques del disco" }, g);
+    for (let n = 1; n <= COLS * ROWS; n++) {
+      const [x, y] = cellXY(n);
+      const c = el("g", {}, g);
+      const box = el("rect", { x: x + 3, y: y + 3, width: CELL - 6, height: CELL - 6, rx: 6, fill: "#faf8f3", stroke: "var(--line)", "stroke-width": 3 }, c);
+      const fill = el("rect", { x: x + 3, y: y + 3, width: CELL - 6, height: CELL - 6, rx: 6, fill: "none", opacity: 0 }, c);
+      const fill2 = el("rect", { x: x + 3, y: y + 3, width: CELL - 6, height: CELL - 6, rx: 6, fill: NEW.color, opacity: 0 }, c);
+      el("text", { x: x + 12, y: y + 28, "font-size": 20, fill: "var(--ink-2)", text: String(n) }, c);
+      d.cells.push({ box, fill, fill2 });
+    }
+    FILES.forEach((f) => { for (let n = f.from; n <= f.to; n++) { d.cells[n - 1].fill.setAttribute("fill", f.color); op(d.cells[n - 1].fill, 0.85); } });
+    // "libre" brackets over the deleted file's blocks
+    const [fx, fy] = cellXY(13);
+    d.free = el("g", {}, g);
+    el("rect", { x: fx - 4, y: fy - 4, width: CELL * 4 + 8, height: CELL + 8, rx: 10, fill: "none", stroke: "#3a9a80", "stroke-width": 5, "stroke-dasharray": "14 9" }, d.free);
+    el("text", { x: fx + CELL * 2, y: GY + ROWS * CELL + 55, "text-anchor": "middle", "font-size": 32, "font-weight": 700, fill: "#3a9a80", text: "marcado como «libre»" }, d.free);
+    return d;
+  }
+
+  // ---------------------------------------------------------------- scene 1: trash
+  let tr = {};
+  function buildTrash() {
+    const g = el("g", {}, $("#sc-trash"));
+    tr.can = el("g", {}, g);
+    el("path", { d: "M400 760 L680 760 L650 1120 L430 1120 Z", fill: "#faf8f3", stroke: "var(--ink)", "stroke-width": 7, "stroke-linejoin": "round" }, tr.can);
+    [480, 540, 600].forEach((x) => el("line", { x1: x, y1: 800, x2: x, y2: 1080, stroke: "var(--line)", "stroke-width": 6 }, tr.can));
+    tr.lid = el("g", {}, g);
+    el("rect", { x: 380, y: 720, width: 320, height: 26, rx: 8, fill: "var(--ink)" }, tr.lid);
+    el("rect", { x: 500, y: 700, width: 80, height: 24, rx: 6, fill: "var(--ink)" }, tr.lid);
+    tr.file = el("g", {}, g);
+    el("path", { d: "M-60 -80 L30 -80 L60 -50 L60 80 L-60 80 Z", fill: "#faf8f3", stroke: "#b3386b", "stroke-width": 6 }, tr.file);
+    el("polygon", { points: "-40,50 -10,10 10,30 25,15 42,50", fill: "#b3386b", opacity: 0.6 }, tr.file);
+    el("text", { x: 0, y: 125, "text-anchor": "middle", class: "m-label", text: "foto.jpg" }, tr.file);
+  }
+  function drawTrash(t, s, A) {
+    const fall = ramp(t, A.borras.start, A.borras.start + 0.9, ease.inOut);
+    const open = Math.sin(Math.PI * ramp(t, A.borras.start - 0.2, A.borras.start + 1.2));
+    tr.lid.setAttribute("transform", `rotate(${(-24 * open).toFixed(2)} 380 733)`);
+    const x = lerp(540, 540, fall), y = lerp(560, 960, fall), sc = lerp(1, 0.7, fall);
+    tr.file.setAttribute("transform", `translate(${x} ${y}) scale(${sc})`);
+    op(tr.file, 1 - ramp(t, A.borras.start + 0.7, A.borras.start + 0.9));
+    const empty = ramp(t, A.vacias.start, A.vacias.start + 0.5);
+    tr.can.setAttribute("transform", `translate(${(Math.sin((t - A.vacias.start) * 30) * 6 * (empty > 0 && empty < 1 ? 1 : 0)).toFixed(1)} 0)`);
+  }
+
+  // ---------------------------------------------------------------- scene 2: hard disk
+  let hd;
+  function buildHdd() {
+    hd = diagram($("#sc-hdd"), "Disco duro");
+    const g = hd.g;
+    hd.lens = el("g", {}, g);
+    const [x14, y14] = cellXY(15);
+    el("circle", { cx: x14 + CELL, cy: y14 + CELL / 2, r: 92, fill: "none", stroke: "var(--ink)", "stroke-width": 8 }, hd.lens);
+    el("line", { x1: x14 + CELL + 65, y1: y14 + CELL / 2 + 65, x2: x14 + CELL + 130, y2: y14 + CELL / 2 + 130, stroke: "var(--ink)", "stroke-width": 16, "stroke-linecap": "round" }, hd.lens);
+    el("text", { x: 700, y: 1120, "text-anchor": "middle", "font-size": 32, "font-weight": 700, fill: "var(--ink)", text: "aún se lee: parte de foto.jpg" }, hd.lens);
+  }
+  function drawHdd(t, s, A) {
+    hd.rows.forEach((r, i) => op(r.g, i < 3 ? on(t, A.indice.start, 0.5) : on(t, A.encima.start)));
+    const sp = ramp(t, A.tacha.start, A.tacha.start + 0.6, ease.out);
+    hd.rows[1].strike.setAttribute("x2", (135 + 260 * sp).toFixed(1));
+    op(hd.rows[1].strike, sp > 0 ? 1 : 0);
+    op(hd.free, on(t, A.libre.start));
+    // the deleted blocks keep their data (slightly dimmed); new data lands on two of them
+    for (let n = 13; n <= 16; n++) op(hd.cells[n - 1].fill, lerp(0.85, 0.55, ramp(t, A.libre.start - 0.2, A.libre.start + 0.3)));
+    [13, 14].forEach((n, k) => op(hd.cells[n - 1].fill2, ramp(t, A.encima.start + k * 0.3, A.encima.start + 0.4 + k * 0.3)));
+    op(hd.lens, on(t, A.recuperan.start));
+  }
+
+  // ---------------------------------------------------------------- scene 3: SSD + TRIM
+  let sd;
+  function buildSsd() {
+    sd = diagram($("#sc-ssd"), "SSD + TRIM");
+    const g = sd.g;
+    sd.trim = el("g", {}, g);
+    el("text", { x: 140, y: 930, "font-size": 26, "font-weight": 700, fill: "#3a9a80", text: "aviso al SSD (TRIM):" }, sd.trim);
+    el("text", { x: 140, y: 966, "font-size": 26, fill: "#3a9a80", text: "bloques 13–16 libres" }, sd.trim);
+    sd.rows.forEach((r, i) => { if (i === 3) op(r.g, 0); });
+    sd.clock = el("text", { x: 700, y: 1120, "text-anchor": "middle", "font-size": 32, "font-weight": 700, fill: "#3a9a80", text: "celdas 13–16 vacías de verdad" }, g);
+  }
+  function drawSsd(t, s, A) {
+    hdHide(sd);
+    const sp = ramp(t, A.avisa.start - 0.3, A.avisa.start + 0.3, ease.out);
+    sd.rows[1].strike.setAttribute("x2", (135 + 260 * sp).toFixed(1));
+    op(sd.rows[1].strike, sp > 0 ? 1 : 0);
+    op(sd.free, on(t, A.avisa.start + 0.3));
+    op(sd.trim, on(t, A.avisa.start + 0.3));
+    for (let n = 13; n <= 16; n++) op(sd.cells[n - 1].fill, 0.85 * (1 - ramp(t, A.limpia.start + (n - 13) * 0.35, A.limpia.start + 0.4 + (n - 13) * 0.35)));
+    op(sd.clock, on(t, A.segundos.start));
+  }
+  function hdHide(d) { op(d.rows[3].g, 0); }
+
+  // ---------------------------------------------------------------- scene 4: selling the computer
+  let se = {};
+  function buildSell() {
+    const g = el("g", {}, $("#sc-sell"));
+    el("rect", { x: 260, y: 520, width: 560, height: 360, rx: 18, fill: "#faf8f3", stroke: "var(--ink)", "stroke-width": 7 }, g);
+    el("path", { d: "M180 900 L900 900 L860 940 L220 940 Z", fill: "var(--ink)" }, g);
+    se.no = el("g", {}, g);
+    el("text", { x: 300, y: 1050, "font-size": 40, "font-weight": 650, fill: "#b3386b", text: "✕  Borrar y vaciar la papelera" }, se.no);
+    se.yes = el("g", {}, g);
+    el("text", { x: 300, y: 1140, "font-size": 40, "font-weight": 650, fill: "#3a9a80", text: "✓  Restablecer de fábrica" }, se.yes);
+    se.bar = el("rect", { x: 330, y: 760, height: 30, rx: 8, fill: "#3a9a80" }, g);
+    el("rect", { x: 330, y: 760, width: 420, height: 30, rx: 8, fill: "none", stroke: "var(--line)", "stroke-width": 3 }, g);
+    el("text", { x: 540, y: 690, "text-anchor": "middle", "font-size": 36, "font-weight": 650, fill: "var(--ink)", text: "Restableciendo…" }, g);
+  }
+  function drawSell(t, s, A) {
+    op(se.no, on(t, A.basta.start));
+    op(se.yes, on(t, A.fabrica.start - 0.3));
+    se.bar.setAttribute("width", (420 * ramp(t, A.fabrica.start, A.duration, ease.inOut)).toFixed(1));
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "Cuando borras un archivo y vacías la papelera, ¿de verdad desaparece? En un disco duro, casi nunca al instante. El sistema guarda un índice, como el de un libro, que dice en qué parte del disco está cada archivo. Al borrar, solo tacha la entrada del índice y marca ese espacio como libre. Los datos siguen ahí hasta que algo nuevo los escriba encima. Por eso existen programas que recuperan archivos borrados: leen lo que el índice ya olvidó. En un SSD, el disco sin partes móviles de las computadoras nuevas, es distinto: el sistema le avisa qué quedó libre, y el disco limpia esas celdas por su cuenta, a veces en segundos. Si vas a vender tu compu, no basta con borrar: restablécela de fábrica.";
+
+  Mosaic.short({
+    kicker: "Memoria y chips",
+    title: "¿Borrar un archivo lo borra de verdad?",
+    script: SCRIPT,
+    anchors: {
+      borras: "borras",
+      vacias: "vacias",
+      desaparece: "desaparece",
+      duro: "disco duro",
+      indice: "indice",
+      tacha: "tacha",
+      libre: "libre",
+      siguen: "siguen",
+      encima: "encima",
+      recuperan: "recuperan",
+      olvido: "olvido",
+      ssd: ["ssd", "s s d", "ese ese de"],
+      avisa: "avisa",
+      limpia: "limpia",
+      segundos: "segundos",
+      vender: "vender",
+      basta: "basta",
+      fabrica: "fabrica",
+    },
+    build() { buildTrash(); buildHdd(); buildSsd(); buildSell(); },
+    scenes: [
+      { el: "#sc-trash", from: 0, to: "duro-0.3", fadeIn: 0.3, rise: 0, update: drawTrash },
+      { el: "#cap-trash", from: 0.2, to: "duro-0.3", fade: 0.3 },
+      { el: "#sc-hdd", from: "duro-0.3", to: "ssd-0.3", rise: 0, update: drawHdd },
+      { el: "#cap-index", from: "indice-0.3", to: "tacha-0.6", fade: 0.3 },
+      { el: "#cap-strike", from: "tacha-0.6", to: "siguen-0.3", fade: 0.3 },
+      { el: "#cap-still", from: "siguen-0.3", to: "recuperan-0.6", fade: 0.3 },
+      { el: "#cap-recover", from: "recuperan-0.6", to: "ssd-0.3", fade: 0.3 },
+      { el: "#sc-ssd", from: "ssd-0.3", to: "vender-0.3", rise: 0, update: drawSsd },
+      { el: "#cap-ssd", from: "ssd-0.2", to: "limpia-0.4", fade: 0.3 },
+      { el: "#cap-clean", from: "limpia-0.4", to: "vender-0.3", fade: 0.3 },
+      { el: "#sc-sell", from: "vender-0.3", to: "end", rise: 0, update: drawSell },
+      { el: "#cap-sell", from: "vender-0.2", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
