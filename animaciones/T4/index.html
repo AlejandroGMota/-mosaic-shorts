@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>T4 · ¿Por qué el último 20 % de carga tarda tanto?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-hook" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-hook" style="top:1300px">Rapidísimo hasta 80 %…<small>y luego una eternidad</small></div>
+
+    <svg class="full scene" id="sc-chart" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-cc" style="top:1300px">Primero: corriente constante y fuerte<small>la batería vacía recibe con facilidad</small></div>
+    <div class="m-caption scene" id="cap-v" style="top:1300px">El voltaje sube hasta un límite<small>≈ 4.2 V por celda</small></div>
+    <div class="m-caption scene" id="cap-cv" style="top:1300px">Después: voltaje constante<small>la corriente baja poco a poco</small></div>
+
+    <svg class="full scene" id="sc-glass" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-glass" style="top:1300px">Como llenar un vaso<small>al final abres menos la llave para que no se derrame</small></div>
+
+    <svg class="full scene" id="sc-plating" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-plating" style="top:1300px">Si siguiera empujando fuerte…<small>el litio se acumula donde no debe: daña la batería</small></div>
+
+    <svg class="full scene" id="sc-end" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-end" style="top:1300px">El último 20 % lento no es un defecto<small>es lo que cuida tu batería</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp, clamp, keys } = Mosaic;
+  const MINT = "#3a9a80", BLUE = "#2f5e8e", AMBER = "#c98a1b", FUCH = "#b3386b", INK = "#1d1d1b", INK2 = "#4a4843", MUTED = "#827e74";
+
+  // ---------------------------------------------------------------- CC/CV charge model (illustrative, consistent)
+  // tau in [0, 1] = 0..90 min. CC until TC: current 1, charge rises linearly to 80 %.
+  // CV after TC: voltage held at 4.2 V, current decays as exp(-x / K) and charge is its integral.
+  const TC = 0.4, K = 0.1;
+  const soc = (u) => (u <= TC ? 0.8 * (u / TC) : 0.8 + 0.2 * (1 - Math.exp(-(u - TC) / K)));
+  const cur = (u) => (u <= TC ? 1 : Math.exp(-(u - TC) / K));
+  const volt = (u) => (u <= TC ? 3.6 + 0.6 * Math.pow(u / TC, 1.6) : 4.2);
+
+  // ---------------------------------------------------------------- scene 1: the counter
+  let hk = {};
+  function buildHook() {
+    const g = el("g", {}, $("#sc-hook"));
+    hk.pct = el("text", { x: 540, y: 720, "text-anchor": "middle", "font-size": 200, "font-weight": 700, class: "m-num", fill: INK, text: "" }, g);
+    el("rect", { x: 220, y: 820, width: 600, height: 240, rx: 30, fill: "none", stroke: INK2, "stroke-width": 10 }, g);
+    el("rect", { x: 820, y: 900, width: 36, height: 80, rx: 8, fill: INK2 }, g);
+    hk.fill = el("rect", { x: 240, y: 840, height: 200, rx: 16, fill: MINT }, g);
+    hk.min = el("text", { x: 540, y: 1150, "text-anchor": "middle", class: "m-label", fill: MUTED, text: "" }, g);
+  }
+  function hookTau(t, A) {
+    return keys(t, [[0.3, 0], [A.ochenta.start, TC, ease.inOut], [A.eternidad.end + 0.8, TC + 0.02, ease.out]]);
+  }
+  function drawHook(t, s, A) {
+    const u = hookTau(t, A);
+    hk.pct.textContent = Math.floor(soc(u) * 100) + " %";
+    hk.fill.setAttribute("width", (560 * soc(u)).toFixed(1));
+    hk.fill.setAttribute("fill", u > TC ? AMBER : MINT);
+    hk.min.textContent = Math.round(u * 90) + " min conectado (ilustrativo)";
+  }
+
+  // ---------------------------------------------------------------- chart (used twice)
+  const X0 = 190, X1 = 900, TOP = [500, 760], BOT = [880, 1160];
+  const xs = (u) => X0 + (X1 - X0) * u;
+  const ySoc = (v) => TOP[1] - (TOP[1] - TOP[0]) * v;
+  const yCur = (v) => BOT[1] - (BOT[1] - BOT[0]) * 0.85 * v;
+  const yV = (v) => BOT[1] - (BOT[1] - BOT[0]) * (0.15 + 0.85 * (v - 3.4) / 0.85);
+  function path(fn, y, u1) {
+    const pts = [];
+    for (let i = 0; i <= 120; i++) { const u = (u1 * i) / 120; pts.push(xs(u).toFixed(1) + "," + y(fn(u)).toFixed(1)); }
+    return pts.join(" ");
+  }
+  function buildChart(svg) {
+    const c = {};
+    const g = el("g", {}, svg);
+    c.band = el("rect", { x: xs(TC), y: TOP[0] - 10, width: X1 - xs(TC), height: BOT[1] - TOP[0] + 10, fill: "#e9e5dc" }, g);
+    // axes
+    [TOP, BOT].forEach(([a, b]) => {
+      el("line", { x1: X0, y1: a - 10, x2: X0, y2: b, stroke: INK2, "stroke-width": 3 }, g);
+      el("line", { x1: X0, y1: b, x2: X1 + 10, y2: b, stroke: INK2, "stroke-width": 3 }, g);
+    });
+    el("text", { x: X0 - 14, y: ySoc(1) + 10, "text-anchor": "end", class: "m-note", fill: MUTED, text: "100 %" }, g);
+    el("text", { x: X0 - 14, y: ySoc(0.8) + 10, "text-anchor": "end", class: "m-note", fill: MUTED, text: "80 %" }, g);
+    el("line", { x1: X0, y1: ySoc(0.8), x2: X1, y2: ySoc(0.8), stroke: "#d6d1c5", "stroke-width": 2, "stroke-dasharray": "8 8" }, g);
+    el("text", { x: X0 + 10, y: TOP[0] - 20, class: "m-label", fill: MINT, text: "carga" }, g);
+    el("text", { x: X1, y: BOT[1] + 42, "text-anchor": "end", class: "m-note", fill: MUTED, text: "tiempo →" }, g);
+    el("text", { x: X0, y: BOT[1] + 42, class: "m-note", fill: MUTED, text: "ilustrativo" }, g);
+    c.lblI = el("text", { x: X0 + 10, y: BOT[0] - 20, class: "m-label", fill: BLUE, text: "corriente" }, g);
+    c.lblV = el("text", { x: X0 + 190, y: BOT[0] - 20, class: "m-label", fill: AMBER, text: "voltaje" }, g);
+    c.v42 = el("text", { x: X1 + 4, y: yV(4.2) - 14, "text-anchor": "end", class: "m-note", fill: AMBER, text: "4.2 V" }, g);
+    c.soc = el("polyline", { fill: "none", stroke: MINT, "stroke-width": 8, "stroke-linejoin": "round", "stroke-linecap": "round" }, g);
+    c.cur = el("polyline", { fill: "none", stroke: BLUE, "stroke-width": 7, "stroke-linejoin": "round" }, g);
+    c.volt = el("polyline", { fill: "none", stroke: AMBER, "stroke-width": 7, "stroke-linejoin": "round" }, g);
+    c.head = el("line", { y1: TOP[0] - 10, y2: BOT[1], stroke: INK, "stroke-width": 3, "stroke-dasharray": "6 8" }, g);
+    c.split = el("line", { x1: xs(TC), x2: xs(TC), y1: TOP[0] - 10, y2: BOT[1], stroke: INK2, "stroke-width": 3 }, g);
+    c.ccLbl = el("text", { x: (X0 + xs(TC)) / 2 + 30, y: TOP[1] - 30, "text-anchor": "middle", class: "m-note", fill: INK2, text: "corriente constante" }, g);
+    c.cvLbl = el("text", { x: (xs(TC) + X1) / 2, y: TOP[1] - 30, "text-anchor": "middle", class: "m-note", fill: INK2, text: "voltaje constante" }, g);
+    return c;
+  }
+  function drawChart(c, u, show) {
+    c.soc.setAttribute("points", path(soc, ySoc, u));
+    c.cur.setAttribute("points", path(cur, yCur, u));
+    c.volt.setAttribute("points", path(volt, yV, u));
+    c.head.setAttribute("x1", xs(u)); c.head.setAttribute("x2", xs(u));
+    c.head.setAttribute("opacity", String(u < 0.999 ? 1 : 0));
+    c.volt.setAttribute("opacity", String(show.v)); c.lblV.setAttribute("opacity", String(show.v));
+    c.v42.setAttribute("opacity", String(show.lim));
+    c.split.setAttribute("opacity", String(show.cv)); c.band.setAttribute("opacity", String(show.cv));
+    c.cvLbl.setAttribute("opacity", String(show.cv)); c.ccLbl.setAttribute("opacity", String(show.cc));
+  }
+  let ch, en;
+  function drawMain(t, s, A) {
+    const u = keys(t, [[A.principio.start, 0], [A.limite.end, TC, ease.linear], [A.modo.start, TC], [A.vaso.start - 0.4, 1, ease.inOut]]);
+    drawChart(ch, u, {
+      v: ramp(t, A.voltaje.start - 0.3, A.voltaje.start + 0.3),
+      lim: ramp(t, A.cuatro.start - 0.3, A.cuatro.start + 0.3),
+      cc: ramp(t, A.constante.start - 0.3, A.constante.start + 0.3),
+      cv: ramp(t, A.modo.start - 0.3, A.modo.start + 0.3),
+    });
+  }
+  function drawEnd(t, s, A) {
+    drawChart(en, 1, { v: 1, lim: 1, cc: 1, cv: 1 });
+    en.hl.setAttribute("opacity", String(ramp(t, A.veinte.start - 0.2, A.veinte.start + 0.4)));
+  }
+
+  // ---------------------------------------------------------------- scene 3: glass and tap
+  let gl = {};
+  function buildGlass() {
+    const g = el("g", {}, $("#sc-glass"));
+    // tap
+    el("rect", { x: 300, y: 470, width: 300, height: 50, rx: 10, fill: "#9a958a" }, g);
+    el("rect", { x: 540, y: 470, width: 50, height: 120, rx: 10, fill: "#9a958a" }, g);
+    gl.handle = el("rect", { x: -70, y: -14, width: 140, height: 28, rx: 14, fill: INK2 }, g);
+    el("text", { x: 300, y: 450, class: "m-note", fill: MUTED, text: "llave" }, g);
+    // glass: x 420..720, y 760..1200
+    const defs = el("defs", {}, g);
+    const cp = el("clipPath", { id: "t4glass" }, defs);
+    el("polygon", { points: "430,760 710,760 690,1200 450,1200" }, cp);
+    gl.stream = el("rect", { y: 590, fill: "#7fb2d6" }, g);
+    gl.water = el("rect", { x: 400, width: 340, fill: "#a9cbe3", "clip-path": "url(#t4glass)" }, g);
+    el("polygon", { points: "430,760 710,760 690,1200 450,1200", fill: "none", stroke: INK2, "stroke-width": 6, "stroke-linejoin": "round" }, g);
+    el("line", { x1: 720, y1: 848, x2: 760, y2: 848, stroke: AMBER, "stroke-width": 4 }, g);
+    el("text", { x: 770, y: 858, class: "m-note", fill: AMBER, text: "80 %" }, g);
+    el("line", { x1: 720, y1: 760, x2: 760, y2: 760, stroke: INK2, "stroke-width": 4 }, g);
+    el("text", { x: 770, y: 770, class: "m-note", fill: MUTED, text: "lleno" }, g);
+    gl.flowLbl = el("text", { x: 250, y: 700, "text-anchor": "middle", class: "m-label", fill: BLUE, text: "" }, g);
+  }
+  function drawGlass(t, s, A) {
+    const u = keys(t, [[s.from, 0.05], [A.llave.start, TC + 0.02, ease.inOut], [A.derrame.end + 0.3, 0.95, ease.inOut]]);
+    const flow = cur(u), lvl = soc(u);
+    gl.handle.setAttribute("transform", `translate(450 452) rotate(${(-35 * flow).toFixed(1)})`);
+    const w = 6 + 44 * flow;
+    gl.stream.setAttribute("x", (565 - w / 2).toFixed(1)); gl.stream.setAttribute("width", w.toFixed(1));
+    const top = 1200 - 440 * lvl;
+    gl.stream.setAttribute("height", Math.max(0, top - 590).toFixed(1));
+    gl.water.setAttribute("y", top.toFixed(1)); gl.water.setAttribute("height", (1200 - top).toFixed(1));
+    gl.flowLbl.textContent = flow > 0.98 ? "chorro fuerte" : "chorro más delgado";
+  }
+
+  // ---------------------------------------------------------------- scene 4: lithium plating (schematic)
+  let pl = {};
+  function buildPlating() {
+    const g = el("g", {}, $("#sc-plating"));
+    el("text", { x: 540, y: 490, "text-anchor": "middle", class: "m-label", fill: INK2, text: "electrodo negativo (grafito), esquema" }, g);
+    for (let i = 0; i < 6; i++) el("rect", { x: 200, y: 640 + i * 90, width: 520, height: 22, rx: 4, fill: "#5d5a54" }, g);
+    el("line", { x1: 720, y1: 600, x2: 720, y2: 1130, stroke: INK2, "stroke-width": 4, "stroke-dasharray": "10 8" }, g);
+    el("text", { x: 740, y: 600, class: "m-note", fill: MUTED, text: "superficie" }, g);
+    pl.good = []; pl.bad = [];
+    for (let i = 0; i < 10; i++) pl.good.push(el("circle", { r: 14, fill: MINT }, g));
+    for (let i = 0; i < 16; i++) pl.bad.push(el("circle", { r: 14, fill: FUCH }, g));
+    pl.okLbl = el("text", { x: 460, y: 1200, "text-anchor": "middle", class: "m-label", fill: MINT, text: "normal: los iones entran entre las capas" }, g);
+    pl.badLbl = el("text", { x: 840, y: 1200, "text-anchor": "middle", class: "m-label", fill: FUCH, text: "se acumulan" }, g);
+    pl.warn = el("g", { transform: "translate(860 760)" }, g);
+    el("polygon", { points: "0,-60 56,40 -56,40", fill: "none", stroke: FUCH, "stroke-width": 8, "stroke-linejoin": "round" }, pl.warn);
+    el("text", { x: 0, y: 26, "text-anchor": "middle", "font-size": 60, "font-weight": 800, fill: FUCH, text: "!" }, pl.warn);
+  }
+  function drawPlating(t, s, A) {
+    // ions from the right slide into the gaps between graphite layers (normal),
+    // then, pushed too fast, they pile up on the surface instead
+    pl.good.forEach((c, i) => {
+      const p = ramp(t, s.from + i * 0.12, s.from + i * 0.12 + 0.8);
+      const row = i % 5, y = 685 + row * 90 + 0;
+      c.setAttribute("cx", lerp(900, 280 + (i >= 5 ? 220 : 0) + row * 20, p).toFixed(1)); c.setAttribute("cy", y);
+      c.setAttribute("opacity", String(p > 0 ? 1 : 0));
+    });
+    pl.bad.forEach((c, i) => {
+      const p = ramp(t, A.acumularian.start - 0.4 + i * 0.07, A.acumularian.start + i * 0.07 + 0.3);
+      const col = Math.floor(i / 8), row = i % 8;
+      c.setAttribute("cx", lerp(940, 740 + col * 28, p).toFixed(1)); c.setAttribute("cy", 650 + row * 62);
+      c.setAttribute("opacity", String(p > 0 ? 1 : 0));
+    });
+    pl.okLbl.setAttribute("opacity", String(1 - ramp(t, A.acumularian.start - 0.4, A.acumularian.start)));
+    pl.badLbl.setAttribute("opacity", String(ramp(t, A.acumularian.start, A.acumularian.start + 0.4)));
+    pl.warn.setAttribute("opacity", String(ramp(t, A.peligrosa.start - 0.3, A.peligrosa.start + 0.2)));
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "Conectas el celular, sube rapidísimo hasta el ochenta por ciento y luego el último tramo tarda una eternidad. ¿Por qué? Al principio, el cargador manda corriente constante y fuerte: la batería está vacía y recibe con facilidad. Pero conforme se llena, su voltaje sube hasta un límite, alrededor de cuatro punto dos volts por celda. Al llegar ahí, el cargador cambia de modo: sostiene ese voltaje y deja que la corriente baje poco a poco. Es como llenar un vaso: al final abres menos la llave para que no se derrame. Si siguiera empujando fuerte, los iones de litio se acumularían donde no deben, lo que daña la batería y puede hacerla peligrosa. Ese último veinte por ciento lento no es un defecto: es lo que cuida tu batería.";
+
+  Mosaic.short({
+    kicker: "El celular por dentro",
+    title: "¿Por qué el último 20 % de carga tarda tanto?",
+    script: SCRIPT,
+    anchors: {
+      ochenta: ["ochenta por ciento", "80 por ciento", "80%"],
+      eternidad: "eternidad",
+      principio: "al principio",
+      constante: "corriente constante",
+      vacia: "vacia",
+      voltaje: "su voltaje",
+      limite: "limite",
+      cuatro: ["cuatro punto dos", "4.2", "4,2"],
+      modo: "cambia de modo",
+      poco: "poco a poco",
+      vaso: "vaso",
+      llave: "llave",
+      derrame: "derrame",
+      siguiera: "siguiera",
+      acumularian: "acumularian",
+      peligrosa: "peligrosa",
+      veinte: ["veinte por ciento", "20 por ciento", "20%"],
+      defecto: "defecto",
+    },
+    build() {
+      buildHook();
+      ch = buildChart($("#sc-chart"));
+      en = buildChart($("#sc-end"));
+      en.hl = el("rect", { x: xs(TC), y: ySoc(1) - 6, width: X1 - xs(TC), height: ySoc(0.8) - ySoc(1) + 12, rx: 8, fill: "none", stroke: MINT, "stroke-width": 6 }, $("#sc-end"));
+      buildGlass(); buildPlating();
+    },
+    scenes: [
+      { el: "#sc-hook", from: 0, to: "principio-0.3", fadeIn: 0.3, rise: 0, update: drawHook },
+      { el: "#cap-hook", from: "ochenta-0.2", to: "principio-0.3", fade: 0.3 },
+      { el: "#sc-chart", from: "principio-0.3", to: "vaso-0.3", rise: 0, update: drawMain },
+      { el: "#cap-cc", from: "principio-0.2", to: "voltaje-0.3", fade: 0.3 },
+      { el: "#cap-v", from: "voltaje-0.3", to: "modo-0.3", fade: 0.3 },
+      { el: "#cap-cv", from: "modo-0.3", to: "vaso-0.3", fade: 0.3 },
+      { el: "#sc-glass", from: "vaso-0.3", to: "siguiera-0.3", rise: 0, update: drawGlass },
+      { el: "#cap-glass", from: "vaso-0.2", to: "siguiera-0.3", fade: 0.3 },
+      { el: "#sc-plating", from: "siguiera-0.3", to: "veinte-0.8", rise: 0, update: drawPlating },
+      { el: "#cap-plating", from: "siguiera-0.2", to: "veinte-0.8", fade: 0.3 },
+      { el: "#sc-end", from: "veinte-0.8", to: "end", rise: 0, update: drawEnd },
+      { el: "#cap-end", from: "veinte-0.6", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
