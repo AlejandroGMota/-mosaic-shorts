@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>T10 · ¿Cómo sabe tu celular que lo pegaste a la oreja?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-main" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-hook" style="top:1300px">Lo acercas: la pantalla se apaga<small>lo alejas: se prende</small></div>
+    <div class="m-caption scene" id="cap-sensor" style="top:1300px">Un sensor de proximidad<small>una lucecita infrarroja que parpadea y un detector de luz</small></div>
+    <div class="m-caption scene" id="cap-far" style="top:1300px">Nada enfrente: la luz se va y no regresa</div>
+    <div class="m-caption scene" id="cap-near" style="top:1300px">Tu cara cerca: la luz rebota y vuelve<small>si pasa de cierto nivel, apaga la pantalla</small></div>
+    <div class="m-caption scene" id="cap-why" style="top:1300px">Así tu oreja no cuelga ni activa el altavoz<small>y de paso ahorra batería</small></div>
+    <div class="m-caption scene" id="cap-mica" style="top:1300px">¿Se apaga sin razón?<small>revisa que la funda o la mica no tapen el sensor</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp, clamp, keys } = Mosaic;
+  const MINT = "#3a9a80", BLUE = "#2f5e8e", AMBER = "#c98a1b", FUCH = "#b3386b", INK = "#1d1d1b", INK2 = "#4a4843", MUTED = "#827e74";
+  const IR = "#8a3f8f";
+
+  // Side view: phone profile on the left, its front face looking right (x = PX).
+  const PX = 470, EY = 560, DY = 640, THR = 0.55;
+  let m = {};
+  function buildMain() {
+    const g = el("g", {}, $("#sc-main"));
+    // phone profile
+    el("rect", { x: PX - 60, y: 480, width: 60, height: 640, rx: 22, fill: "#2b2d31" }, g);
+    el("rect", { x: PX - 8, y: 500, width: 8, height: 600, fill: "#cfe0ea" }, g);
+    m.em = el("circle", { cx: PX - 4, cy: EY, r: 13, fill: IR }, g);
+    el("rect", { x: PX - 14, y: DY - 13, width: 20, height: 26, rx: 4, fill: INK2 }, g);
+    m.labels = el("g", {}, g);
+    el("text", { x: PX - 90, y: EY + 10, "text-anchor": "end", class: "m-label", fill: IR, text: "luz infrarroja" }, m.labels);
+    el("text", { x: PX - 90, y: DY + 10, "text-anchor": "end", class: "m-label", fill: INK2, text: "detector" }, m.labels);
+    el("line", { x1: PX - 80, y1: EY, x2: PX - 20, y2: EY, stroke: IR, "stroke-width": 3 }, m.labels);
+    el("line", { x1: PX - 80, y1: DY, x2: PX - 20, y2: DY, stroke: INK2, "stroke-width": 3 }, m.labels);
+    el("text", { x: PX - 90, y: EY - 40, "text-anchor": "end", class: "m-note", fill: MUTED, text: "invisible: aquí la dibujamos" }, m.labels);
+    // pulses
+    m.pulses = [];
+    for (let i = 0; i < 5; i++) m.pulses.push(el("line", { stroke: IR, "stroke-width": 7, "stroke-linecap": "round" }, g));
+    // face (simple profile seen from the side) and mica
+    m.face = el("g", {}, g);
+    el("path", { d: "M0 -260 C 150 -280 330 -200 330 40 C 330 230 200 330 60 320 C 10 316 -10 260 0 200 C 8 150 -30 120 -10 80 C 10 40 -20 0 0 -40 Z", fill: "#e7c3a6", stroke: "#b98d6f", "stroke-width": 5 }, m.face);
+    el("path", { d: "M70 -40 C 120 -70 150 0 110 40 C 90 60 70 40 70 20", fill: "none", stroke: "#b98d6f", "stroke-width": 6 }, m.face);
+    m.mica = el("g", {}, g);
+    el("rect", { x: PX, y: 490, width: 16, height: 620, fill: "#9db5a9", opacity: 0.85 }, m.mica);
+    el("text", { x: PX + 30, y: 520, class: "m-label", fill: "#5f7f70", text: "mica gruesa o funda" }, m.mica);
+    // returned-light bar with threshold
+    m.bar = el("g", {}, g);
+    el("text", { x: 120, y: 1180, class: "m-label", fill: INK2, text: "luz que regresa" }, m.bar);
+    el("rect", { x: 120, y: 1200, width: 480, height: 34, rx: 8, fill: "#e9e5dc" }, m.bar);
+    m.barFill = el("rect", { x: 120, y: 1200, height: 34, rx: 8, fill: IR }, m.bar);
+    m.thr = el("g", {}, m.bar);
+    el("line", { x1: 120 + 480 * THR, y1: 1186, x2: 120 + 480 * THR, y2: 1250, stroke: INK, "stroke-width": 5 }, m.thr);
+    el("text", { x: 120 + 480 * THR, y: 1280, "text-anchor": "middle", class: "m-note", fill: INK, text: "nivel" }, m.thr);
+    // front view of the phone: screen on/off
+    m.front = el("g", { transform: "translate(830 1080)" }, g);
+    el("rect", { x: -80, y: -150, width: 160, height: 300, rx: 24, fill: "#2b2d31" }, m.front);
+    m.screen = el("rect", { x: -70, y: -140, width: 140, height: 280, rx: 16, fill: "#faf8f3" }, m.front);
+    m.ui = el("g", {}, m.front);
+    el("circle", { cx: 0, cy: -70, r: 26, fill: "#d6d1c5" }, m.ui);
+    el("rect", { x: -44, y: -26, width: 88, height: 12, rx: 6, fill: "#d6d1c5" }, m.ui);
+    el("circle", { cx: 0, cy: 90, r: 24, fill: "#c0504d" }, m.ui);
+    el("rect", { x: -12, y: 86, width: 24, height: 8, rx: 3, fill: "#fff" }, m.ui);
+    m.state = el("text", { x: 0, y: 190, "text-anchor": "middle", class: "m-label", fill: INK, text: "" }, m.front);
+    m.warn = el("g", { transform: "translate(830 870)" }, g);
+    el("polygon", { points: "0,-50 48,34 -48,34", fill: "none", stroke: FUCH, "stroke-width": 7, "stroke-linejoin": "round" }, m.warn);
+    el("text", { x: 0, y: 24, "text-anchor": "middle", "font-size": 52, "font-weight": 800, fill: FUCH, text: "!" }, m.warn);
+  }
+  function drawMain(t, s, A) {
+    // face distance from the screen (px; > 520 = nothing in front)
+    const d = keys(t, [[0, 700], [A.acercas.start, 700], [A.apaga.start, 40], [A.alejas.start, 40], [A.prende.start, 700],
+      [A.nada.start + 0.2, 700], [A.cara.start - 0.3, 700], [A.centimetros.start + 0.2, 60],
+      [A.ahorra.end + 0.5, 60], [A.mica.start - 0.5, 700]]);
+    const micaOn = ramp(t, A.mica.start - 0.5, A.mica.start);
+    m.face.setAttribute("transform", `translate(${(PX + d).toFixed(1)} ${EY + 20}) scale(0.68)`);
+    m.mica.setAttribute("opacity", String(micaOn));
+    // reflecting surface: the mica (right at the sensor) or the face
+    const surf = micaOn > 0.5 ? 16 : d;
+    const refl = clamp(Math.pow(110 / Math.max(surf, 1), 1.2));
+    const sensorOn = ramp(t, A.sensor.start - 0.3, A.sensor.start + 0.3);
+    m.labels.setAttribute("opacity", String(sensorOn));
+    // pulses: blink of the emitter and travelling dashes
+    const pulsing = ramp(t, A.parpadea.start - 0.3, A.parpadea.start);
+    const T = 0.9;
+    m.em.setAttribute("opacity", String(0.35 + 0.65 * pulsing * (((t % T) / T) < 0.35 ? 1 : 0.2) + (1 - pulsing) * 0.4));
+    m.pulses.forEach((ln, i) => {
+      const ph = (((t - A.parpadea.start) / T) + i * 0.2) % 1;
+      const reach = Math.min(surf, 560);
+      // out: from emitter to the surface; back (only if something is there): to the detector
+      const outLen = reach, back = surf < 560 ? reach : 0;
+      const L = outLen + back, pos = ph * (L + 60);
+      let x1, y1, x2, y2;
+      const ym = (EY + DY) / 2;
+      if (pos < outLen) {
+        const p0 = Math.max(0, pos - 50) / outLen, p1 = pos / outLen;
+        x1 = PX + outLen * p0; y1 = lerp(EY, ym, p0); x2 = PX + outLen * p1; y2 = lerp(EY, ym, p1);
+      } else if (back > 0 && pos < L) {
+        const q0 = Math.max(0, pos - 50 - outLen) / back, q1 = (pos - outLen) / back;
+        x1 = PX + outLen * (1 - q0); y1 = lerp(ym, DY, q0); x2 = PX + outLen * (1 - q1); y2 = lerp(ym, DY, q1);
+      } else { x1 = x2 = -100; y1 = y2 = -100; }
+      ln.setAttribute("x1", x1.toFixed(1)); ln.setAttribute("y1", y1.toFixed(1));
+      ln.setAttribute("x2", x2.toFixed(1)); ln.setAttribute("y2", y2.toFixed(1));
+      ln.setAttribute("opacity", String(pulsing * (pos < outLen ? 1 : 0.5 + 0.5 * refl)));
+    });
+    // returned light vs threshold -> screen state
+    const barOn = ramp(t, A.rebote.start - 0.6, A.rebote.start);
+    m.bar.setAttribute("opacity", String(barOn));
+    m.barFill.setAttribute("width", (480 * refl * pulsing).toFixed(1));
+    m.thr.setAttribute("opacity", String(ramp(t, A.nivel.start - 0.3, A.nivel.start + 0.2)));
+    // before the sensor is explained, the screen just follows the face
+    const off = barOn > 0.5 ? refl * pulsing > THR : d < 200;
+    m.screen.setAttribute("fill", off ? "#1d1d1b" : "#faf8f3");
+    m.ui.setAttribute("opacity", off ? "0" : "1");
+    m.state.textContent = off ? "pantalla apagada" : "pantalla prendida";
+    m.warn.setAttribute("opacity", String(ramp(t, A.mica.start, A.mica.start + 0.4)));
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "En una llamada, acercas el celular a la oreja y la pantalla se apaga sola. Lo alejas y se prende. ¿Cómo sabe? Arriba de la pantalla hay un sensor de proximidad. Tiene una lucecita infrarroja, invisible para tus ojos, que parpadea todo el tiempo, y al lado un detector de luz. Si no hay nada enfrente, la luz se va y no regresa. Si tu cara está a pocos centímetros, la luz rebota y vuelve al detector. Cuando el rebote pasa de cierto nivel, el celular apaga la pantalla. Así tu oreja no cuelga la llamada ni activa el altavoz por accidente, y de paso se ahorra batería. Si se te apaga la pantalla sin razón, revisa que la funda o la mica no tapen el sensor.";
+
+  Mosaic.short({
+    kicker: "El celular por dentro",
+    title: "¿Cómo sabe tu celular que lo pegaste a la oreja?",
+    script: SCRIPT,
+    anchors: {
+      acercas: "acercas",
+      apaga: "se apaga sola",
+      alejas: "alejas",
+      prende: "prende",
+      sensor: "sensor de proximidad",
+      infrarroja: "infrarroja",
+      parpadea: "parpadea",
+      detector: "detector de luz",
+      nada: "no hay nada",
+      cara: "tu cara",
+      centimetros: "centimetros",
+      rebote: "el rebote",
+      nivel: "nivel",
+      oreja: "tu oreja",
+      ahorra: "ahorra bateria",
+      razon: "sin razon",
+      mica: "mica",
+    },
+    build() { buildMain(); },
+    scenes: [
+      { el: "#sc-main", from: 0, to: "end", fadeIn: 0.3, rise: 0, update: drawMain },
+      { el: "#cap-hook", from: "apaga-0.3", to: "sensor-0.6", fade: 0.3 },
+      { el: "#cap-sensor", from: "sensor-0.6", to: "nada-0.3", fade: 0.3 },
+      { el: "#cap-far", from: "nada-0.3", to: "cara-0.3", fade: 0.3 },
+      { el: "#cap-near", from: "cara-0.3", to: "oreja-0.4", fade: 0.3 },
+      { el: "#cap-why", from: "oreja-0.4", to: "razon-1.2", fade: 0.3 },
+      { el: "#cap-mica", from: "razon-1.2", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
