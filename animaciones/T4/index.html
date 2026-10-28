@@ -100,7 +100,7 @@
     c.volt = el("polyline", { fill: "none", stroke: AMBER, "stroke-width": 7, "stroke-linejoin": "round" }, g);
     c.head = el("line", { y1: TOP[0] - 10, y2: BOT[1], stroke: INK, "stroke-width": 3, "stroke-dasharray": "6 8" }, g);
     c.split = el("line", { x1: xs(TC), x2: xs(TC), y1: TOP[0] - 10, y2: BOT[1], stroke: INK2, "stroke-width": 3 }, g);
-    c.ccLbl = el("text", { x: (X0 + xs(TC)) / 2 + 30, y: TOP[1] - 30, "text-anchor": "middle", class: "m-note", fill: INK2, text: "corriente constante" }, g);
+    c.ccLbl = el("text", { x: X0 + 16, y: TOP[0] + 50, "text-anchor": "start", class: "m-note", fill: INK2, text: "corriente constante" }, g);
     c.cvLbl = el("text", { x: (xs(TC) + X1) / 2, y: TOP[1] - 30, "text-anchor": "middle", class: "m-note", fill: INK2, text: "voltaje constante" }, g);
     return c;
   }
