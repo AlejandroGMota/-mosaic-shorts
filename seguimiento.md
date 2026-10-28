@@ -65,18 +65,18 @@ Guion: `guiones/shorts-lote-02-2026-10-27.md` · Tomas: `audios/shorts-lote-02-2
 | T10 | ¿Cómo sabe tu celular que lo pegaste a la oreja? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
 | T11 | ¿Cómo vibra tu celular? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
 | T12 | ¿Cómo lee tu huella la pantalla del celular? | ✅ 27 oct | — | — | ✅ 27 oct | — | — | |
-| R1 ⭐ | ¿Cómo llega tu mensaje de WhatsApp a otro país? | ✅ 27 oct | — | — | — | — | — |  |
-| R2 ⭐ | ¿Internet viaja por satélite o por el fondo del mar? | ✅ 27 oct | — | — | — | — | — | conteo de cables cambia rápido |
-| R3 | ¿Por qué toda tu casa comparte una sola IP? | ✅ 27 oct | — | — | — | — | — |  |
-| R4 | ¿Cómo encuentra tu celular una página web? | ✅ 27 oct | — | — | — | — | — | revisar conteo de copias raíz |
-| R5 | ¿Por qué el wifi de 5 GHz llega menos lejos? | ✅ 27 oct | — | — | — | — | — |  |
-| R6 | ¿Qué protege el candado de tu navegador? | ✅ 27 oct | — | — | — | — | — |  |
-| R7 ⭐ | ¿Por qué tus «100 megas» nunca bajan a 100? | ✅ 27 oct | — | — | — | — | — |  |
-| R8 | ¿Qué es el ping y por qué arruina tus partidas? | ✅ 27 oct | — | — | — | — | — |  |
-| R9 | ¿Cómo viaja la luz dentro de la fibra óptica? | ✅ 27 oct | — | — | — | — | — |  |
-| R10 ⭐ | ¿Cómo sabe YouTube bajar la calidad del video? | ✅ 27 oct | — | — | — | — | — |  |
-| R11 | ¿Por qué el 5G es más rápido que el 4G? | ✅ 27 oct | — | — | — | — | — | confirmar bandas de Telcel/AT&T con el IFT |
-| R12 | ¿Dónde están tus fotos cuando las subes a la nube? | ✅ 27 oct | — | — | — | — | — | |
+| R1 ⭐ | ¿Cómo llega tu mensaje de WhatsApp a otro país? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
+| R2 ⭐ | ¿Internet viaja por satélite o por el fondo del mar? | ✅ 27 oct | — | — | ✅ 27 oct | — | — | conteo de cables cambia rápido |
+| R3 | ¿Por qué toda tu casa comparte una sola IP? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
+| R4 | ¿Cómo encuentra tu celular una página web? | ✅ 27 oct | — | — | ✅ 27 oct | — | — | revisar conteo de copias raíz |
+| R5 | ¿Por qué el wifi de 5 GHz llega menos lejos? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
+| R6 | ¿Qué protege el candado de tu navegador? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
+| R7 ⭐ | ¿Por qué tus «100 megas» nunca bajan a 100? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
+| R8 | ¿Qué es el ping y por qué arruina tus partidas? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
+| R9 | ¿Cómo viaja la luz dentro de la fibra óptica? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
+| R10 ⭐ | ¿Cómo sabe YouTube bajar la calidad del video? | ✅ 27 oct | — | — | ✅ 27 oct | — | — |  |
+| R11 | ¿Por qué el 5G es más rápido que el 4G? | ✅ 27 oct | — | — | ✅ 27 oct | — | — | confirmar bandas de Telcel/AT&T con el IFT |
+| R12 | ¿Dónde están tus fotos cuando las subes a la nube? | ✅ 27 oct | — | — | ✅ 27 oct | — | — | |
 
 ## Lote 03
 
