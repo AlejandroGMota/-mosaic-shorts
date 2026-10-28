@@ -84,11 +84,11 @@ Guion: `guiones/shorts-lote-03-2026-10-27.md` · Tomas: `audios/shorts-lote-03-2
 
 | ID | Short | Guion | Grabado | Audio | Animación | Render | Publicado | Notas |
 |---|---|---|---|---|---|---|---|---|
-| N1 ⭐ | ¿Una librería de IA puede robarte tus contraseñas? | ✅ 27 oct | — | — | — | — | — | LiteLLM 1.107.0, 21 oct |
-| N2 ⭐ | ¿El código que escribe la IA es seguro? | ✅ 27 oct | — | — | — | — | — | leer el abstract de arXiv 2610.14766 antes de publicar |
-| N3 | ¿Tu bot de WhatsApp ya cobra por contestar? | ✅ 27 oct | — | — | — | — | — | confirmar en la calculadora oficial de Meta |
-| N4 ⭐ | ¿Qué significa que la empresa de Claude salga a bolsa? | ✅ 27 oct | — | — | — | — | — | IPO de Anthropic; confirmar cifras en EDGAR y si ya cotizó |
-| N5 ⭐ | ¿Cuánto cuesta mantener encendida una IA? | ✅ 27 oct | — | — | — | — | — | cómputo como % de ventas (S-1); notas en guiones/noticias-2026-10-27.md |
+| N1 ⭐ | ¿Una librería de IA puede robarte tus contraseñas? | ✅ 27 oct | — | — | ✅ 27 oct | — | — | LiteLLM 1.107.0, 21 oct |
+| N2 ⭐ | ¿El código que escribe la IA es seguro? | ✅ 27 oct | — | — | ✅ 27 oct | — | — | leer el abstract de arXiv 2610.14766 antes de publicar |
+| N3 | ¿Tu bot de WhatsApp ya cobra por contestar? | ✅ 27 oct | — | — | ✅ 27 oct | — | — | confirmar en la calculadora oficial de Meta |
+| N4 ⭐ | ¿Qué significa que la empresa de Claude salga a bolsa? | ✅ 27 oct | — | — | ✅ 27 oct | — | — | IPO de Anthropic; confirmar cifras en EDGAR y si ya cotizó |
+| N5 ⭐ | ¿Cuánto cuesta mantener encendida una IA? | ✅ 27 oct | — | — | ✅ 27 oct | — | — | cómputo como % de ventas (S-1); notas en guiones/noticias-2026-10-27.md |
 
 ## Notas
 

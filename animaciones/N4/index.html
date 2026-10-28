@@ -69,7 +69,7 @@
     el("polygon", { points: "584,800 556,784 556,816", fill: INK }, it.arrow);
     it.ex = el("g", {}, g);
     el("rect", { x: 600, y: 640, width: 340, height: 320, rx: 16, fill: PAPER, stroke: INK, "stroke-width": 5 }, it.ex);
-    el("polyline", { points: "630,900 690,850 740,875 800,780 860,800 910,720", fill: "none", stroke: MINT, "stroke-width": 7, "stroke-linejoin": "round" }, it.ex);
+    el("polyline", { points: "630,830 690,790 740,860 800,800 860,880 910,820", fill: "none", stroke: INK, /* neutral: goes up and down, no implied trend */ "stroke-width": 7, "stroke-linejoin": "round" }, it.ex);
     el("line", { x1: 630, y1: 920, x2: 910, y2: 920, stroke: LINE, "stroke-width": 3 }, it.ex);
     el("text", { x: 770, y: 1010, "text-anchor": "middle", "font-size": 44, "font-weight": 700, fill: INK, text: "Bolsa de valores" }, it.ex);
     it.ask = el("text", { x: 510, y: 760, "text-anchor": "middle", "font-size": 34, "font-weight": 650, fill: AMBER, text: "permiso" }, g);
@@ -188,7 +188,7 @@
     sp.tape = el("g", {}, sp.tick);
     el("text", { x: 510, y: 950, "text-anchor": "middle", "font-size": 96, "font-weight": 750, fill: "#f3f0e9", "font-family": "var(--mono)", text: "ANT" }, sp.tick);
     el("text", { x: 510, y: 1080, "text-anchor": "middle", "font-size": 34, "font-weight": 600, fill: INK, text: "las acciones cambian de manos" }, sp.tick);
-    el("text", { x: 510, y: 1125, "text-anchor": "middle", class: "m-note", text: "clave en bolsa ilustrativa" }, sp.tick);
+    el("text", { x: 510, y: 1125, "text-anchor": "middle", class: "m-note", text: "clave en bolsa según el S-1" }, sp.tick);
   }
   function stepAt(t, A) {
     if (t < A.gira.start - 0.2) return 0;
