@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>I13 · ¿Cómo decide TikTok qué video sigue?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-phone" viewBox="0 0 1080 1920"></svg>
+    <svg class="full scene" id="sc-cat" viewBox="0 0 1080 1920"></svg>
+    <svg class="full scene" id="sc-fol" viewBox="0 0 1080 1920"></svg>
+    <svg class="full scene" id="sc-swipe" viewBox="0 0 1080 1920"></svg>
+
+    <div class="m-caption scene" id="cap-know" style="top:1300px">En pocos minutos parece que te conoce</div>
+    <div class="m-caption scene" id="cap-meas" style="top:1300px">No adivina: mide lo que haces<small>me gusta, compartir, seguir, comentar</small></div>
+    <div class="m-caption scene" id="cap-watch" style="top:1300px">¿Lo ves hasta el final o lo saltas?<small>eso casi nadie lo nota</small></div>
+    <div class="m-caption scene" id="cap-prof" style="top:1300px">Cada video también tiene su perfil<small>tema, sonido, texto</small></div>
+    <div class="m-caption scene" id="cap-match" style="top:1300px">Te muestra los que más se parecen<small>y de vez en cuando, algo distinto para probar</small></div>
+    <div class="m-caption scene" id="cap-fol" style="top:1300px">Los seguidores de quien publica<small>no cuentan directamente, según TikTok</small></div>
+    <div class="m-caption scene" id="cap-swipe" style="top:1300px">Cada vez que deslizas, le estás enseñando</div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp, clamp } = Mosaic;
+  const TOPICS = [["cocina", "#c98a1b"], ["futbol", "#3a9a80"], ["tecnología", "#2f5e8e"]];
+
+  // ---------------------------------------------------------------- small drawings
+  function phone(g, x, y, w, h) {
+    const p = el("g", {}, g);
+    el("rect", { x, y, width: w, height: h, rx: 36, fill: "#2b2a27" }, p);
+    const clipId = "clip" + Math.round(x) + Math.round(y);
+    const defs = el("defs", {}, p);
+    const cp = el("clipPath", { id: clipId }, defs);
+    el("rect", { x: x + 14, y: y + 14, width: w - 28, height: h - 28, rx: 24 }, cp);
+    const screen = el("g", { "clip-path": `url(#${clipId})` }, p);
+    return { p, screen, x: x + 14, y: y + 14, w: w - 28, h: h - 28 };
+  }
+  // a video "frame": a coloured scene that hints the topic (pan, ball, chip)
+  function videoFrame(g, kind, x, y, w, h) {
+    const f = el("g", {}, g);
+    const bg = ["#f1dcb4", "#cfe6dc", "#d6e2ee"][kind];
+    el("rect", { x, y, width: w, height: h, fill: bg }, f);
+    const cx = x + w * (w > 250 ? 0.4 : 0.5), cy = y + h * 0.45, s = w / 260;
+    if (kind === 0) { // pan
+      el("ellipse", { cx, cy, rx: 70 * s, ry: 22 * s, fill: "#2b2a27" }, f);
+      el("rect", { x: cx + 66 * s, y: cy - 6 * s, width: 70 * s, height: 12 * s, rx: 6 * s, fill: "#2b2a27" }, f);
+      el("circle", { cx: cx - 18 * s, cy: cy - 6 * s, r: 14 * s, fill: "#f4c542" }, f);
+    } else if (kind === 1) { // ball
+      el("circle", { cx, cy, r: 55 * s, fill: "#faf8f3", stroke: "#2b2a27", "stroke-width": 5 * s }, f);
+      el("polygon", { points: `${cx},${cy - 20 * s} ${cx + 19 * s},${cy - 6 * s} ${cx + 12 * s},${cy + 16 * s} ${cx - 12 * s},${cy + 16 * s} ${cx - 19 * s},${cy - 6 * s}`, fill: "#2b2a27" }, f);
+    } else { // chip
+      el("rect", { x: cx - 50 * s, y: cy - 50 * s, width: 100 * s, height: 100 * s, rx: 10 * s, fill: "#2f5e8e" }, f);
+      for (let i = 0; i < 4; i++) {
+        el("rect", { x: cx - 40 * s + i * 24 * s, y: cy - 66 * s, width: 10 * s, height: 16 * s, fill: "#2f5e8e" }, f);
+        el("rect", { x: cx - 40 * s + i * 24 * s, y: cy + 50 * s, width: 10 * s, height: 16 * s, fill: "#2f5e8e" }, f);
+      }
+    }
+    return f;
+  }
+  const ICONS = ["me gusta", "compartir", "seguir", "comentar"];
+  function icon(g, i, x, y) {
+    const ic = el("g", { transform: `translate(${x} ${y})` }, g);
+    const bg = el("circle", { cx: 0, cy: 0, r: 34, fill: "#faf8f3" }, ic);
+    const c = "#2b2a27";
+    if (i === 0) el("path", { d: "M0 16 C -26 -2, -18 -22, -6 -18 C -2 -16, 0 -12, 0 -10 C 0 -12, 2 -16, 6 -18 C 18 -22, 26 -2, 0 16 Z", fill: c }, ic);
+    if (i === 1) el("path", { d: "M-16 12 L-16 -2 Q -16 -8 -8 -8 L 6 -8 L 6 -18 L 22 -2 L 6 14 L 6 4 L -6 4 Q -12 4 -16 12 Z", fill: c }, ic);
+    if (i === 2) { el("rect", { x: -4, y: -18, width: 8, height: 36, fill: c }, ic); el("rect", { x: -18, y: -4, width: 36, height: 8, fill: c }, ic); }
+    if (i === 3) el("path", { d: "M-18 -14 h36 a4 4 0 0 1 4 4 v20 a4 4 0 0 1 -4 4 h-18 l-10 10 v-10 h-8 a4 4 0 0 1 -4 -4 v-20 a4 4 0 0 1 4 -4 z", fill: c }, ic);
+    return { ic, bg };
+  }
+  function profileCard(g, x, y, w, title) {
+    const c = el("g", {}, g);
+    el("rect", { x, y, width: w, height: 330, rx: 18, fill: "#faf8f3", stroke: "var(--ink-2)", "stroke-width": 4 }, c);
+    el("text", { x: x + 28, y: y + 56, "font-size": 40, "font-weight": 750, fill: "var(--ink)", text: title }, c);
+    const bars = TOPICS.map(([name, col], i) => {
+      const by = y + 90 + i * 76;
+      el("text", { x: x + 28, y: by + 34, "font-size": 30, "font-weight": 600, fill: "var(--ink-2)", text: name }, c);
+      el("rect", { x: x + 210, y: by + 8, width: w - 240, height: 34, rx: 6, fill: "#e9e5dc" }, c);
+      return { r: el("rect", { x: x + 210, y: by + 8, width: 0, height: 34, rx: 6, fill: col }, c), max: w - 240 };
+    });
+    return { c, bars };
+  }
+
+  // ---------------------------------------------------------------- phone + interactions + profile
+  let ph = {};
+  function buildPhone() {
+    const g = el("g", {}, $("#sc-phone"));
+    ph.ph = phone(g, 100, 470, 360, 660);
+    ph.v0 = videoFrame(ph.ph.screen, 0, ph.ph.x, ph.ph.y, ph.ph.w, ph.ph.h);
+    ph.v1 = videoFrame(ph.ph.screen, 1, ph.ph.x, ph.ph.y, ph.ph.w, ph.ph.h);
+    ph.icons = ICONS.map((n, i) => icon(ph.ph.screen, i, ph.ph.x + ph.ph.w - 50, ph.ph.y + 250 + i * 80));
+    // progress bar of the video
+    el("rect", { x: ph.ph.x, y: ph.ph.y + ph.ph.h - 12, width: ph.ph.w, height: 12, fill: "#827e74" }, ph.ph.screen);
+    ph.prog = el("rect", { x: ph.ph.x, y: ph.ph.y + ph.ph.h - 12, width: 0, height: 12, fill: "#3a9a80" }, ph.ph.screen);
+    ph.watch = el("text", { x: 280, y: 1180, "text-anchor": "middle", "font-size": 34, "font-weight": 700 }, g);
+    ph.card = profileCard(g, 500, 600, 440, "tu perfil");
+    ph.feed = el("text", { x: 720, y: 975, "text-anchor": "middle", class: "m-note", text: "ilustrativo" }, g);
+    ph.card.c.setAttribute("opacity", "0");
+  }
+  // profile values over time: each signal adds a little; watching to the end adds the most
+  function profileAt(t, A) {
+    const v = [0.15, 0.15, 0.15];
+    const add = (anchor, k, amt) => { v[k] += amt * ramp(t, anchor.start - 0.1, anchor.start + 0.4); };
+    add(A.gusta, 0, 0.12); add(A.compartes, 0, 0.1); add(A.sigues, 0, 0.08); add(A.comentas, 0, 0.06);
+    add(A.final, 0, 0.3);
+    add(A.saltas, 1, 0.02);
+    return v;
+  }
+  function drawPhone(t, s, A) {
+    const v = profileAt(t, A);
+    ph.card.c.setAttribute("opacity", String(ramp(t, A.mide.start - 0.3, A.mide.start + 0.2)));
+    ph.card.bars.forEach((b, i) => b.r.setAttribute("width", (b.max * v[i]).toFixed(1)));
+    const lit = [A.gusta, A.compartes, A.sigues, A.comentas];
+    ph.icons.forEach((ic, i) => {
+      const on = ramp(t, lit[i].start - 0.15, lit[i].start + 0.15);
+      ic.bg.setAttribute("fill", on > 0.5 && t < A.saltas.start - 0.1 ? "#e9a1bd" : "#faf8f3");
+    });
+    // watched to the end (cooking) vs skipped after a second (football)
+    const skip = t >= A.saltas.start - 0.1;
+    ph.v1.setAttribute("opacity", skip ? "1" : "0");
+    const full = ramp(t, A.final.start - 1.4, A.final.end, ease.linear);
+    const p = skip ? 0.05 * ramp(t, A.saltas.start - 0.1, A.saltas.start + 0.3) : t < A.nadie.start ? ramp(t, 0.3, A.nadie.start, ease.linear) * 0.6 : lerp(0.6, 1, full);
+    ph.prog.setAttribute("width", (ph.ph.w * p).toFixed(1));
+    ph.prog.setAttribute("fill", skip ? "#b3386b" : "#3a9a80");
+    ph.watch.textContent = skip ? "saltado: casi no suma" : full >= 1 ? "visto completo: suma mucho" : "";
+    ph.watch.setAttribute("fill", skip ? "#b3386b" : "#3a9a80");
+  }
+
+  // ---------------------------------------------------------------- catalogue of videos, each with its own profile
+  const CAT = [[0.9, 0.1, 0.2, 0], [0.1, 0.9, 0.1, 1], [0.15, 0.1, 0.9, 2], [0.5, 0.15, 0.6, 0]];
+  let ct = {};
+  function buildCat() {
+    const g = el("g", {}, $("#sc-cat"));
+    el("text", { x: 120, y: 500, class: "m-label", text: "tu perfil" }, g);
+    const you = [0.75, 0.17, 0.15];
+    TOPICS.forEach(([n, c], i) => {
+      el("rect", { x: 300 + i * 210, y: 470, width: 190 * you[i], height: 36, rx: 6, fill: c }, g);
+      el("text", { x: 300 + i * 210, y: 540, "font-size": 26, fill: "var(--ink-2)", text: n }, g);
+    });
+    ct.cards = CAT.map((vals, i) => {
+      const x = 120 + i * 210, y = 620, w = 190, h = 440;
+      const c = el("g", {}, g);
+      const frame = el("rect", { x: x - 6, y: y - 6, width: w + 12, height: h + 12, rx: 18, fill: "none", stroke: "transparent", "stroke-width": 8 }, c);
+      el("rect", { x, y, width: w, height: h, rx: 14, fill: "#faf8f3", stroke: "var(--line)", "stroke-width": 3 }, c);
+      const clip = el("clipPath", { id: "cc" + i }, el("defs", {}, c));
+      el("rect", { x, y, width: w, height: 240, rx: 14 }, clip);
+      videoFrame(el("g", { "clip-path": `url(#cc${i})` }, c), vals[3], x, y, w, 240);
+      // its own profile: three vertical bars (cocina, futbol, tecnología)
+      TOPICS.forEach(([n, col], k) => el("rect", { x: x + 28 + k * 50, y: y + 420 - 150 * vals[k], width: 34, height: 150 * vals[k], rx: 4, fill: col }, c));
+      const tag = el("text", { x: x + w / 2, y: y + h + 60, "text-anchor": "middle", "font-size": 30, "font-weight": 750 }, c);
+      return { c, frame, tag };
+    });
+    el("text", { x: 120, y: 1180, class: "m-note", text: "cada video: su tema, su sonido y su texto · ilustrativo" }, g);
+  }
+  function drawCat(t, s, A) {
+    const best = ramp(t, A.parecen.start - 0.2, A.parecen.start + 0.3);
+    const test = ramp(t, A.distinto.start - 0.2, A.distinto.start + 0.3);
+    ct.cards.forEach((c, i) => {
+      c.c.setAttribute("opacity", String(ramp(t, A.suyo.start - 0.3 + i * 0.25, A.suyo.start + i * 0.25)));
+      if (i === 0) { c.frame.setAttribute("stroke", best > 0.5 ? "#3a9a80" : "transparent"); c.tag.textContent = best > 0.5 ? "se parece" : ""; c.tag.setAttribute("fill", "#3a9a80"); }
+      if (i === 2) { c.frame.setAttribute("stroke", test > 0.5 ? "#c98a1b" : "transparent"); c.tag.textContent = test > 0.5 ? "prueba" : ""; c.tag.setAttribute("fill", "#c98a1b"); }
+    });
+  }
+
+  // ---------------------------------------------------------------- followers do not count directly
+  function buildFol() {
+    const g = el("g", {}, $("#sc-fol"));
+    el("rect", { x: 140, y: 560, width: 800, height: 360, rx: 22, fill: "#faf8f3", stroke: "var(--line)", "stroke-width": 4 }, g);
+    el("circle", { cx: 250, cy: 680, r: 60, fill: "#d6d1c5" }, g);
+    el("text", { x: 340, y: 670, "font-size": 40, "font-weight": 700, fill: "var(--ink)", text: "quien publica" }, g);
+    el("text", { x: 340, y: 725, "font-size": 50, "font-weight": 750, fill: "var(--ink-2)", text: "1 200 000 seguidores" }, g);
+    el("line", { x1: 330, y1: 708, x2: 880, y2: 708, stroke: "#b3386b", "stroke-width": 6 }, g);
+    el("text", { x: 540, y: 840, "text-anchor": "middle", "font-size": 42, "font-weight": 700, fill: "#b3386b", text: "no cuenta directamente" }, g);
+    el("text", { x: 540, y: 990, "text-anchor": "middle", class: "m-note", text: "según la explicación que publicó TikTok · número de ejemplo" }, g);
+  }
+
+  // ---------------------------------------------------------------- swipe
+  let sw = {};
+  function buildSwipe() {
+    const g = el("g", {}, $("#sc-swipe"));
+    sw.ph = phone(g, 375, 470, 330, 640);
+    sw.frames = [0, 2, 0, 1, 0].map((k) => videoFrame(sw.ph.screen, k, sw.ph.x, sw.ph.y, sw.ph.w, sw.ph.h));
+    sw.hand = el("path", { d: "M0 0 v-60 m-18 18 l18 -18 l18 18", fill: "none", stroke: "#faf8f3", "stroke-width": 8, "stroke-linecap": "round", "stroke-linejoin": "round" }, sw.ph.screen);
+  }
+  function drawSwipe(t, s, A) {
+    // one swipe every 1.1 s; each frame slides up
+    const u = Math.max(0, t - A.deslizas.start + 0.3) / 1.1;
+    const k = Math.floor(u), f = ease.inOut(clamp((u - k) / 0.45));
+    sw.frames.forEach((fr, i) => {
+      const off = (i - k - f) * sw.ph.h;
+      fr.setAttribute("transform", `translate(0 ${off.toFixed(1)})`);
+    });
+    sw.hand.setAttribute("transform", `translate(${sw.ph.x + sw.ph.w / 2} ${sw.ph.y + sw.ph.h - 60 - 120 * f})`);
+    sw.hand.setAttribute("opacity", String(1 - f));
+  }
+
+  const SCRIPT = "Abres TikTok y en pocos minutos parece que te conoce. ¿Cómo decide qué video sigue? No adivina: mide lo que haces. Según la propia TikTok, lo que más pesa son tus interacciones: a qué le das me gusta, qué compartes, a quién sigues y qué comentas. Y algo que casi nadie nota: si ves un video hasta el final o lo saltas en un segundo. Con eso arma un perfil de tus gustos. Cada video también tiene el suyo: tema, sonido, texto. El sistema te muestra los que más se parecen a lo que ya viste completo, y de vez en cuando mete algo distinto para probar. Dato curioso: TikTok dice que el número de seguidores de quien publica no cuenta directamente. Cada vez que deslizas, le estás enseñando.";
+
+  Mosaic.short({
+    kicker: "IA por dentro",
+    title: "¿Cómo decide TikTok qué video sigue?",
+    script: SCRIPT,
+    anchors: {
+      conoce: "conoce",
+      adivina: "no adivina",
+      mide: "mide",
+      interacciones: "interacciones",
+      gusta: "me gusta",
+      compartes: "compartes",
+      sigues: "sigues",
+      comentas: "comentas",
+      nadie: "casi nadie",
+      final: "hasta el final",
+      saltas: "saltas",
+      perfil: "perfil",
+      suyo: "suyo",
+      parecen: "parecen",
+      distinto: "distinto",
+      curioso: "curioso",
+      seguidores: "seguidores",
+      deslizas: "deslizas",
+    },
+    build() { buildPhone(); buildCat(); buildFol(); buildSwipe(); },
+    scenes: [
+      { el: "#sc-phone", from: 0, to: "suyo-0.6", fadeIn: 0.4, rise: 0, update: drawPhone },
+      { el: "#sc-cat", from: "suyo-0.6", to: "curioso-0.3", rise: 0, update: drawCat },
+      { el: "#sc-fol", from: "curioso-0.3", to: "deslizas-0.5", rise: 0 },
+      { el: "#sc-swipe", from: "deslizas-0.5", to: "end", rise: 0, update: drawSwipe },
+      { el: "#cap-know", from: 0.2, to: "adivina-0.3", fade: 0.3 },
+      { el: "#cap-meas", from: "adivina-0.3", to: "nadie-0.3", fade: 0.3 },
+      { el: "#cap-watch", from: "nadie-0.3", to: "suyo-0.6", fade: 0.3 },
+      { el: "#cap-prof", from: "suyo-0.6", to: "parecen-0.6", fade: 0.3 },
+      { el: "#cap-match", from: "parecen-0.6", to: "curioso-0.3", fade: 0.3 },
+      { el: "#cap-fol", from: "curioso-0.3", to: "deslizas-0.5", fade: 0.3 },
+      { el: "#cap-swipe", from: "deslizas-0.5", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
