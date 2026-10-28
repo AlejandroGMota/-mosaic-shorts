@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>R6 · ¿Qué protege el candado de tu navegador?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+  .mono { font-family: var(--mono); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-bar" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-bar" style="top:1300px">¿Qué protege exactamente?</div>
+
+    <svg class="full scene" id="sc-path" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-cif" style="top:1300px">La conexión va cifrada<small>solo tu navegador y la página tienen la llave</small></div>
+    <div class="m-caption scene" id="cap-mix" style="top:1300px">Un secreto en común<small>armado con pistas públicas</small></div>
+
+    <svg class="full scene" id="sc-cert" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-cert" style="top:1300px">Un certificado<small>demuestra que la página es quien dice ser</small></div>
+
+    <svg class="full scene" id="sc-fake" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-fake" style="top:1300px">Protege el camino, no el destino<small>una página falsa también puede tener candado</small></div>
+    <div class="m-caption scene" id="cap-check" style="top:1300px">Revisa bien la dirección<small>antes de escribir tu contraseña</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script src="../_base/redes.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp, clamp } = Mosaic;
+  const { C, op, place, lock, router, building, rack, along } = Redes;
+
+  function addressBar(parent, x, y, w, host, hostColor) {
+    const g = el("g", {}, parent);
+    el("rect", { x, y, width: w, height: 100, rx: 50, fill: C.card, stroke: C.ink2, "stroke-width": 5 }, g);
+    const lk = lock(g, x + 62, y + 46, 0.62, C.ink);
+    const tx = el("text", { x: x + 110, y: y + 64, class: "mono", "font-size": 40, fill: C.muted }, g);
+    el("tspan", { text: "https://" }, tx);
+    const h = el("tspan", { fill: hostColor || C.ink, "font-weight": 700, text: host }, tx);
+    return { g, lk, h };
+  }
+  function keyIcon(parent, x, y, s, color) {
+    const g = el("g", { transform: `translate(${x} ${y}) scale(${s})` }, parent);
+    el("circle", { cx: -24, cy: 0, r: 18, fill: "none", stroke: color, "stroke-width": 8 }, g);
+    el("path", { d: "M-6 0 L36 0 M22 0 L22 14 M32 0 L32 12", stroke: color, "stroke-width": 8, "stroke-linecap": "round", fill: "none" }, g);
+    return g;
+  }
+  function browserIcon(parent, x, y) {
+    const g = el("g", { transform: `translate(${x} ${y})` }, parent);
+    el("rect", { x: -70, y: -55, width: 140, height: 110, rx: 10, fill: C.card, stroke: C.ink, "stroke-width": 5 }, g);
+    el("line", { x1: -70, y1: -30, x2: 70, y2: -30, stroke: C.ink, "stroke-width": 4 }, g);
+    for (let i = 0; i < 3; i++) el("circle", { cx: -55 + i * 14, cy: -43, r: 4, fill: C.ink2 }, g);
+    return g;
+  }
+  function eyeIcon(parent, x, y, s) {
+    const g = el("g", { transform: `translate(${x} ${y}) scale(${s})` }, parent);
+    el("path", { d: "M-50 0 Q0 -40 50 0 Q0 40 -50 0 Z", fill: C.card, stroke: C.ink2, "stroke-width": 5 }, g);
+    el("circle", { r: 15, fill: C.ink2 }, g);
+    return g;
+  }
+
+  // ---------------------------------------------------------------- the padlock in the address bar
+  let br = {};
+  function buildBar() {
+    const g = el("g", {}, $("#sc-bar"));
+    br.bar = addressBar(g, 110, 640, 860, "ejemplo.com");
+    br.ring = el("circle", { cx: 172, cy: 690, r: 62, fill: "none", stroke: C.amber, "stroke-width": 6 }, g);
+    br.q = el("text", { x: 172, y: 900, "text-anchor": "middle", "font-size": 120, "font-weight": 700, fill: C.fuchsia, text: "?" }, g);
+    el("line", { x1: 172, y1: 760, x2: 172, y2: 800, stroke: C.amber, "stroke-width": 5 }, br.q);
+  }
+  function drawBar(t, s, A) {
+    op(br.ring, ramp(t, A.candadito.start - 0.3, A.candadito.start + 0.2));
+    op(br.q, ramp(t, A.protege.start - 0.3, A.protege.start + 0.2));
+  }
+
+  // ---------------------------------------------------------------- the path, the scrambled message, the shared secret
+  let ph = {};
+  const PY = 620, NODES = [360, 540, 720];
+  const MSG = "Hola, ¿cómo vas?", SCR = "k#9$Qz!x@2p&Lm7%";
+  const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  const mixC = (...cs) => { const a = cs.map(hex); return "rgb(" + [0, 1, 2].map((k) => Math.round(a.reduce((s, c) => s + c[k], 0) / a.length)).join(",") + ")"; };
+  const PUBC = "#e3b448", SA = "#b3386b", SB = "#2f5e8e";
+  const MIXA = mixC(PUBC, SA), MIXB = mixC(PUBC, SB), FIN = mixC(PUBC, SA, SB);
+  const LX = 230, RX = 850, MXX = 540;
+  function blob(parent, x, y, r, fill) { return el("circle", { cx: x, cy: y, r, fill, stroke: C.ink2, "stroke-width": 3 }, parent); }
+  function buildPath() {
+    const g = el("g", {}, $("#sc-path"));
+    el("line", { x1: 240, y1: PY, x2: 860, y2: PY, stroke: C.line, "stroke-width": 6 }, g);
+    browserIcon(g, 170, PY);
+    el("text", { x: 170, y: PY + 100, "text-anchor": "middle", class: "m-label", "font-size": 28, text: "tu navegador" }, g);
+    rack(g, 900, PY, 0.5, C.ink2);
+    el("text", { x: 900, y: PY + 100, "text-anchor": "middle", class: "m-label", "font-size": 28, text: "la página" }, g);
+    ph.nodes = el("g", {}, g);
+    const wf = el("g", { transform: `translate(${NODES[0]} ${PY + 14})` }, ph.nodes);
+    el("circle", { cx: 0, cy: -14, r: 34, fill: C.card, stroke: C.ink2, "stroke-width": 4 }, wf);
+    for (const r of [10, 20]) el("path", { d: `M${-r * 0.75} ${-r * 0.66} A${r} ${r} 0 0 1 ${r * 0.75} ${-r * 0.66}`, fill: "none", stroke: C.ink2, "stroke-width": 5, "stroke-linecap": "round" }, wf);
+    el("circle", { cx: 0, cy: 0, r: 4, fill: C.ink2 }, wf);
+    building(ph.nodes, NODES[1], PY, 64, 64, C.ink2);
+    router(ph.nodes, NODES[2], PY, 0.9, C.ink2);
+    ["tu wifi", "tu proveedor", "otros equipos"].forEach((l, i) => el("text", { x: NODES[i], y: PY + 80, "text-anchor": "middle", class: "m-note", text: l }, ph.nodes));
+    ph.keys = [keyIcon(g, 170, PY - 100, 0.9, C.mint), keyIcon(g, 900, PY - 100, 0.9, C.mint)];
+    // the message
+    ph.msg = el("g", {}, g);
+    ph.msgBg = el("rect", { x: -150, y: -30, width: 300, height: 60, rx: 30, fill: C.card, stroke: C.amber, "stroke-width": 4 }, ph.msg);
+    ph.msgTx = el("text", { x: 0, y: 11, "text-anchor": "middle", "font-size": 30, "font-weight": 600, fill: C.ink, text: MSG }, ph.msg);
+    // paint mixing analogy
+    ph.mix = el("g", {}, g);
+    el("text", { x: LX, y: 790, "text-anchor": "middle", class: "m-label", "font-size": 28, text: "tú" }, ph.mix);
+    el("text", { x: RX, y: 790, "text-anchor": "middle", class: "m-label", "font-size": 28, text: "la página" }, ph.mix);
+    el("line", { x1: MXX, y1: 760, x2: MXX, y2: 1210, stroke: C.line, "stroke-width": 3, "stroke-dasharray": "10 10" }, ph.mix);
+    ph.pub = el("g", {}, ph.mix);
+    blob(ph.pub, MXX, 850, 38, PUBC);
+    el("text", { x: MXX, y: 920, "text-anchor": "middle", class: "m-note", text: "color público" }, ph.pub);
+    ph.secA = el("g", {}, ph.mix); blob(ph.secA, LX - 90, 860, 32, SA); el("text", { x: LX - 90, y: 920, "text-anchor": "middle", class: "m-note", text: "secreto" }, ph.secA);
+    ph.secB = el("g", {}, ph.mix); blob(ph.secB, RX + 50, 860, 32, SB); el("text", { x: RX + 50, y: 920, "text-anchor": "middle", class: "m-note", text: "secreto" }, ph.secB);
+    ph.mA = blob(ph.mix, LX, 1000, 36, MIXA);
+    ph.mB = blob(ph.mix, RX, 1000, 36, MIXB);
+    ph.fA = blob(ph.mix, LX, 1140, 44, FIN);
+    ph.fB = blob(ph.mix, RX, 1140, 44, FIN);
+    ph.eq = el("g", {}, ph.mix);
+    el("text", { x: MXX, y: 1155, "text-anchor": "middle", "font-size": 54, "font-weight": 700, fill: C.mint, text: "=" }, ph.eq);
+    el("text", { x: MXX, y: 1215, "text-anchor": "middle", class: "m-label", "font-size": 28, fill: C.mint, text: "mismo secreto" }, ph.eq);
+    ph.eye = el("g", {}, ph.mix);
+    eyeIcon(ph.eye, MXX, 1060, 0.7);
+    ph.eyeL = el("text", { x: MXX, y: 1100, "text-anchor": "middle", class: "m-note", text: "en medio solo se ven mezclas" }, ph.eye);
+  }
+  function drawPath(t, s, A) {
+    // message: scrambled while in transit
+    const go = ramp(t, A.mandas.start - 0.2, A.recibes.start, ease.inOutSine);
+    const back = ramp(t, A.recibes.start, A.llave.start, ease.inOutSine);
+    const inMix = t >= A.ingenioso.start - 0.4;
+    const x = back > 0 ? lerp(860, 240, back) : lerp(240, 860, go);
+    place(ph.msg, clamp(x, 250, 790), PY - 90);
+    const mid = Math.min(1, Math.min(x - 240, 860 - x) / 90);
+    const enc = ramp(t, A.cifrada.start - 0.2, A.cifrada.end);
+    let txt = "";
+    for (let i = 0; i < MSG.length; i++) txt += mid * enc > (i % 5) / 6 + 0.05 && MSG[i] !== " " ? SCR[(i + Math.floor(t * 5)) % SCR.length] : MSG[i];
+    ph.msgTx.textContent = txt;
+    ph.msgTx.setAttribute("class", mid * enc > 0.05 ? "mono" : "");
+    op(ph.msg, ramp(t, s.from + 0.1, s.from + 0.5) * (1 - ramp(t, A.ingenioso.start - 0.6, A.ingenioso.start - 0.2)));
+    ph.keys.forEach((k) => op(k, ramp(t, A.llave.start - 0.2, A.llave.start + 0.3)));
+    const hiN = ramp(t, A.wifi.start - 0.3, A.wifi.start) * (1 - ramp(t, A.matematicas.start - 0.4, A.matematicas.start));
+    ph.nodes.setAttribute("opacity", String(0.75 + 0.25 * hiN));
+    // mixing
+    op(ph.mix, ramp(t, A.ingenioso.start - 0.3, A.ingenioso.start + 0.3));
+    op(ph.pub, ramp(t, A.acuerdo.start - 0.3, A.acuerdo.start + 0.2));
+    op(ph.secA, ramp(t, A.acuerdo.start, A.acuerdo.start + 0.4));
+    op(ph.secB, ramp(t, A.acuerdo.start + 0.2, A.acuerdo.start + 0.6));
+    const mk = ramp(t, A.conversacion.start - 0.2, A.conversacion.end + 0.3);
+    op(ph.mA, mk); op(ph.mB, mk);
+    const ex = ramp(t, A.wifi.start - 0.2, A.equipos.end, ease.inOut);
+    ph.mA.setAttribute("cx", String(lerp(LX, RX, ex))); ph.mA.setAttribute("cy", String(1000 - Math.sin(Math.PI * ex) * 20));
+    ph.mB.setAttribute("cx", String(lerp(RX, LX, ex))); ph.mB.setAttribute("cy", String(1000 + Math.sin(Math.PI * ex) * 20));
+    op(ph.eye, ramp(t, A.nadie.start - 0.3, A.nadie.start + 0.2));
+    op(ph.eyeL, ramp(t, A.wifi.start - 0.2, A.wifi.start + 0.3));
+    const fin = ramp(t, A.secreto.start - 0.3, A.secreto.start + 0.3);
+    op(ph.fA, fin); op(ph.fB, fin);
+    op(ph.eq, ramp(t, A.secreto.end, A.secreto.end + 0.4));
+  }
+
+  // ---------------------------------------------------------------- certificate
+  let ce = {};
+  function buildCert() {
+    const g = el("g", {}, $("#sc-cert"));
+    el("rect", { x: 170, y: 520, width: 740, height: 560, rx: 18, fill: C.card, stroke: C.ink2, "stroke-width": 5 }, g);
+    el("rect", { x: 196, y: 546, width: 688, height: 508, rx: 10, fill: "none", stroke: C.line, "stroke-width": 3 }, g);
+    el("text", { x: 540, y: 620, "text-anchor": "middle", "font-size": 40, "font-weight": 700, "letter-spacing": "0.08em", fill: C.ink, text: "CERTIFICADO" }, g);
+    el("text", { x: 240, y: 700, class: "m-note", text: "emitido para" }, g);
+    el("text", { x: 240, y: 748, class: "mono", "font-size": 40, "font-weight": 700, fill: C.ink, text: "ejemplo.com" }, g);
+    el("text", { x: 240, y: 820, class: "m-note", text: "firmado por" }, g);
+    el("text", { x: 240, y: 862, "font-size": 34, "font-weight": 600, fill: C.ink2, text: "una autoridad de confianza" }, g);
+    ce.seal = el("g", { transform: "translate(760 960)" }, g);
+    for (let i = 0; i < 16; i++) { const a = (i / 16) * Math.PI * 2; el("circle", { cx: Math.cos(a) * 62, cy: Math.sin(a) * 62, r: 14, fill: C.mint }, ce.seal); }
+    el("circle", { r: 64, fill: C.mint }, ce.seal);
+    el("path", { d: "M-26 2 L-6 22 L28 -18", fill: "none", stroke: "#fff", "stroke-width": 10, "stroke-linecap": "round", "stroke-linejoin": "round" }, ce.seal);
+    el("text", { x: 240, y: 1000, class: "m-note", text: "tu navegador revisa la firma" }, g);
+  }
+  function drawCert(t, s, A) {
+    const p = ramp(t, A.demuestra.start - 0.3, A.demuestra.start + 0.3, ease.out);
+    op(ce.seal, p);
+    ce.seal.setAttribute("transform", `translate(760 960) scale(${lerp(1.3, 1, p)}) rotate(${lerp(-20, 0, p)})`);
+  }
+
+  // ---------------------------------------------------------------- a fake page with a padlock too
+  let fk = {};
+  function buildFake() {
+    const g = el("g", {}, $("#sc-fake"));
+    el("text", { x: 110, y: 530, class: "m-label", fill: C.mint, text: "tu banco" }, g);
+    fk.real = addressBar(g, 110, 550, 860, "ejemplo.com");
+    el("text", { x: 110, y: 760, class: "m-label", fill: C.fuchsia, text: "página falsa" }, g);
+    fk.fake = addressBar(g, 110, 780, 860, "banco-seguro.xyz", C.fuchsia);
+    fk.under = el("line", { x1: 412, y1: 860, x2: 796, y2: 860, stroke: C.fuchsia, "stroke-width": 6, "stroke-linecap": "round" }, g);
+    fk.note = el("text", { x: 110, y: 940, class: "m-note", text: "las dos tienen candado: la conexión va cifrada… hacia quien sea" }, g);
+    fk.pwd = el("g", {}, g);
+    el("text", { x: 110, y: 1040, class: "m-label", text: "contraseña" }, fk.pwd);
+    el("rect", { x: 110, y: 1060, width: 860, height: 96, rx: 14, fill: C.card, stroke: C.ink2, "stroke-width": 4 }, fk.pwd);
+    fk.dots = [];
+    for (let i = 0; i < 10; i++) fk.dots.push(el("circle", { cx: 160 + i * 40, cy: 1108, r: 11, fill: C.ink }, fk.pwd));
+    fk.stop = el("g", {}, g);
+    el("rect", { x: 650, y: 1074, width: 300, height: 68, rx: 34, fill: C.fuchsia }, fk.stop);
+    el("text", { x: 800, y: 1120, "text-anchor": "middle", "font-size": 34, "font-weight": 700, fill: "#fff", text: "¡revisa antes!" }, fk.stop);
+  }
+  function drawFake(t, s, A) {
+    op(fk.fake.g, ramp(t, A.falsa.start - 0.4, A.falsa.start + 0.1));
+    op(fk.under, ramp(t, A.direccion.start - 0.3, A.direccion.start + 0.2));
+    op(fk.note, ramp(t, A.falsa.end, A.falsa.end + 0.4));
+    op(fk.pwd, ramp(t, A.direccion.start, A.direccion.start + 0.4));
+    const n = Math.floor(10 * ramp(t, A.direccion.end, A.contrasena.end, ease.linear));
+    fk.dots.forEach((d, i) => op(d, i < n ? 1 : 0));
+    op(fk.stop, ramp(t, A.contrasena.end, A.contrasena.end + 0.3));
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "Junto a la dirección de una página aparece un candadito. ¿Qué protege exactamente? Significa que la conexión va cifrada: lo que mandas y recibes viaja revuelto, y solo tu navegador y esa página tienen la llave para desrevolverlo. Lo ingenioso es cómo se ponen de acuerdo en esa llave sin que nadie más la vea, aunque la conversación pase por tu wifi, tu proveedor y muchos equipos más. Usan unas matemáticas que permiten armar un secreto en común intercambiando solo pistas públicas. Además, la página muestra un certificado que demuestra que sí es quien dice ser. Pero ojo: el candado protege el camino, no el destino. Una página falsa también puede tener candado. Revisa bien la dirección antes de escribir tu contraseña.";
+
+  Mosaic.short({
+    kicker: "Internet y redes",
+    title: "¿Qué protege el candado de tu navegador?",
+    script: SCRIPT,
+    anchors: {
+      candadito: "candadito",
+      protege: "protege",
+      significa: "significa",
+      cifrada: "cifrada",
+      mandas: "mandas",
+      recibes: "recibes",
+      llave: "llave",
+      ingenioso: "ingenioso",
+      acuerdo: "acuerdo",
+      nadie: "nadie mas",
+      conversacion: "conversacion",
+      wifi: "wifi",
+      proveedor: "proveedor",
+      equipos: "equipos",
+      matematicas: "matematicas",
+      permiten: "permiten",
+      secreto: "secreto en comun",
+      intercambiando: "intercambiando",
+      publicas: "pistas publicas",
+      ademas: "ademas",
+      certificado: "certificado",
+      demuestra: "demuestra",
+      ojo: "ojo",
+      camino: "camino",
+      falsa: "falsa",
+      direccion: { q: "direccion", after: "falsa" },
+      contrasena: "contrasena",
+    },
+    build() { buildBar(); buildPath(); buildCert(); buildFake(); },
+    scenes: [
+      { el: "#sc-bar", from: 0, to: "significa-0.4", fadeIn: 0.3, rise: 0, update: drawBar },
+      { el: "#cap-bar", from: "protege-0.4", to: "significa-0.4", fade: 0.3 },
+      { el: "#sc-path", from: "significa-0.4", to: "certificado-0.4", rise: 0, update: drawPath },
+      { el: "#cap-cif", from: "significa-0.3", to: "acuerdo-0.4", fade: 0.3 },
+      { el: "#cap-mix", from: "acuerdo-0.4", to: "certificado-0.4", fade: 0.3 },
+      { el: "#sc-cert", from: "certificado-0.4", to: "ojo-0.3", rise: 0, update: drawCert },
+      { el: "#cap-cert", from: "certificado-0.3", to: "ojo-0.3", fade: 0.3 },
+      { el: "#sc-fake", from: "ojo-0.3", to: "end", rise: 0, update: drawFake },
+      { el: "#cap-fake", from: "camino-0.3", to: "direccion-0.4", fade: 0.3 },
+      { el: "#cap-check", from: "direccion-0.4", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
