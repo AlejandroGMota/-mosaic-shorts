@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>R9 · ¿Cómo viaja la luz dentro de la fibra óptica?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-curve" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-q" style="top:1300px">Si el cable da vueltas…<small>¿por qué la luz no se sale?</small></div>
+
+    <svg class="full scene" id="sc-cut" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-cut" style="top:1300px">Dos capas de vidrio<small>un centro muy delgado y una capa que lo envuelve</small></div>
+    <div class="m-caption scene" id="cap-n" style="top:1300px">El centro desvía más la luz<small>un poquito más que el vidrio de afuera</small></div>
+
+    <svg class="full scene" id="sc-tir" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-tir" style="top:1300px">Muy inclinada: rebota completa<small>como una piedra que rebota en el agua</small></div>
+    <div class="m-caption scene" id="cap-name" style="top:1300px">Reflexión total interna</div>
+
+    <svg class="full scene" id="sc-zig" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-zig" style="top:1300px">Avanza rebotando<small>aunque el cable se curve</small></div>
+
+    <svg class="full scene" id="sc-km" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-km" style="top:1300px">Decenas de kilómetros<small>antes de volver a amplificarla</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script src="../_base/redes.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp, clamp } = Mosaic;
+  const { C, op, along, ptsStr } = Redes;
+  const CORE = "#f6e2b0", CLAD = "#dfe8ee";
+
+  // a smooth curve (centreline) as points, plus its normals
+  function curve(fn, n) {
+    const pts = [];
+    for (let i = 0; i <= n; i++) pts.push(fn(i / n));
+    const nor = pts.map((p, i) => {
+      const a = pts[Math.max(0, i - 1)], b = pts[Math.min(n, i + 1)];
+      const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1;
+      return [-dy / L, dx / L];
+    });
+    const len = [0];
+    for (let i = 1; i <= n; i++) len.push(len[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+    return { pts, nor, len, total: len[n] };
+  }
+  function at(cv, s) {
+    const n = cv.pts.length - 1;
+    s = clamp(s, 0, cv.total);
+    let i = 1;
+    while (i < n && cv.len[i] < s) i++;
+    const q = (s - cv.len[i - 1]) / ((cv.len[i] - cv.len[i - 1]) || 1);
+    const p = [lerp(cv.pts[i - 1][0], cv.pts[i][0], q), lerp(cv.pts[i - 1][1], cv.pts[i][1], q)];
+    const nn = [lerp(cv.nor[i - 1][0], cv.nor[i][0], q), lerp(cv.nor[i - 1][1], cv.nor[i][1], q)];
+    return { p, n: nn };
+  }
+  function band(cv, w) {
+    const a = cv.pts.map((p, i) => [p[0] + cv.nor[i][0] * w, p[1] + cv.nor[i][1] * w]);
+    const b = cv.pts.map((p, i) => [p[0] - cv.nor[i][0] * w, p[1] - cv.nor[i][1] * w]).reverse();
+    return ptsStr(a.concat(b));
+  }
+
+  // ---------------------------------------------------------------- a curved cable: does the light escape?
+  let cu = {};
+  const CV1 = curve((u) => [120 + u * 820, 840 + Math.sin(u * Math.PI * 2) * 180 * (0.4 + 0.6 * u)], 120);
+  function buildCurve() {
+    const g = el("g", {}, $("#sc-curve"));
+    el("polygon", { points: band(CV1, 34), fill: CLAD, stroke: C.blue, "stroke-width": 3 }, g);
+    el("polygon", { points: band(CV1, 9), fill: CORE }, g);
+    cu.trail = el("polyline", { fill: "none", stroke: C.amber, "stroke-width": 8, "stroke-linecap": "round" }, g);
+    cu.dot = el("circle", { r: 14, fill: C.amber }, g);
+    el("text", { x: 120, y: 620, class: "m-label", text: "hilo de vidrio (fibra)" }, g);
+    cu.q = el("g", {}, g);
+    const P = at(CV1, CV1.total * 0.25).p;
+    el("path", { d: `M${P[0]} ${P[1] - 40} L${P[0] + 50} ${P[1] - 150}`, stroke: C.fuchsia, "stroke-width": 5, "stroke-dasharray": "10 8" }, cu.q);
+    el("text", { x: P[0] + 60, y: P[1] - 160, "font-size": 80, "font-weight": 700, fill: C.fuchsia, text: "?" }, cu.q);
+  }
+  function drawCurve(t, s, A) {
+    const p = ((t - s.from) * 0.35) % 1;
+    const end = p * CV1.total, st = Math.max(0, end - 260);
+    const tr = [];
+    for (let k = 0; k <= 20; k++) tr.push(at(CV1, lerp(st, end, k / 20)).p);
+    cu.trail.setAttribute("points", ptsStr(tr));
+    const d = at(CV1, end).p;
+    cu.dot.setAttribute("cx", d[0]); cu.dot.setAttribute("cy", d[1]);
+    op(cu.q, ramp(t, A.sale.start - 0.4, A.sale.start + 0.1));
+  }
+
+  // ---------------------------------------------------------------- cross-section, to scale
+  let ct = {};
+  function buildCut() {
+    const g = el("g", {}, $("#sc-cut"));
+    const cx = 380, cy = 820, R = 250; // 125 micrometres -> 250 px, so 9 micrometres -> 18 px
+    el("circle", { cx, cy, r: R, fill: CLAD, stroke: C.blue, "stroke-width": 4 }, g);
+    ct.core = el("circle", { cx, cy, r: 18, fill: C.amber }, g);
+    ct.l1 = el("g", {}, g);
+    el("line", { x1: cx + 18, y1: cy, x2: 680, y2: 760, stroke: C.amber, "stroke-width": 3 }, ct.l1);
+    el("text", { x: 690, y: 740, class: "m-label", fill: "#9a6a12", text: "centro (núcleo)" }, ct.l1);
+    el("text", { x: 690, y: 780, "font-size": 34, "font-weight": 700, fill: C.ink, text: "≈ 9 µm" }, ct.l1);
+    el("text", { x: 690, y: 815, class: "m-note", text: "0.009 mm" }, ct.l1);
+    ct.l2 = el("g", {}, g);
+    el("line", { x1: cx + 177, y1: cy + 177, x2: 680, y2: 960, stroke: C.blue, "stroke-width": 3 }, ct.l2);
+    el("text", { x: 690, y: 950, class: "m-label", fill: C.blue, text: "capa de afuera" }, ct.l2);
+    el("text", { x: 690, y: 990, "font-size": 34, "font-weight": 700, fill: C.ink, text: "125 µm" }, ct.l2);
+    el("text", { x: 690, y: 1025, class: "m-note", text: "0.125 mm" }, ct.l2);
+    el("text", { x: 130, y: 1120, class: "m-note", text: "corte del hilo, a escala (sin el plástico protector)" }, g);
+    ct.n = el("g", {}, g);
+    el("text", { x: 130, y: 1190, class: "m-label", text: "cuánto desvía la luz (índice):" }, ct.n);
+    el("text", { x: 600, y: 1190, "font-size": 34, "font-weight": 700, fill: "#9a6a12", text: "1.468" }, ct.n);
+    el("text", { x: 720, y: 1190, "font-size": 34, "font-weight": 700, fill: C.ink2, text: ">" }, ct.n);
+    el("text", { x: 760, y: 1190, "font-size": 34, "font-weight": 700, fill: C.blue, text: "1.463" }, ct.n);
+    el("text", { x: 130, y: 1232, class: "m-note", text: "valores típicos de fibra monomodo" }, ct.n);
+  }
+  function drawCut(t, s, A) {
+    op(ct.l1, ramp(t, A.centro.start - 0.3, A.centro.start + 0.2));
+    op(ct.l2, ramp(t, A.envuelve.start - 0.3, A.envuelve.start + 0.2));
+    op(ct.n, ramp(t, A.desvia.start - 0.3, A.desvia.start + 0.2));
+    ct.core.setAttribute("r", String(18 + 4 * ramp(t, A.nueve.start - 0.3, A.nueve.start + 0.2) * (0.5 + 0.5 * Math.sin(t * 6))));
+  }
+
+  // ---------------------------------------------------------------- steep vs grazing ray at the edge
+  let tr = {};
+  const IY = 760; // interface: cladding above, core below
+  function ray(g, x0, y0, x1, y1, color, w) { return el("line", { x1: x0, y1: y0, x2: x1, y2: y1, stroke: color, "stroke-width": w || 7, "stroke-linecap": "round" }, g); }
+  function buildTir() {
+    const g = el("g", {}, $("#sc-tir"));
+    el("rect", { x: 100, y: 540, width: 880, height: IY - 540, fill: CLAD }, g);
+    el("rect", { x: 100, y: IY, width: 880, height: 300, fill: CORE }, g);
+    el("line", { x1: 100, y1: IY, x2: 980, y2: IY, stroke: C.ink2, "stroke-width": 3 }, g);
+    el("text", { x: 120, y: 585, class: "m-note", text: "capa de afuera" }, g);
+    el("text", { x: 120, y: 1040, class: "m-note", fill: "#9a6a12", text: "centro" }, g);
+    // left: steep ray, escapes (bends a little)
+    tr.steep = el("g", {}, g);
+    tr.s1 = ray(tr.steep, 210, 1030, 330, IY, C.fuchsia);
+    tr.s2 = ray(tr.steep, 330, IY, 432, 560, C.fuchsia);
+    el("text", { x: 330, y: 1100, "text-anchor": "middle", class: "m-label", fill: C.fuchsia, text: "poco inclinada: se escapa" }, tr.steep);
+    // right: grazing ray, reflects completely
+    tr.graze = el("g", {}, g);
+    tr.g1 = ray(tr.graze, 520, IY + 42, 760, IY, C.mint);
+    tr.g2 = ray(tr.graze, 760, IY, 960, IY + 35, C.mint);
+    el("text", { x: 760, y: 1100, "text-anchor": "middle", class: "m-label", fill: C.mint, text: "muy inclinada: rebota" }, tr.graze);
+    el("text", { x: 540, y: 1160, "text-anchor": "middle", class: "m-note", text: "ángulos exagerados: en la fibra real el rayo va casi paralelo al hilo" }, g);
+    tr.stone = el("g", {}, g);
+    el("path", { d: "M110 1230 L970 1230", stroke: C.blue, "stroke-width": 4, opacity: 0.4 }, tr.stone);
+    tr.st = el("circle", { r: 12, fill: C.ink2 }, tr.stone);
+  }
+  function seg(line, x0, y0, x1, y1, p) {
+    line.setAttribute("x1", x0); line.setAttribute("y1", y0);
+    line.setAttribute("x2", lerp(x0, x1, p)); line.setAttribute("y2", lerp(y0, y1, p));
+    line.setAttribute("opacity", p > 0 ? 1 : 0);
+  }
+  function drawTir(t, s, A) {
+    const a = ramp(t, A.pega.start - 0.3, A.pega.end + 0.3, ease.linear), b = ramp(t, A.pega.end + 0.3, A.atraviesa.end, ease.linear);
+    seg(tr.s1, 210, 1030, 330, IY, a); seg(tr.s2, 330, IY, 432, 560, b);
+    op(tr.steep, ramp(t, A.pega.start - 0.4, A.pega.start));
+    const c = ramp(t, A.inclinado.start - 0.2, A.inclinado.end + 0.4, ease.linear), d = ramp(t, A.rebota.start - 0.3, A.rebota.end + 0.2, ease.linear);
+    seg(tr.g1, 520, IY + 42, 760, IY, c); seg(tr.g2, 760, IY, 960, IY + 35, d);
+    op(tr.graze, ramp(t, A.inclinado.start - 0.4, A.inclinado.start));
+    // the skipping stone
+    const u = ramp(t, A.piedra.start - 0.2, A.piedra.start + 1.8, ease.linear);
+    const x = lerp(140, 940, u), hops = 4;
+    const ph = (u * hops) % 1;
+    tr.st.setAttribute("cx", x); tr.st.setAttribute("cy", 1218 - Math.sin(Math.PI * ph) * 60 * (1 - u * 0.6));
+    op(tr.stone, ramp(t, A.piedra.start - 0.4, A.piedra.start));
+  }
+
+  // ---------------------------------------------------------------- zigzag along a curving fibre
+  let zz = {};
+  const CV2 = curve((u) => [130 + u * 800, 830 + Math.sin(u * Math.PI * 2) * 110], 240);
+  const HW = 48; // half-width of the core, drawn huge
+  function buildZig() {
+    const g = el("g", {}, $("#sc-zig"));
+    el("polygon", { points: band(CV2, HW + 26), fill: CLAD, stroke: C.blue, "stroke-width": 3 }, g);
+    el("polygon", { points: band(CV2, HW), fill: CORE }, g);
+    zz.ray = el("polyline", { fill: "none", stroke: C.amber, "stroke-width": 6, "stroke-linejoin": "round" }, g);
+    zz.dot = el("circle", { r: 12, fill: C.amber }, g);
+    el("text", { x: 110, y: 560, class: "m-note", text: "esquema: grosor y ángulos exagerados" }, g);
+  }
+  function drawZig(t, s, A) {
+    // straight segments between bounce points that alternate between the two edges of the core
+    const per = 170;
+    const head = ((t - s.from) * 260) % (CV2.total + 300);
+    const bounce = (k) => { const q = at(CV2, k * per); const side = k % 2 ? 1 : -1; return [q.p[0] + q.n[0] * side * (HW - 6), q.p[1] + q.n[1] * side * (HW - 6)]; };
+    const kMax = Math.floor(Math.min(head, CV2.total) / per);
+    const pts = [];
+    for (let k = Math.max(0, kMax - 7); k <= kMax; k++) pts.push(bounce(k));
+    const frac = (Math.min(head, CV2.total) - kMax * per) / per;
+    const a = bounce(kMax), b = bounce(kMax + 1);
+    pts.push([lerp(a[0], b[0], frac), lerp(a[1], b[1], frac)]);
+    zz.ray.setAttribute("points", ptsStr(pts));
+    const last = pts[pts.length - 1];
+    zz.dot.setAttribute("cx", last[0]); zz.dot.setAttribute("cy", last[1]);
+    op(zz.dot, head <= CV2.total ? 1 : 0);
+  }
+
+  // ---------------------------------------------------------------- tens of kilometres between amplifiers
+  let km = {};
+  function buildKm() {
+    const g = el("g", {}, $("#sc-km"));
+    km.grad = el("linearGradient", { id: "fade", x1: "0", x2: "1", y1: "0", y2: "0" }, el("defs", {}, g));
+    el("stop", { offset: "0", "stop-color": C.amber, "stop-opacity": 1 }, km.grad);
+    el("stop", { offset: "1", "stop-color": C.amber, "stop-opacity": 0.08 }, km.grad);
+    el("rect", { x: 150, y: 760, width: 700, height: 40, rx: 20, fill: CLAD, stroke: C.blue, "stroke-width": 3 }, g);
+    km.light = el("rect", { x: 150, y: 770, height: 20, rx: 10, fill: "url(#fade)" }, g);
+    el("rect", { x: 100, y: 735, width: 60, height: 90, rx: 8, fill: C.card, stroke: C.ink, "stroke-width": 4 }, g);
+    km.amp = el("g", {}, g);
+    el("rect", { x: 850, y: 720, width: 110, height: 120, rx: 10, fill: C.card, stroke: C.mint, "stroke-width": 5 }, km.amp);
+    el("path", { d: "M875 800 L905 760 L935 800", fill: "none", stroke: C.mint, "stroke-width": 7, "stroke-linecap": "round", "stroke-linejoin": "round" }, km.amp);
+    el("text", { x: 905, y: 880, "text-anchor": "middle", class: "m-label", "font-size": 28, fill: C.mint, text: "amplificador" }, km.amp);
+    el("path", { d: "M150 900 L150 920 L850 920 L850 900", fill: "none", stroke: C.ink2, "stroke-width": 3 }, g);
+    km.lbl = el("text", { x: 500, y: 980, "text-anchor": "middle", "font-size": 54, "font-weight": 700, fill: C.ink, class: "m-num", text: "" }, g);
+    km.note = el("text", { x: 500, y: 1030, "text-anchor": "middle", class: "m-note", text: "en cables submarinos, ≈ 80 km entre amplificadores" }, g);
+    km.loss = el("text", { x: 500, y: 680, "text-anchor": "middle", class: "m-label", text: "la luz se debilita poco a poco" }, g);
+  }
+  function drawKm(t, s, A) {
+    const p = ramp(t, A.transparente.start - 0.2, A.decenas.end + 0.4, ease.inOut);
+    km.light.setAttribute("width", String(700 * p));
+    km.lbl.textContent = "≈ " + Math.round(80 * p) + " km";
+    op(km.loss, ramp(t, A.viajar.start - 0.3, A.viajar.start + 0.2));
+    op(km.note, ramp(t, A.decenas.end, A.decenas.end + 0.4));
+    op(km.amp, ramp(t, A.amplificar.start - 0.4, A.amplificar.start + 0.1));
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "La fibra óptica lleva internet como luz dentro de un hilo de vidrio. Pero si el cable da vueltas, ¿por qué la luz no se sale? El hilo tiene dos capas de vidrio: un centro muy delgado, de unos nueve milésimos de milímetro, y una capa que lo envuelve. El vidrio del centro desvía la luz un poquito más que el de afuera. Cuando la luz pega contra la orilla con un ángulo muy inclinado, no la atraviesa: rebota completa hacia adentro, como una piedra que rebota en el agua. Eso se llama reflexión total interna. Así avanza, rebotando, aunque el cable se curve. El vidrio es tan transparente que la luz puede viajar decenas de kilómetros antes de necesitar que alguien la vuelva a amplificar.";
+
+  Mosaic.short({
+    kicker: "Internet y redes",
+    title: "¿Cómo viaja la luz dentro de la fibra óptica?",
+    script: SCRIPT,
+    anchors: {
+      hilo: "hilo de vidrio",
+      vueltas: "vueltas",
+      sale: "se sale",
+      capas: "dos capas",
+      centro: "centro",
+      nueve: ["nueve milesimos", "9 milesimos"],
+      envuelve: "envuelve",
+      desvia: "desvia",
+      pega: "pega",
+      inclinado: "inclinado",
+      atraviesa: "atraviesa",
+      rebota: "rebota completa",
+      piedra: "piedra",
+      reflexion: "reflexion total",
+      avanza: "avanza",
+      curve: "curve",
+      transparente: "transparente",
+      viajar: "viajar",
+      decenas: "decenas",
+      amplificar: "amplificar",
+    },
+    build() { buildCurve(); buildCut(); buildTir(); buildZig(); buildKm(); },
+    scenes: [
+      { el: "#sc-curve", from: 0, to: "capas-0.6", fadeIn: 0.3, rise: 0, update: drawCurve },
+      { el: "#cap-q", from: "vueltas-0.6", to: "capas-0.6", fade: 0.3 },
+      { el: "#sc-cut", from: "capas-0.6", to: "pega-0.6", rise: 0, update: drawCut },
+      { el: "#cap-cut", from: "capas-0.5", to: "desvia-0.4", fade: 0.3 },
+      { el: "#cap-n", from: "desvia-0.4", to: "pega-0.6", fade: 0.3 },
+      { el: "#sc-tir", from: "pega-0.6", to: "avanza-0.4", rise: 0, update: drawTir },
+      { el: "#cap-tir", from: "rebota-0.4", to: "reflexion-0.3", fade: 0.3 },
+      { el: "#cap-name", from: "reflexion-0.3", to: "avanza-0.4", fade: 0.3 },
+      { el: "#sc-zig", from: "avanza-0.4", to: "transparente-0.5", rise: 0, update: drawZig },
+      { el: "#cap-zig", from: "avanza-0.3", to: "transparente-0.5", fade: 0.3 },
+      { el: "#sc-km", from: "transparente-0.5", to: "end", rise: 0, update: drawKm },
+      { el: "#cap-km", from: "decenas-0.3", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
