@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>I11 · ¿Cuánta energía gasta una pregunta a la IA?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-flow" viewBox="0 0 1080 1920"></svg>
+    <svg class="full scene" id="sc-tv" viewBox="0 0 1080 1920"></svg>
+    <svg class="full scene" id="sc-33" viewBox="0 0 1080 1920"></svg>
+    <svg class="full scene" id="sc-note" viewBox="0 0 1080 1920"></svg>
+    <svg class="full scene" id="sc-many" viewBox="0 0 1080 1920"></svg>
+
+    <div class="m-caption scene" id="cap-flow" style="top:1300px">Cada pregunta gasta electricidad<small>en un centro de datos</small></div>
+    <div class="m-caption scene" id="cap-024" style="top:1300px">Una pregunta de texto: 0.24 Wh<small>medición de Google para Gemini, agosto de 2025</small></div>
+    <div class="m-caption scene" id="cap-tv" style="top:1300px">Una tele encendida menos de 9 segundos</div>
+    <div class="m-caption scene" id="cap-33" style="top:1300px">En un año, 33 veces menos<small>mejores chips y modelos más eficientes</small></div>
+    <div class="m-caption scene" id="cap-ojo" style="top:1300px">Ojo con dos cosas</div>
+    <div class="m-caption scene" id="cap-many" style="top:1300px">Una pregunta es poquito<small>pero se hacen miles de millones al día</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp } = Mosaic;
+  const fmt = (n) => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+
+  // ---------------------------------------------------------------- question -> server -> electricity
+  let fl = {};
+  function buildFlow() {
+    const g = el("g", {}, $("#sc-flow"));
+    fl.q = el("g", {}, g);
+    el("path", { d: "M120 700 h200 a24 24 0 0 1 24 24 v110 a24 24 0 0 1 -24 24 h-120 l-40 40 v-40 h-40 a24 24 0 0 1 -24 -24 v-110 a24 24 0 0 1 24 -24 z", fill: "#dbe5ef" }, fl.q);
+    el("text", { x: 220, y: 812, "text-anchor": "middle", "font-size": 90, "font-weight": 700, fill: "#2f5e8e", text: "?" }, fl.q);
+    el("text", { x: 220, y: 970, "text-anchor": "middle", class: "m-label", text: "tu pregunta" }, fl.q);
+    fl.srv = el("g", {}, g);
+    el("rect", { x: 450, y: 620, width: 180, height: 300, rx: 10, fill: "#faf8f3", stroke: "var(--ink)", "stroke-width": 5 }, fl.srv);
+    fl.leds = [];
+    for (let i = 0; i < 6; i++) {
+      el("rect", { x: 470, y: 640 + i * 46, width: 140, height: 34, rx: 4, fill: "#e9e5dc" }, fl.srv);
+      fl.leds.push(el("circle", { cx: 590, cy: 657 + i * 46, r: 6, fill: "#3a9a80" }, fl.srv));
+    }
+    el("text", { x: 540, y: 970, "text-anchor": "middle", class: "m-label", text: "centro de datos" }, fl.srv);
+    fl.bolt = el("g", {}, g);
+    el("polygon", { points: "880,640 820,780 865,780 840,900 920,740 872,740 900,640", fill: "#c98a1b" }, fl.bolt);
+    el("text", { x: 860, y: 970, "text-anchor": "middle", class: "m-label", text: "electricidad" }, fl.bolt);
+    fl.ar = [[360, 430], [650, 800]].map(([a, b]) => el("line", { x1: a, y1: 780, x2: b, y2: 780, stroke: "var(--ink-2)", "stroke-width": 5, "stroke-dasharray": "10 10" }, g));
+  }
+  function drawFlow(t, s, A) {
+    fl.srv.setAttribute("opacity", String(ramp(t, A.centro.start - 0.3, A.centro.start + 0.2)));
+    fl.bolt.setAttribute("opacity", String(ramp(t, A.electricidad.start - 0.3, A.electricidad.start + 0.2)));
+    fl.ar[0].setAttribute("opacity", String(ramp(t, A.centro.start - 0.3, A.centro.start + 0.2)));
+    fl.ar[1].setAttribute("opacity", String(ramp(t, A.electricidad.start - 0.3, A.electricidad.start + 0.2)));
+    fl.ar.forEach((a) => a.setAttribute("stroke-dashoffset", String(-t * 40)));
+    fl.leds.forEach((l, i) => l.setAttribute("opacity", Math.floor(t * 5 + i * 1.7) % 3 ? "1" : "0.25"));
+  }
+
+  // ---------------------------------------------------------------- 0.24 Wh vs a 100 W TV for 9 s (0.25 Wh)
+  const BASE = 1080, HMAX = 440;
+  let tv = {};
+  function buildTv() {
+    const g = el("g", {}, $("#sc-tv"));
+    el("line", { x1: 140, y1: BASE, x2: 940, y2: BASE, stroke: "var(--ink-2)", "stroke-width": 4 }, g);
+    tv.b1 = el("rect", { x: 230, width: 200, rx: 8, fill: "#2f5e8e" }, g);
+    tv.v1 = el("text", { x: 330, "text-anchor": "middle", "font-size": 54, "font-weight": 720, fill: "#2f5e8e", text: "0.24 Wh" }, g);
+    el("text", { x: 330, y: BASE + 50, "text-anchor": "middle", class: "m-label", text: "1 pregunta de texto" }, g);
+    el("text", { x: 330, y: BASE + 90, "text-anchor": "middle", class: "m-note", text: "Gemini · cifra de Google" }, g);
+    tv.grp = el("g", {}, g);
+    tv.b2 = el("rect", { x: 650, width: 200, rx: 8, fill: "#c98a1b" }, tv.grp);
+    tv.v2 = el("text", { x: 750, "text-anchor": "middle", "font-size": 54, "font-weight": 720, fill: "#c98a1b" }, tv.grp);
+    el("text", { x: 750, y: BASE + 50, "text-anchor": "middle", class: "m-label", text: "tele de 100 W" }, tv.grp);
+    tv.sec = el("text", { x: 750, y: BASE + 90, "text-anchor": "middle", class: "m-note" }, tv.grp);
+    // a small TV above its bar
+    tv.icon = el("g", {}, tv.grp);
+    el("rect", { x: 680, y: 470, width: 140, height: 90, rx: 8, fill: "#faf8f3", stroke: "var(--ink)", "stroke-width": 5 }, tv.icon);
+    el("line", { x1: 730, y1: 575, x2: 770, y2: 575, stroke: "var(--ink)", "stroke-width": 6 }, tv.icon);
+  }
+  function drawTv(t, s, A) {
+    const g1 = ramp(t, A.medicion.start, A.cero.start, ease.out);
+    const h1 = (HMAX * 0.24 / 0.25) * g1;
+    tv.b1.setAttribute("y", (BASE - h1).toFixed(1)); tv.b1.setAttribute("height", h1.toFixed(1));
+    tv.v1.setAttribute("y", (BASE - h1 - 20).toFixed(1));
+    tv.v1.setAttribute("opacity", String(ramp(t, A.cero.start - 0.2, A.cero.start + 0.3)));
+    // the TV runs for 8.6 s of "TV time" (100 W x 8.6 s = 0.24 Wh), shown as a running clock
+    const p = ramp(t, A.tele.start - 0.2, A.nueve.end + 0.3, ease.inOut);
+    tv.grp.setAttribute("opacity", String(ramp(t, A.tele.start - 0.4, A.tele.start)));
+    const sec = 8.6 * p, wh = (100 * sec) / 3600;
+    const h2 = HMAX * wh / 0.25;
+    tv.b2.setAttribute("y", (BASE - h2).toFixed(1)); tv.b2.setAttribute("height", h2.toFixed(1));
+    tv.v2.setAttribute("y", (BASE - h2 - 20).toFixed(1));
+    tv.v2.textContent = wh.toFixed(2) + " Wh";
+    tv.sec.textContent = "encendida " + sec.toFixed(1) + " s";
+  }
+
+  // ---------------------------------------------------------------- 33 times less in one year
+  let tt = {};
+  function buildTT() {
+    const g = el("g", {}, $("#sc-33"));
+    el("line", { x1: 140, y1: 1120, x2: 940, y2: 1120, stroke: "var(--ink-2)", "stroke-width": 4 }, g);
+    tt.b1 = el("rect", { x: 230, width: 200, rx: 8, fill: "#b9c9da" }, g);
+    tt.b2 = el("rect", { x: 650, width: 200, rx: 8, fill: "#2f5e8e" }, g);
+    tt.v1 = el("text", { x: 330, "text-anchor": "middle", "font-size": 44, "font-weight": 700, fill: "var(--ink-2)", text: "≈ 7.9 Wh" }, g);
+    el("text", { x: 750, y: 1080, "text-anchor": "middle", "font-size": 44, "font-weight": 700, fill: "#2f5e8e", text: "0.24 Wh" }, g);
+    el("text", { x: 330, y: 1170, "text-anchor": "middle", class: "m-label", text: "mayo de 2024" }, g);
+    el("text", { x: 750, y: 1170, "text-anchor": "middle", class: "m-label", text: "mayo de 2025" }, g);
+    tt.lbl = el("text", { x: 750, y: 700, "text-anchor": "middle", "font-size": 64, "font-weight": 750, fill: "#3a9a80", text: "÷ 33" }, g);
+    el("text", { x: 540, y: 1220, "text-anchor": "middle", class: "m-note", text: "por pregunta de texto · 7.9 = 0.24 × 33" }, g);
+  }
+  function drawTT(t, s, A) {
+    const H1 = 560, h1 = H1 * ramp(t, A.ademas.start - 0.2, A.ademas.start + 0.5, ease.out);
+    tt.b1.setAttribute("y", String(1120 - h1)); tt.b1.setAttribute("height", String(h1));
+    tt.v1.setAttribute("y", String(1120 - h1 - 18));
+    const shrink = ramp(t, A.treinta.start - 0.3, A.treinta.end + 0.4, ease.inOut);
+    const h2 = lerp(H1, H1 / 33, shrink) * ramp(t, A.ademas.start - 0.2, A.ademas.start + 0.5, ease.out);
+    tt.b2.setAttribute("y", String(1120 - h2)); tt.b2.setAttribute("height", String(h2));
+    tt.b2.setAttribute("opacity", String(ramp(t, A.anio2.start - 0.3, A.anio2.start + 0.2)));
+    tt.lbl.setAttribute("opacity", String(shrink));
+  }
+
+  // ---------------------------------------------------------------- two caveats
+  let nt = {};
+  function buildNote() {
+    const g = el("g", {}, $("#sc-note"));
+    const card = (y, n, head, sub, color) => {
+      const c = el("g", {}, g);
+      el("rect", { x: 120, y, width: 840, height: 190, rx: 18, fill: "#faf8f3", stroke: color, "stroke-width": 5 }, c);
+      el("circle", { cx: 195, cy: y + 95, r: 40, fill: color }, c);
+      el("text", { x: 195, y: y + 113, "text-anchor": "middle", "font-size": 50, "font-weight": 750, fill: "#faf8f3", text: n }, c);
+      el("text", { x: 265, y: y + 85, "font-size": 46, "font-weight": 700, fill: "var(--ink)", text: head }, c);
+      el("text", { x: 265, y: y + 135, "font-size": 34, fill: "var(--ink-2)", text: sub }, c);
+      return c;
+    };
+    nt.c1 = card(560, "1", "Cifra de la propia empresa", "la publicó Google sobre su IA", "#2f5e8e");
+    nt.c2 = card(800, "2", "Solo para texto", "imágenes o video gastan bastante más", "#b3386b");
+  }
+  function drawNote(t, s, A) {
+    nt.c1.setAttribute("opacity", String(ramp(t, A.empresa.start - 0.5, A.empresa.start)));
+    nt.c2.setAttribute("opacity", String(ramp(t, A.texto.start - 0.4, A.texto.start + 0.1)));
+  }
+
+  // ---------------------------------------------------------------- times billions
+  let mn = {};
+  function buildMany() {
+    const g = el("g", {}, $("#sc-many"));
+    el("text", { x: 540, y: 560, "text-anchor": "middle", class: "m-label", text: "ejemplo: mil millones de preguntas al día" }, g);
+    mn.q = el("text", { x: 540, y: 720, "text-anchor": "middle", "font-size": 96, "font-weight": 720, fill: "#2f5e8e" }, g);
+    el("text", { x: 540, y: 780, "text-anchor": "middle", class: "m-label", text: "preguntas" }, g);
+    el("text", { x: 540, y: 880, "text-anchor": "middle", "font-size": 48, fill: "var(--ink-2)", text: "× 0.24 Wh =" }, g);
+    mn.e = el("text", { x: 540, y: 1020, "text-anchor": "middle", "font-size": 96, "font-weight": 720, fill: "#c98a1b" }, g);
+    el("text", { x: 540, y: 1080, "text-anchor": "middle", class: "m-label", text: "kWh al día" }, g);
+  }
+  function drawMany(t, s, A) {
+    const p = ramp(t, A.poquito.end, A.dia.start, ease.inOut);
+    const n = Math.pow(10, 9 * p);
+    const e = (n * 0.24) / 1000;
+    mn.q.textContent = fmt(n);
+    mn.e.textContent = e >= 10 ? fmt(e) : e.toFixed(e >= 1 ? 1 : 4);
+  }
+
+  const SCRIPT = "Cada vez que le preguntas algo a una IA, un centro de datos en algún lugar gasta electricidad. ¿Cuánta? En agosto de dos mil veinticinco, Google publicó su medición: una pregunta de texto típica a su IA, Gemini, gasta unos cero punto dos cuatro watts hora. Es lo que gasta una tele encendida menos de nueve segundos. Además dijo que en un año bajó ese consumo treinta y tres veces, por mejores chips y modelos más eficientes. Ojo con dos cosas: es la cifra de la propia empresa, y es solo para texto. Generar imágenes o video gasta bastante más. Una pregunta es poquito. El tema es que se hacen miles de millones al día.";
+
+  Mosaic.short({
+    kicker: "IA por dentro",
+    title: "¿Cuánta energía gasta una pregunta a la IA?",
+    script: SCRIPT,
+    anchors: {
+      centro: "centro de datos",
+      electricidad: "electricidad",
+      agosto: "agosto",
+      anio: ["dos mil veinticinco", "2025"],
+      medicion: "medicion",
+      gemini: "gemini",
+      cero: ["cero punto dos cuatro", "cero punto veinticuatro", "0.24", "0,24", "024"],
+      watts: ["watts hora", "watt hora", "watts", "wh"],
+      tele: "tele",
+      nueve: ["nueve segundos", "9 segundos"],
+      ademas: "ademas",
+      anio2: "en un ano",
+      treinta: ["treinta y tres veces", "33 veces"],
+      ojo: "ojo",
+      empresa: "empresa",
+      texto: "solo para texto",
+      imagenes: "imagenes",
+      poquito: "poquito",
+      miles: "miles de millones",
+      dia: "al dia",
+    },
+    build() { buildFlow(); buildTv(); buildTT(); buildNote(); buildMany(); },
+    scenes: [
+      { el: "#sc-flow", from: 0, to: "agosto-0.3", fadeIn: 0.4, rise: 0, update: drawFlow },
+      { el: "#sc-tv", from: "agosto-0.3", to: "ademas-0.3", rise: 0, update: drawTv },
+      { el: "#sc-33", from: "ademas-0.3", to: "ojo-0.3", rise: 0, update: drawTT },
+      { el: "#sc-note", from: "ojo-0.3", to: "poquito-0.3", rise: 0, update: drawNote },
+      { el: "#sc-many", from: "poquito-0.3", to: "end", rise: 0, update: drawMany },
+      { el: "#cap-flow", from: 0.2, to: "agosto-0.3", fade: 0.3 },
+      { el: "#cap-024", from: "agosto-0.3", to: "tele-0.3", fade: 0.3 },
+      { el: "#cap-tv", from: "tele-0.3", to: "ademas-0.3", fade: 0.3 },
+      { el: "#cap-33", from: "ademas-0.3", to: "ojo-0.3", fade: 0.3 },
+      { el: "#cap-ojo", from: "ojo-0.3", to: "poquito-0.3", fade: 0.3 },
+      { el: "#cap-many", from: "poquito-0.3", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
