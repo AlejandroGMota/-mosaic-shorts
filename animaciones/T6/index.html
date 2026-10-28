@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>T6 · ¿Cómo carga tu celular sin cables?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-main" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-hook" style="top:1300px">Empieza a cargar sin ningún cable</div>
+    <div class="m-caption scene" id="cap-coil" style="top:1300px">En la base: una bobina<small>un alambre de cobre enrollado</small></div>
+    <div class="m-caption scene" id="cap-ac" style="top:1300px">Corriente alterna → campo magnético<small>que cambia de dirección una y otra vez</small></div>
+    <div class="m-caption scene" id="cap-induce" style="top:1300px">El campo que cambia genera corriente<small>en la bobina de tu celular</small></div>
+    <div class="m-caption scene" id="cap-trafo" style="top:1300px">Como un transformador<small>solo que con aire de por medio</small></div>
+    <div class="m-caption scene" id="cap-heat" style="top:1300px">Parte de la energía se pierde como calor<small>sobre todo si está mal alineado o la funda es gruesa</small></div>
+    <div class="m-caption scene" id="cap-mag" style="top:1300px">Los imanes alinean las bobinas</div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp, clamp, keys } = Mosaic;
+  const MINT = "#3a9a80", BLUE = "#2f5e8e", AMBER = "#c98a1b", FUCH = "#b3386b", INK = "#1d1d1b", INK2 = "#4a4843", MUTED = "#827e74";
+  const COPPER = "#b8743a";
+
+  // Side view. Pad coil centred at (540, PADY); phone coil at (540 + dx, PHY0 + 20).
+  // The gap between pad and phone is exaggerated so the field lines can be seen.
+  const PADY = 1090, PHY0 = 800, DX = 170;
+  let m = {};
+  function coil(g, rxs, k) {
+    const gg = el("g", {}, g);
+    rxs.forEach((rx) => el("ellipse", { rx, ry: rx * k, fill: "none", stroke: COPPER, "stroke-width": 6 }, gg));
+    return gg;
+  }
+  function arrowHead(g, color) {
+    return el("polygon", { points: "0,-11 18,0 0,11", fill: color }, g);
+  }
+  function buildMain() {
+    const svg = $("#sc-main");
+    const g = el("g", {}, svg);
+    m.slow = el("text", { x: 540, y: 500, "text-anchor": "middle", class: "m-note", fill: MUTED, text: "en realidad más de 100 000 veces por segundo; aquí, en cámara lenta" }, g);
+    el("text", { x: 960, y: 1180, "text-anchor": "end", class: "m-note", fill: MUTED, text: "separación exagerada" }, g);
+    // field lines: lobes left and right of the coil axis (vertical through the centre)
+    m.field = el("g", {}, g);
+    for (let k = 0; k < 3; k++) {
+      const a = 60 + 45 * k, bb = 150 + 50 * k;
+      el("ellipse", { cx: 540 - a, cy: 950, rx: a, ry: bb, fill: "none", stroke: BLUE, "stroke-width": 4, "stroke-dasharray": "14 10" }, m.field);
+      el("ellipse", { cx: 540 + a, cy: 950, rx: a, ry: bb, fill: "none", stroke: BLUE, "stroke-width": 4, "stroke-dasharray": "14 10" }, m.field);
+    }
+    m.axisArrow = el("g", {}, m.field);
+    arrowHead(m.axisArrow, BLUE);
+    m.fieldLbl = el("text", { x: 100, y: 600, class: "m-label", fill: BLUE, text: "campo magnético" }, g);
+
+    // pad
+    m.pad = el("g", {}, g);
+    el("rect", { x: 300, y: PADY - 40, width: 480, height: 90, rx: 28, fill: "#d9d4c8", stroke: INK2, "stroke-width": 5 }, m.pad);
+    m.padCoil = coil(m.pad, [60, 90, 120, 150], 0.16);
+    m.padCoil.setAttribute("transform", `translate(540 ${PADY})`);
+    m.padArrows = [-1, 1].map(() => { const a = el("g", {}, m.pad); arrowHead(a, FUCH); return a; });
+    el("text", { x: 800, y: PADY + 12, class: "m-label", fill: INK, text: "base" }, m.pad);
+    m.acLbl = el("text", { x: 540, y: PADY + 100, "text-anchor": "middle", class: "m-label", fill: FUCH, text: "corriente alterna" }, m.pad);
+    m.magPad = el("g", {}, g);
+    [-190, 190].forEach((x) => el("rect", { x: 540 + x - 22, y: PADY - 30, width: 44, height: 24, rx: 4, fill: INK2 }, m.magPad));
+
+    // heat waves, above the phone
+    m.heat = el("g", {}, g);
+    m.waves = [];
+    for (let i = 0; i < 4; i++) m.waves.push(el("path", { fill: "none", stroke: AMBER, "stroke-width": 5, "stroke-linecap": "round" }, m.heat));
+    m.heatLbl = el("text", { x: 0, y: 590, class: "m-label", fill: AMBER, text: "calor" }, m.heat);
+
+    // phone (side cut)
+    m.phone = el("g", {}, g);
+    el("rect", { x: -230, y: -70, width: 460, height: 110, rx: 26, fill: "#faf8f3", stroke: "#2b2d31", "stroke-width": 8 }, m.phone);
+    el("rect", { x: 30, y: -54, width: 170, height: 50, rx: 8, fill: "#e9e5dc", stroke: INK2, "stroke-width": 3 }, m.phone);
+    m.batt = el("rect", { x: 34, y: -50, height: 42, rx: 6, fill: MINT }, m.phone);
+    el("text", { x: 115, y: -86, "text-anchor": "middle", class: "m-note", fill: MUTED, text: "batería" }, m.phone);
+    m.phCoil = coil(m.phone, [50, 80, 110], 0.16);
+    m.phCoil.setAttribute("transform", "translate(0 18)");
+    m.phArrows = [-1, 1].map(() => { const a = el("g", {}, m.phone); arrowHead(a, MINT); return a; });
+    m.wire = el("path", { d: "M100 18 C130 18 130 -10 140 -8", fill: "none", stroke: MINT, "stroke-width": 6 }, m.phone);
+    m.magPh = el("g", {}, m.phone);
+    [-190, 190].forEach((x) => el("rect", { x: x - 22, y: 6, width: 44, height: 24, rx: 4, fill: INK2 }, m.magPh));
+    m.caseL = el("rect", { x: -244, y: 40, width: 488, height: 0, rx: 8, fill: "#9db5a9" }, m.phone);
+    m.caseLbl = el("text", { x: -230, y: 130, class: "m-note", fill: MUTED, text: "funda gruesa" }, m.phone);
+    m.inLbl = el("text", { x: -230, y: -90, class: "m-label", fill: MINT, text: "corriente inducida" }, m.phone);
+
+    m.eff = el("g", {}, g);
+    el("text", { x: 100, y: 1250, class: "m-label", fill: MINT, text: "energía que llega" }, m.eff);
+    el("rect", { x: 400, y: 1226, width: 300, height: 28, rx: 6, fill: "#e9e5dc" }, m.eff);
+    m.effBar = el("rect", { x: 400, y: 1226, height: 28, rx: 6, fill: MINT }, m.eff);
+  }
+  function drawMain(t, s, A) {
+    const land = ramp(t, 0.2, 1.6, ease.out);
+    const dx = keys(t, [[A.alineado.start - 0.6, 0], [A.alineado.start + 0.4, DX], [A.funda.start - 0.4, DX], [A.funda.start + 0.3, 0],
+      [A.calienta.start - 0.3, 0], [A.calienta.start + 0.4, DX], [A.imanes.start + 0.3, DX], [A.alinear.start + 0.2, 0]]);
+    const caseH = keys(t, [[A.funda.start - 0.3, 0], [A.funda.start + 0.4, 40], [A.calienta.start - 0.4, 40], [A.calienta.start + 0.1, 0]]);
+    const y = lerp(560, PHY0 - caseH, land);
+    m.phone.setAttribute("transform", `translate(${540 + dx} ${y.toFixed(1)})`);
+    m.caseL.setAttribute("height", caseH.toFixed(1));
+    m.caseLbl.setAttribute("opacity", String(clamp(caseH / 40)));
+
+    // alternating current in the pad (slow motion); the field follows it
+    const on = ramp(t, A.alterna.start - 0.3, A.alterna.start + 0.3);
+    const ph = Math.sin(Math.max(0, t - A.alterna.start) * 2 * Math.PI * 0.7);
+    const I = on * ph;
+    m.padArrows.forEach((a, i) => {
+      a.setAttribute("transform", `translate(${540 + (i ? 70 : -70)} ${PADY + 24}) scale(${I >= 0 ? 1 : -1} 1)`);
+      a.setAttribute("opacity", String(Math.abs(I)));
+    });
+    m.acLbl.setAttribute("opacity", String(on));
+    m.padCoil.setAttribute("opacity", String(0.3 + 0.7 * ramp(t, A.bobina.start - 0.3, A.bobina.start + 0.3)));
+    const fOn = ramp(t, A.campo.start - 0.3, A.campo.start + 0.3);
+    m.field.setAttribute("opacity", String(fOn * (0.2 + 0.8 * Math.abs(ph))));
+    m.fieldLbl.setAttribute("opacity", String(fOn));
+    m.axisArrow.setAttribute("transform", `translate(540 950) rotate(${ph >= 0 ? -90 : 90})`);
+    m.slow.setAttribute("opacity", String(ramp(t, A.miles.start - 0.3, A.miles.start + 0.3) * (1 - ramp(t, A.otra.start, A.otra.start + 0.3))));
+
+    // coupling: share of the field that goes through the phone coil
+    const couple = clamp(1 - Math.abs(dx) / 280) * (1 - caseH / 100);
+    const ind = ramp(t, A.atravesarla.start - 0.3, A.atravesarla.start + 0.3);
+    m.phArrows.forEach((a, i) => {
+      a.setAttribute("transform", `translate(${i ? 55 : -55} 36) scale(${-I >= 0 ? 1 : -1} 1)`);
+      a.setAttribute("opacity", String(ind * Math.abs(I) * couple));
+    });
+    m.inLbl.setAttribute("opacity", String(ind));
+    m.wire.setAttribute("opacity", String(ind * (0.3 + 0.7 * couple)));
+    const charge = 0.3 + 0.65 * ramp(t, A.genera.start, A.alinear.start, ease.linear);
+    m.batt.setAttribute("width", (162 * charge).toFixed(1));
+    const effOn = ramp(t, A.problema.start - 0.3, A.problema.start + 0.3);
+    m.effBar.setAttribute("width", (300 * (0.8 * couple)).toFixed(1));
+    m.eff.setAttribute("opacity", String(effOn));
+
+    // heat grows when less energy gets through
+    const loss = effOn * (0.2 + 0.8 * (1 - couple));
+    m.waves.forEach((w, i) => {
+      const x0 = 540 + dx - 150 + i * 100, y0 = y - 120;
+      let d = "";
+      for (let k = 0; k <= 8; k++) {
+        const yy = y0 - k * 14, xx = x0 + Math.sin(t * 3 + i + k * 0.9) * 9;
+        d += (k ? " L" : "M") + xx.toFixed(1) + " " + yy.toFixed(1);
+      }
+      w.setAttribute("d", d);
+    });
+    m.heatLbl.setAttribute("x", (540 + dx + 170).toFixed(1));
+    m.heatLbl.setAttribute("y", (y - 160).toFixed(1));
+    m.heat.setAttribute("opacity", String(loss));
+
+    const mag = ramp(t, A.imanes.start - 0.3, A.imanes.start + 0.3);
+    m.magPad.setAttribute("opacity", String(mag)); m.magPh.setAttribute("opacity", String(mag));
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "Pones el celular sobre una base y empieza a cargar sin ningún cable. ¿Cómo pasa la energía? Dentro de la base hay una bobina, un alambre de cobre enrollado. Cuando le pasa corriente alterna, crea un campo magnético que cambia de dirección miles de veces por segundo. Dentro de tu celular hay otra bobina. Ese campo magnético cambiante, al atravesarla, genera corriente en ella. Es el mismo principio de un transformador, solo que con aire de por medio. El problema es que parte de la energía se pierde como calor, sobre todo si el celular queda mal alineado o la funda es gruesa. Por eso se calienta más y tarda más que con cable. Los imanes de las bases nuevas sirven justo para eso: alinear las bobinas.";
+
+  Mosaic.short({
+    kicker: "El celular por dentro",
+    title: "¿Cómo carga tu celular sin cables?",
+    script: SCRIPT,
+    anchors: {
+      cable: "cable",
+      bobina: "bobina",
+      cobre: "cobre",
+      alterna: "alterna",
+      campo: "campo magnetico",
+      miles: "miles",
+      otra: "otra bobina",
+      atravesarla: "atravesarla",
+      genera: "genera corriente",
+      transformador: "transformador",
+      aire: "aire",
+      problema: "problema",
+      calor: "calor",
+      alineado: "alineado",
+      funda: "funda",
+      calienta: "calienta",
+      imanes: "imanes",
+      alinear: "alinear las bobinas",
+    },
+    build() { buildMain(); },
+    scenes: [
+      { el: "#sc-main", from: 0, to: "end", fadeIn: 0.3, rise: 0, update: drawMain },
+      { el: "#cap-hook", from: "cable-0.6", to: "bobina-0.6", fade: 0.3 },
+      { el: "#cap-coil", from: "bobina-0.6", to: "alterna-0.3", fade: 0.3 },
+      { el: "#cap-ac", from: "alterna-0.3", to: "otra-0.3", fade: 0.3 },
+      { el: "#cap-induce", from: "otra-0.3", to: "transformador-0.5", fade: 0.3 },
+      { el: "#cap-trafo", from: "transformador-0.5", to: "problema-0.3", fade: 0.3 },
+      { el: "#cap-heat", from: "problema-0.3", to: "imanes-0.3", fade: 0.3 },
+      { el: "#cap-mag", from: "imanes-0.3", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
