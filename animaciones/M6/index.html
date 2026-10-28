@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>M6 · ¿Cómo guarda datos una memoria USB sin pila?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-usb" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-usb" style="top:1300px">Sin pila, y recuerda durante años<small>¿cómo?</small></div>
+    <div class="m-caption scene" id="cap-flash" style="top:1300px">Memoria flash<small>miles de millones de celdas diminutas</small></div>
+
+    <svg class="full scene" id="sc-cell" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-cell" style="top:1300px">Cada celda es un transistor<small>con una trampa para electrones rodeada de aislante</small></div>
+    <div class="m-caption scene" id="cap-write" style="top:1300px">Escribir: un voltaje alto<small>empuja electrones a través del aislante</small></div>
+    <div class="m-caption scene" id="cap-off" style="top:1300px">Sin corriente, se quedan ahí<small>no tienen por dónde salir</small></div>
+
+    <svg class="full scene" id="sc-read" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-read" style="top:1300px">Leer: ¿qué tan fácil se enciende?<small>con electrones cuesta más; sin ellos, menos</small></div>
+    <div class="m-caption scene" id="cap-end" style="top:1300px">No es electricidad guardada<small>son electrones encerrados</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp } = Mosaic;
+  const op = (n, v) => n.setAttribute("opacity", String(v));
+  const on = (t, a, d = 0.3) => ramp(t, a - d, a + 0.15);
+  const OX = "#cfe0ea", TRAP = "#c98a1b", GATE = "#4a4843", SUB = "#e2dccd", E = "#2f5e8e";
+
+  // ---------------------------------------------------------------- USB stick -> chip -> cells
+  let us = {};
+  function buildUsb() {
+    const g = el("g", {}, $("#sc-usb"));
+    us.stick = el("g", {}, g);
+    el("rect", { x: 120, y: 620, width: 120, height: 110, rx: 6, fill: "#d9dde2", stroke: "#8a96a3", "stroke-width": 4 }, us.stick);
+    el("rect", { x: 145, y: 645, width: 25, height: 22, fill: "#8a96a3" }, us.stick);
+    el("rect", { x: 190, y: 645, width: 25, height: 22, fill: "#8a96a3" }, us.stick);
+    el("rect", { x: 240, y: 590, width: 420, height: 170, rx: 26, fill: "#faf8f3", stroke: "var(--ink)", "stroke-width": 6 }, us.stick);
+    us.chip = el("rect", { x: 380, y: 625, width: 150, height: 100, rx: 8, fill: "#2b2f36" }, us.stick);
+    // no battery
+    us.batt = el("g", {}, g);
+    el("rect", { x: 740, y: 610, width: 150, height: 80, rx: 10, fill: "none", stroke: "var(--ink-2)", "stroke-width": 6 }, us.batt);
+    el("rect", { x: 890, y: 635, width: 14, height: 30, rx: 3, fill: "var(--ink-2)" }, us.batt);
+    el("line", { x1: 720, y1: 720, x2: 920, y2: 580, stroke: "#b3386b", "stroke-width": 10, "stroke-linecap": "round" }, us.batt);
+    el("text", { x: 815, y: 760, "text-anchor": "middle", class: "m-label", text: "sin pila" }, us.batt);
+    // years in a drawer
+    us.years = el("text", { x: 450, y: 900, "text-anchor": "middle", "font-size": 46, "font-weight": 700, fill: "var(--ink)", text: "años en un cajón… y sigue ahí" }, g);
+    // zoom into the cells
+    us.zoom = el("g", {}, g);
+    el("line", { x1: 380, y1: 725, x2: 120, y2: 860, stroke: "var(--ink-2)", "stroke-width": 3, "stroke-dasharray": "8 8" }, us.zoom);
+    el("line", { x1: 530, y1: 725, x2: 940, y2: 860, stroke: "var(--ink-2)", "stroke-width": 3, "stroke-dasharray": "8 8" }, us.zoom);
+    el("rect", { x: 120, y: 860, width: 820, height: 360, rx: 14, fill: "#2b2f36" }, us.zoom);
+    for (let j = 0; j < 12; j++) for (let i = 0; i < 28; i++) {
+      el("rect", { x: 138 + i * 28.6, y: 878 + j * 27.4, width: 20, height: 19, rx: 3, fill: (i * 7 + j * 13) % 5 < 2 ? "#c98a1b" : "#4a525e" }, us.zoom);
+    }
+  }
+  function drawUsb(t, s, A) {
+    op(us.batt, on(t, A.pila.start));
+    op(us.years, on(t, A.anos.start) * (1 - ramp(t, A.flash.start - 0.4, A.flash.start)));
+    op(us.zoom, ramp(t, A.flash.start - 0.2, A.flash.start + 0.5));
+    us.chip.setAttribute("stroke", "#c98a1b");
+    us.chip.setAttribute("stroke-width", String(8 * ramp(t, A.flash.start - 0.4, A.flash.start)));
+  }
+
+  // ---------------------------------------------------------------- one cell in cross-section
+  const CX0 = 400, CX1 = 900;
+  const L = { gate: [700, 800], oxTop: [800, 840], trap: [840, 920], oxBot: [920, 960], sub: [960, 1140] };
+  let ce = {};
+  function layer(g, [y0, y1], fill, x0 = CX0 + 80, x1 = CX1 - 80) {
+    return el("rect", { x: x0, y: y0, width: x1 - x0, height: y1 - y0, fill }, g);
+  }
+  function label(g, y, text, color) {
+    const gg = el("g", {}, g);
+    el("text", { x: 100, y: y + 10, "font-size": 30, "font-weight": 650, fill: color, text }, gg);
+    el("line", { x1: 340, y1: y, x2: CX0 + 70, y2: y, stroke: "var(--line)", "stroke-width": 3 }, gg);
+    return gg;
+  }
+  function buildCell() {
+    const g = el("g", {}, $("#sc-cell"));
+    el("rect", { x: CX0, y: L.sub[0], width: CX1 - CX0, height: L.sub[1] - L.sub[0], fill: SUB }, g);
+    el("rect", { x: CX0 + 20, y: L.sub[0], width: 110, height: 70, rx: 8, fill: "#b7c0ca" }, g);
+    el("rect", { x: CX1 - 130, y: L.sub[0], width: 110, height: 70, rx: 8, fill: "#b7c0ca" }, g);
+    ce.channel = el("rect", { x: CX0 + 130, y: L.sub[0], width: CX1 - CX0 - 260, height: 26, fill: "#3a9a80", opacity: 0 }, g);
+    ce.oxB = layer(g, L.oxBot, OX);
+    ce.trap = layer(g, L.trap, TRAP);
+    ce.oxT = layer(g, L.oxTop, OX);
+    ce.gate = layer(g, L.gate, GATE);
+    ce.labels = [
+      label(g, 750, "compuerta", GATE),
+      label(g, 880, "trampa", "#a06c10"),
+      label(g, 820, "aislante", "#5d8aa8"),
+      label(g, 940, "aislante", "#5d8aa8"),
+      label(g, 1010, "canal", "var(--ink-2)"),
+    ];
+    ce.volt = el("g", {}, g);
+    el("line", { x1: 650, y1: 600, x2: 650, y2: 690, stroke: "#c98a1b", "stroke-width": 8 }, ce.volt);
+    el("polygon", { points: "650,700 634,676 666,676", fill: "#c98a1b" }, ce.volt);
+    el("text", { x: 670, y: 640, "font-size": 32, "font-weight": 700, fill: "#c98a1b", text: "+ voltaje alto" }, ce.volt);
+    ce.off = el("text", { x: 670, y: 640, "font-size": 30, "font-weight": 700, fill: "var(--ink-2)", text: "0 V: sin corriente" }, g);
+    ce.es = [];
+    for (let i = 0; i < 9; i++) ce.es.push(el("circle", { r: 11, fill: E, stroke: "#faf8f3", "stroke-width": 3 }, g));
+    ce.lock = el("text", { x: 650, y: 1200, "text-anchor": "middle", "font-size": 32, "font-weight": 700, fill: E, text: "atrapados: no tienen por dónde salir" }, g);
+  }
+  function drawCell(t, s, A) {
+    ce.labels.forEach((l, i) => {
+      const a = [A.transistor, A.trampa, A.aislante, A.aislante, A.transistor][i].start;
+      op(l, on(t, a));
+    });
+    op(ce.trap, 0.35 + 0.65 * on(t, A.trampa.start));
+    const vOn = ramp(t, A.voltaje.start - 0.3, A.voltaje.start) * (1 - ramp(t, A.quitar.start - 0.2, A.quitar.start + 0.2));
+    op(ce.volt, vOn);
+    op(ce.off, ramp(t, A.quitar.start, A.quitar.start + 0.3));
+    ce.gate.setAttribute("fill", vOn > 0.5 ? "#8a5c0c" : GATE);
+    // electrons: wait in the channel, tunnel up through the bottom oxide when pushed, then stay
+    ce.es.forEach((c, i) => {
+      const x = CX0 + 145 + i * 25 + (i % 2) * 6;
+      const a = A.empuja.start + i * 0.18;
+      const p = ramp(t, a, a + 0.7, ease.inOut);
+      const y = lerp(L.sub[0] + 40 + (i % 3) * 14, L.trap[0] + 22 + (i % 3) * 18, p);
+      c.setAttribute("cx", x.toFixed(1));
+      c.setAttribute("cy", y.toFixed(1));
+      op(c, ramp(t, A.escribir.start - 0.2, A.escribir.start + 0.3));
+    });
+    op(ce.lock, ramp(t, A.salir.start - 0.2, A.salir.start + 0.3));
+  }
+
+  // ---------------------------------------------------------------- reading: two cells side by side
+  let rd = {};
+  function miniCell(g, x, full) {
+    const gg = el("g", {}, g);
+    const w = 320;
+    el("rect", { x, y: 620, width: w, height: 70, fill: GATE }, gg);
+    el("rect", { x, y: 690, width: w, height: 24, fill: OX }, gg);
+    el("rect", { x, y: 714, width: w, height: 60, fill: TRAP, opacity: 0.8 }, gg);
+    el("rect", { x, y: 774, width: w, height: 24, fill: OX }, gg);
+    el("rect", { x, y: 798, width: w, height: 90, fill: SUB }, gg);
+    if (full) for (let i = 0; i < 9; i++) el("circle", { cx: x + 40 + i * 30, cy: 732 + (i % 3) * 14, r: 10, fill: E, stroke: "#faf8f3", "stroke-width": 3 }, gg);
+    el("text", { x: x + w / 2, y: 590, "text-anchor": "middle", "font-size": 32, "font-weight": 650, fill: "var(--ink)", text: full ? "con electrones" : "sin electrones" }, gg);
+    // meter: voltage needed to switch it on
+    el("rect", { x, y: 950, width: w, height: 40, rx: 8, fill: "#faf8f3", stroke: "var(--line)", "stroke-width": 3 }, gg);
+    const bar = el("rect", { x: x + 3, y: 953, height: 34, rx: 6, fill: full ? "#b3386b" : "#3a9a80" }, gg);
+    el("text", { x: x + w / 2, y: 1030, "text-anchor": "middle", "font-size": 28, fill: "var(--ink-2)", text: full ? "cuesta encenderla" : "se enciende fácil" }, gg);
+    const bit = el("text", { x: x + w / 2, y: 1180, "text-anchor": "middle", "font-size": 130, "font-weight": 750, fill: full ? "#b3386b" : "#3a9a80", text: full ? "0" : "1" }, gg);
+    const ch = el("rect", { x: x + 80, y: 798, width: w - 160, height: 18, fill: "#3a9a80", opacity: 0 }, gg);
+    return { gg, bar, bit, ch, full };
+  }
+  function buildRead() {
+    const g = el("g", {}, $("#sc-read"));
+    rd.cells = [miniCell(g, 140, true), miniCell(g, 620, false)];
+    el("text", { x: 540, y: 935, "text-anchor": "middle", "font-size": 26, fill: "var(--muted)", text: "voltaje necesario para encenderla" }, g);
+  }
+  function drawRead(t, s, A) {
+    rd.cells.forEach((c, i) => {
+      const p = ramp(t, A.enciende.start - 0.2, A.enciende.start + 1.2, ease.out);
+      const target = c.full ? 0.82 : 0.3;
+      c.bar.setAttribute("width", (314 * target * p).toFixed(1));
+      op(c.ch, ramp(t, A.enciende.start + 0.8, A.enciende.start + 1.1) * (c.full ? 0 : 1));
+      op(c.bit, ramp(t, A.diferencia.start - 0.2, A.diferencia.start + 0.4));
+    });
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "Una memoria USB no tiene pila, y aun así recuerda tus archivos durante años guardada en un cajón. ¿Cómo? Por dentro tiene memoria flash: miles de millones de celdas diminutas. Cada celda es un transistor, un interruptor eléctrico, con una pequeña trampa para electrones rodeada de aislante. Para escribir, se aplica un voltaje alto que empuja electrones a través del aislante y los deja atrapados. Al quitar la corriente, no tienen por dónde salir: se quedan ahí. Para leer, se mide qué tan fácil se enciende la celda. Con electrones atrapados cuesta más; sin ellos, cuesta menos. Esa diferencia es un uno o un cero. Lo que guarda tus fotos no es la electricidad: son electrones encerrados.";
+
+  Mosaic.short({
+    kicker: "Memoria y chips",
+    title: "¿Cómo guarda datos una memoria USB sin pila?",
+    script: SCRIPT,
+    anchors: {
+      pila: "pila",
+      anos: "anos",
+      cajon: "cajon",
+      flash: "flash",
+      celdas: "celdas",
+      transistor: "transistor",
+      interruptor: "interruptor",
+      trampa: "trampa",
+      aislante: "aislante",
+      escribir: "escribir",
+      voltaje: "voltaje",
+      empuja: "empuja",
+      atrapados: "atrapados",
+      quitar: "quitar",
+      salir: "salir",
+      leer: "leer",
+      enciende: "enciende",
+      menos: "cuesta menos",
+      diferencia: "diferencia",
+      fotos: "fotos",
+      encerrados: "encerrados",
+    },
+    build() { buildUsb(); buildCell(); buildRead(); },
+    scenes: [
+      { el: "#sc-usb", from: 0, to: "transistor-0.5", fadeIn: 0.3, rise: 0, update: drawUsb },
+      { el: "#cap-usb", from: 0.2, to: "flash-0.4", fade: 0.3 },
+      { el: "#cap-flash", from: "flash-0.4", to: "transistor-0.5", fade: 0.3 },
+      { el: "#sc-cell", from: "transistor-0.5", to: "leer-0.4", rise: 0, update: drawCell },
+      { el: "#cap-cell", from: "transistor-0.4", to: "escribir-0.3", fade: 0.3 },
+      { el: "#cap-write", from: "escribir-0.3", to: "quitar-0.3", fade: 0.3 },
+      { el: "#cap-off", from: "quitar-0.3", to: "leer-0.4", fade: 0.3 },
+      { el: "#sc-read", from: "leer-0.4", to: "end", rise: 0, update: drawRead },
+      { el: "#cap-read", from: "leer-0.3", to: "fotos-0.4", fade: 0.3 },
+      { el: "#cap-end", from: "fotos-0.4", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
