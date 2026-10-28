@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>I4 · ¿Por qué la IA inventa cosas con tanta seguridad?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+  .chat { position: absolute; inset: auto; left: 120px; top: 560px; width: 840px; }
+  .chat .q { margin-left: 220px; padding: 26px 32px; border-radius: 26px; background: var(--paper-2); font-size: 42px; line-height: 1.25; color: var(--ink); }
+  .chat .a { margin-top: 34px; margin-right: 80px; padding: 26px 32px; border-radius: 26px; background: #faf8f3; border: 3px solid var(--line); font-size: 42px; line-height: 1.3; color: var(--ink); }
+  .chat .a b { color: var(--fuchsia); font-weight: 650; }
+  .chat .tag { margin-top: 18px; font-size: 32px; font-weight: 600; color: var(--fuchsia); }
+  .box { position: absolute; inset: auto; left: 190px; width: 700px; top: 640px; padding: 50px 0; text-align: center; border: 6px solid var(--mint); border-radius: 22px; background: #faf8f3; }
+  .box .big { font-size: 66px; font-weight: 700; color: var(--mint); }
+  .box .sm { font-size: 40px; margin-top: 14px; color: var(--ink-2); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <div class="chat scene" id="sc-chat">
+      <div class="q">¿Qué libro sobre el tema me recomiendas?</div>
+      <div class="a">Te recomiendo <b>«La memoria de las máquinas»</b> (2011). Es un clásico del tema.</div>
+      <div class="tag" id="fake">✗ ese libro no existe (ejemplo inventado)</div>
+    </div>
+    <svg class="full scene" id="sc-scale" viewBox="0 0 1080 1920"></svg>
+    <svg class="full scene" id="sc-exam" viewBox="0 0 1080 1920"></svg>
+    <svg class="full scene" id="sc-rate" viewBox="0 0 1080 1920"></svg>
+    <div class="box scene" id="sc-src"><div class="big">Pídele la fuente</div><div class="sm">y revísala tú</div></div>
+
+    <div class="m-caption scene" id="cap-inv" style="top:1300px">Inventa un dato, una cita o un libro<small>y lo dice con total seguridad</small></div>
+    <div class="m-caption scene" id="cap-prob" style="top:1300px">No busca la verdad<small>predice el texto más probable</small></div>
+    <div class="m-caption scene" id="cap-same" style="top:1300px">Lo inventado y bien escrito<small>puede sonar igual de probable</small></div>
+    <div class="m-caption scene" id="cap-exam" style="top:1300px">Como un examen de opción múltiple<small>estudio de OpenAI, 2025</small></div>
+    <div class="m-caption scene" id="cap-guess" style="top:1300px">Las pruebas premian adivinar<small>y los modelos aprenden a no decir «no sé»</small></div>
+    <div class="m-caption scene" id="cap-rate" style="top:1300px">Cada vez inventa menos<small>pero no es cero</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp, keys } = Mosaic;
+
+  // ---------------------------------------------------------------- balance of probabilities
+  const PX = 540, PY = 640, ARM = 270;
+  let sc = {};
+  function pan(g, label, color, sub) {
+    const p = el("g", {}, g);
+    el("line", { x1: -90, y1: 0, x2: 0, y2: -150, stroke: "var(--ink-2)", "stroke-width": 3 }, p);
+    el("line", { x1: 90, y1: 0, x2: 0, y2: -150, stroke: "var(--ink-2)", "stroke-width": 3 }, p);
+    el("path", { d: "M-120 0 L120 0 Q100 46 0 46 Q-100 46 -120 0 Z", fill: "#faf8f3", stroke: color, "stroke-width": 6 }, p);
+    el("text", { x: 0, y: 110, "text-anchor": "middle", "font-size": 40, "font-weight": 650, fill: color, text: label }, p);
+    el("text", { x: 0, y: 156, "text-anchor": "middle", class: "m-note", text: sub }, p);
+    const pct = el("text", { x: 0, y: 216, "text-anchor": "middle", "font-size": 48, "font-weight": 700, fill: color }, p);
+    return { p, pct };
+  }
+  function buildScale() {
+    const g = el("g", {}, $("#sc-scale"));
+    el("path", { d: `M${PX - 110} 1130 L${PX + 110} 1130 L${PX + 26} 1090 L${PX + 14} ${PY} L${PX - 14} ${PY} L${PX - 26} 1090 Z`, fill: "#e9e5dc", stroke: "var(--ink-2)", "stroke-width": 3 }, g);
+    sc.beam = el("g", {}, g);
+    el("rect", { x: -ARM - 20, y: -10, width: 2 * ARM + 40, height: 20, rx: 10, fill: "var(--ink)" }, sc.beam);
+    el("circle", { cx: PX, cy: PY, r: 16, fill: "var(--ink)" }, g);
+    sc.L = pan(g, "real", "#2f5e8e", "la respuesta correcta");
+    sc.R = pan(g, "inventada", "#b3386b", "pero bien redactada");
+    sc.note = el("text", { x: 540, y: 1190, "text-anchor": "middle", class: "m-note", text: "probabilidades ilustrativas" }, g);
+  }
+  function drawScale(t, s, A) {
+    // the beam tips towards the true answer, then levels out on "inventada pero bien redactada"
+    const lv = ramp(t, A.inventada.start - 0.2, A.redactada.end, ease.inOut);
+    const pl = lerp(55, 49, lv), pr = lerp(20, 47, lv);
+    const deg = (pr - pl) * 0.45; // heavier side goes down
+    sc.beam.setAttribute("transform", `translate(${PX} ${PY}) rotate(${deg.toFixed(2)})`);
+    const a = (deg * Math.PI) / 180;
+    const lx = PX - ARM * Math.cos(a), ly = PY - ARM * Math.sin(a);
+    const rx = PX + ARM * Math.cos(a), ry = PY + ARM * Math.sin(a);
+    sc.L.p.setAttribute("transform", `translate(${lx.toFixed(1)} ${(ly + 150).toFixed(1)})`);
+    sc.R.p.setAttribute("transform", `translate(${rx.toFixed(1)} ${(ry + 150).toFixed(1)})`);
+    sc.L.pct.textContent = Math.round(pl) + " %";
+    sc.R.pct.textContent = Math.round(pr) + " %";
+    sc.R.p.setAttribute("opacity", String(ramp(t, A.inventada.start - 0.4, A.inventada.start)));
+  }
+
+  // ---------------------------------------------------------------- the exam
+  let ex = {};
+  function optRow(g, y, label, checked) {
+    const r = el("g", {}, g);
+    el("text", { x: 230, y: y + 44, "font-size": 40, "font-weight": 600, fill: "var(--ink)", text: label }, r);
+    const marks = ["A", "B", "C", "D"].map((L, i) => {
+      const x = 560 + i * 82;
+      el("rect", { x, y: y + 6, width: 56, height: 56, rx: 8, fill: "#faf8f3", stroke: "var(--ink-2)", "stroke-width": 3 }, r);
+      el("text", { x: x + 28, y: y + 46, "text-anchor": "middle", "font-size": 30, fill: "var(--muted)", text: L }, r);
+      return x;
+    });
+    let tick = null;
+    if (checked !== undefined) {
+      tick = el("path", { d: `M${marks[checked] + 10} ${y + 34} L${marks[checked] + 24} ${y + 50} L${marks[checked] + 50} ${y + 14}`, fill: "none", stroke: "#2f5e8e", "stroke-width": 7, "stroke-linecap": "round", "stroke-linejoin": "round" }, r);
+    }
+    return { r, tick };
+  }
+  function buildExam() {
+    const g = el("g", {}, $("#sc-exam"));
+    el("rect", { x: 180, y: 500, width: 720, height: 560, rx: 10, fill: "#faf8f3", stroke: "var(--line)", "stroke-width": 3 }, g);
+    el("text", { x: 230, y: 570, "font-size": 34, "font-weight": 700, "letter-spacing": "0.04em", fill: "var(--muted)", text: "EXAMEN · OPCIÓN MÚLTIPLE" }, g);
+    el("text", { x: 230, y: 640, "font-size": 40, fill: "var(--ink)", text: "Pregunta 7: no sabes la respuesta" }, g);
+    el("line", { x1: 230, y1: 670, x2: 850, y2: 670, stroke: "var(--line)", "stroke-width": 3 }, g);
+    ex.blank = optRow(g, 700, "Dejar en blanco");
+    ex.blankPts = el("text", { x: 230, y: 820, "font-size": 40, "font-weight": 700, fill: "#827e74", text: "→ 0 puntos" }, g);
+    ex.guess = optRow(g, 860, "Adivinar", 2);
+    ex.guessPts = el("text", { x: 230, y: 980, "font-size": 40, "font-weight": 700, fill: "#2f5e8e", text: "→ 1 de cada 4 veces: +1 punto" }, g);
+    ex.avg = el("text", { x: 230, y: 1030, class: "m-note", text: "en promedio: +0.25 puntos, más que 0" }, g);
+    ex.learn = el("g", {}, g);
+    el("text", { x: 540, y: 1150, "text-anchor": "middle", "font-size": 46, "font-weight": 700, fill: "#b3386b", text: "el modelo aprende a adivinar" }, ex.learn);
+  }
+  function drawExam(t, s, A) {
+    ex.blank.r.setAttribute("opacity", String(ramp(t, A.blanco.start - 0.3, A.blanco.start + 0.2)));
+    ex.blankPts.setAttribute("opacity", String(ramp(t, A.cero.start - 0.3, A.cero.start + 0.2)));
+    ex.guess.r.setAttribute("opacity", String(ramp(t, A.adivinas.start - 0.3, A.adivinas.start + 0.2)));
+    ex.guess.tick.setAttribute("opacity", String(ramp(t, A.adivinas.start, A.adivinas.start + 0.3)));
+    ex.guessPts.setAttribute("opacity", String(ramp(t, A.atinas.start - 0.3, A.atinas.start + 0.2)));
+    ex.avg.setAttribute("opacity", String(ramp(t, A.atinas.end, A.atinas.end + 0.5)));
+    ex.learn.setAttribute("opacity", String(ramp(t, A.premian.start - 0.2, A.premian.start + 0.3)));
+  }
+
+  // ---------------------------------------------------------------- the rate goes down, not to zero
+  const RATE = [0.86, 0.66, 0.5, 0.36, 0.26];
+  let rt = {};
+  function buildRate() {
+    const g = el("g", {}, $("#sc-rate"));
+    el("text", { x: 160, y: 560, class: "m-label", text: "Qué tanto inventa" }, g);
+    el("line", { x1: 160, y1: 1100, x2: 920, y2: 1100, stroke: "var(--ink-2)", "stroke-width": 4 }, g);
+    el("text", { x: 140, y: 1112, "text-anchor": "end", class: "m-label", text: "0" }, g);
+    rt.bars = RATE.map((v, i) => el("rect", { x: 200 + i * 145, width: 100, rx: 6, fill: i === RATE.length - 1 ? "#b3386b" : "#2f5e8e" }, g));
+    rt.last = el("text", { x: 200 + 4 * 145 + 100, "text-anchor": "end", "font-size": 38, "font-weight": 700, fill: "#b3386b", text: "no es cero" }, g);
+    el("text", { x: 540, y: 1160, "text-anchor": "middle", class: "m-note", text: "modelos más nuevos → · ilustrativo" }, g);
+  }
+  function drawRate(t, s, A) {
+    RATE.forEach((v, i) => {
+      const p = ramp(t, A.tasa.start + i * 0.3, A.tasa.start + i * 0.3 + 0.5, ease.out);
+      const h = 480 * v * p;
+      rt.bars[i].setAttribute("y", (1100 - h).toFixed(1));
+      rt.bars[i].setAttribute("height", h.toFixed(1));
+    });
+    rt.last.setAttribute("y", String(1100 - 480 * RATE[3] - 30));
+    rt.last.setAttribute("opacity", String(ramp(t, A.noescero.start - 0.2, A.noescero.start + 0.3)));
+  }
+
+  const SCRIPT = "A veces una IA te inventa un dato, una cita o un libro que no existe, y te lo dice con total seguridad. ¿Por qué? Primero, porque no busca la verdad: predice qué texto suena más probable después de tu pregunta. Una respuesta inventada pero bien redactada puede sonar tan probable como una real. Segundo, por cómo se califica. Un estudio de OpenAI de dos mil veinticinco lo compara con un examen de opción múltiple: si no sabes y dejas en blanco, sacas cero; si adivinas, a veces le atinas. Muchas pruebas para medir modelos premian adivinar, así que los modelos aprenden a no decir «no sé». La tasa de inventos está bajando, pero no es cero. Si el dato importa, pídele la fuente y revísala tú.";
+
+  Mosaic.short({
+    kicker: "IA por dentro",
+    title: "¿Por qué la IA inventa cosas con tanta seguridad?",
+    script: SCRIPT,
+    anchors: {
+      libro: "libro",
+      seguridad: "seguridad",
+      primero: "primero",
+      verdad: "verdad",
+      inventada: "inventada",
+      redactada: "redactada",
+      segundo: "segundo",
+      estudio: "estudio",
+      anio: ["dos mil veinticinco", "2025"],
+      examen: "examen",
+      blanco: "blanco",
+      cero: "cero",
+      adivinas: "adivinas",
+      atinas: "atinas",
+      premian: "premian",
+      nose: "no se",
+      tasa: "tasa",
+      noescero: "no es cero",
+      importa: "importa",
+      fuente: "fuente",
+    },
+    build() { buildScale(); buildExam(); buildRate(); },
+    scenes: [
+      { el: "#sc-chat", from: 0.1, to: "primero-0.2", fadeIn: 0.4, rise: 12, update(t, s, A) {
+        $("#fake").style.opacity = String(ramp(t, A.libro.start, A.libro.start + 0.4));
+      } },
+      { el: "#sc-scale", from: "primero-0.2", to: "segundo-0.2", rise: 0, update: drawScale },
+      { el: "#sc-exam", from: "segundo-0.2", to: "tasa-0.3", rise: 0, update: drawExam },
+      { el: "#sc-rate", from: "tasa-0.3", to: "importa-0.3", rise: 0, update: drawRate },
+      { el: "#sc-src", from: "importa-0.3", to: "end", rise: 12 },
+      { el: "#cap-inv", from: 0.3, to: "primero-0.2", fade: 0.3 },
+      { el: "#cap-prob", from: "primero-0.2", to: "inventada-0.5", fade: 0.3 },
+      { el: "#cap-same", from: "inventada-0.5", to: "segundo-0.2", fade: 0.3 },
+      { el: "#cap-exam", from: "segundo-0.2", to: "premian-0.4", fade: 0.3 },
+      { el: "#cap-guess", from: "premian-0.4", to: "tasa-0.3", fade: 0.3 },
+      { el: "#cap-rate", from: "tasa-0.3", to: "importa-0.3", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
