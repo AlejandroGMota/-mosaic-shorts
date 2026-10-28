@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>M11 · ¿Qué pasa en tu compu desde que la prendes?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-intro" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-intro" style="top:1300px">Del botón al escritorio<small>una carrera de relevos</small></div>
+
+    <svg class="full scene" id="sc-relay" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-fw" style="top:1300px">1. Firmware<small>revisa memoria, teclado y disco</small></div>
+    <div class="m-caption scene" id="cap-boot" style="top:1300px">2. Cargador de arranque<small>encuentra el sistema y lo sube a la memoria</small></div>
+    <div class="m-caption scene" id="cap-kernel" style="top:1300px">3. Núcleo del sistema<small>controladores y servicios de fondo</small></div>
+    <div class="m-caption scene" id="cap-login" style="top:1300px">4. Inicio de sesión</div>
+    <div class="m-caption scene" id="cap-relay" style="top:1300px">Cuatro corredores<small>cada uno le pasa la estafeta al siguiente</small></div>
+    <div class="m-caption scene" id="cap-fail" style="top:1300px">Si uno falla, se traba ahí</div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp } = Mosaic;
+  const op = (n, v) => n.setAttribute("opacity", String(v));
+  const on = (t, a, d = 0.3) => ramp(t, a - d, a + 0.15);
+
+  // ---------------------------------------------------------------- intro: power button -> desktop
+  let it = {};
+  function buildIntro() {
+    const g = el("g", {}, $("#sc-intro"));
+    it.btn = el("g", {}, g);
+    el("circle", { cx: 250, cy: 820, r: 110, fill: "#faf8f3", stroke: "var(--ink)", "stroke-width": 7 }, it.btn);
+    el("path", { d: "M207 786 A58 58 0 1 0 293 786", fill: "none", stroke: "var(--ink)", "stroke-width": 12, "stroke-linecap": "round" }, it.btn);
+    el("line", { x1: 250, y1: 752, x2: 250, y2: 812, stroke: "var(--ink)", "stroke-width": 12, "stroke-linecap": "round" }, it.btn);
+    it.arrow = el("line", { x1: 390, y1: 820, x2: 560, y2: 820, stroke: "var(--ink-2)", "stroke-width": 6, "stroke-dasharray": "14 10" }, g);
+    it.desk = el("g", {}, g);
+    el("rect", { x: 590, y: 690, width: 350, height: 240, rx: 14, fill: "#cfe0ea", stroke: "var(--ink)", "stroke-width": 6 }, it.desk);
+    for (let i = 0; i < 3; i++) el("rect", { x: 620, y: 715 + i * 62, width: 44, height: 40, rx: 6, fill: "#faf8f3" }, it.desk);
+    el("rect", { x: 590, y: 894, width: 350, height: 36, fill: "var(--ink-2)" }, it.desk);
+    el("text", { x: 765, y: 990, "text-anchor": "middle", class: "m-label", text: "escritorio" }, it.desk);
+  }
+  function drawIntro(t, s, A) {
+    const press = Math.sin(Math.PI * ramp(t, A.boton.start, A.boton.start + 0.4));
+    it.btn.setAttribute("transform", `translate(250 820) scale(${(1 - 0.06 * press).toFixed(3)}) translate(-250 -820)`);
+    op(it.arrow, on(t, A.escritorio.start - 0.3));
+    op(it.desk, on(t, A.escritorio.start));
+  }
+
+  // ---------------------------------------------------------------- the relay: four stages
+  const STAGES = [
+    { title: "Firmware", where: "chip en la tarjeta madre", color: "#2f5e8e" },
+    { title: "Cargador de arranque", where: "en el disco", color: "#3a9a80" },
+    { title: "Núcleo del sistema", where: "en la memoria RAM", color: "#c98a1b" },
+    { title: "Inicio de sesión", where: "en la pantalla", color: "#b3386b" },
+  ];
+  const Y0 = 480, H = 190, TRX = 150;
+  const rowY = (i) => Y0 + i * H;
+  let rl = {};
+  function buildRelay() {
+    const g = el("g", {}, $("#sc-relay"));
+    el("line", { x1: TRX, y1: rowY(0) + 40, x2: TRX, y2: rowY(3) + 40, stroke: "var(--line)", "stroke-width": 10, "stroke-linecap": "round" }, g);
+    rl.rows = STAGES.map((st, i) => {
+      const y = rowY(i);
+      const gg = el("g", {}, g);
+      const box = el("rect", { x: 200, y, width: 740, height: H - 25, rx: 14, fill: "#faf8f3", stroke: st.color, "stroke-width": 4 }, gg);
+      const dot = el("circle", { cx: TRX, cy: y + 40, r: 22, fill: "#faf8f3", stroke: st.color, "stroke-width": 6 }, gg);
+      el("text", { x: TRX, y: y + 50, "text-anchor": "middle", "font-size": 28, "font-weight": 750, fill: st.color, text: String(i + 1) }, gg);
+      el("text", { x: 230, y: y + 52, "font-size": 40, "font-weight": 720, fill: st.color, text: st.title }, gg);
+      el("text", { x: 230, y: y + 92, "font-size": 28, fill: "var(--ink-2)", text: st.where }, gg);
+      return { gg, box, dot, y, st, extras: [] };
+    });
+    const extra = (i, x, text, color = "var(--ink)") => {
+      const n = el("text", { x, y: rowY(i) + 132, "font-size": 28, "font-weight": 650, fill: color, text }, g);
+      rl.rows[i].extras.push(n);
+      return n;
+    };
+    rl.chk = [extra(0, 230, "✓ memoria", "#3a9a80"), extra(0, 430, "✓ teclado", "#3a9a80"), extra(0, 620, "✓ disco", "#3a9a80")];
+    rl.find = extra(1, 230, "busca el sistema → lo sube a la memoria");
+    rl.drv = extra(2, 230, "controladores");
+    rl.svc = extra(2, 470, "· servicios de fondo");
+    rl.hw = el("text", { x: 920, y: rowY(2) + 52, "text-anchor": "end", "font-size": 26, fill: "var(--ink-2)", text: "controla el hardware" }, g);
+    rl.baton = el("rect", { x: -40, y: -12, width: 80, height: 24, rx: 12, fill: "#c98a1b", stroke: "var(--ink)", "stroke-width": 3 }, g);
+    // failure: the baton is dropped at stage 2
+    rl.err = el("g", {}, g);
+    el("rect", { x: 300, y: rowY(2) + 10, width: 640, height: 330, rx: 12, fill: "#1d1d1b" }, rl.err);
+    el("text", { x: 330, y: rowY(2) + 80, "font-family": "var(--mono)", "font-size": 30, fill: "#f3f0e9", text: "No se encontró" }, rl.err);
+    el("text", { x: 330, y: rowY(2) + 122, "font-family": "var(--mono)", "font-size": 30, fill: "#f3f0e9", text: "sistema operativo" }, rl.err);
+    el("rect", { x: 330, y: rowY(2) + 150, width: 18, height: 30, fill: "#f3f0e9" }, rl.err);
+    el("text", { x: 330, y: rowY(2) + 260, "font-size": 26, fill: "#b7b2a6", text: "ejemplo de falla en el paso 2" }, rl.err);
+  }
+  function batonAt(t, A) {
+    // main run, then a quick replay on "cuatro corredores"
+    const r1 = A.t("cuatro"), r2 = A.t("estafeta.end");
+    let pos;
+    if (t < r1 - 0.2) {
+      const marks = [A.firmware.start, A.cargador.start, A.nucleo.start, A.sesion.start];
+      pos = 0;
+      for (let i = 1; i < 4; i++) pos += ramp(t, marks[i] - 0.8, marks[i], ease.inOut);
+    } else {
+      pos = 3 * ramp(t, r1, r2, ease.inOut);
+    }
+    return pos;
+  }
+  function drawRelay(t, s, A) {
+    const fail = ramp(t, A.falla.start - 0.2, A.falla.start + 0.6, ease.out);
+    const pos = t >= A.falla.start - 0.2 ? 1 : batonAt(t, A);
+    const lit = Math.floor(pos + 0.02);
+    const shown = [A.primero.start + 0.4, A.cargador.start, A.nucleo.start, A.sesion.start];
+    rl.rows.forEach((r, i) => {
+      const reached = pos >= i - 0.02;
+      op(r.gg, t >= A.falla.start - 0.2 && i > 1 ? 0.25 : ramp(t, shown[i] - 0.6, shown[i] - 0.2) * 0.75 + 0.25);
+      r.box.setAttribute("fill", reached && i === lit ? r.st.color + "22" : "#faf8f3");
+      r.dot.setAttribute("fill", reached ? r.st.color : "#faf8f3");
+      r.dot.setAttribute("stroke", r.st.color);
+    });
+    const marks = [A.memoria, A.teclado, A.disco];
+    rl.chk.forEach((n, i) => op(n, on(t, marks[i].start)));
+    op(rl.find, on(t, A.encontrar.start));
+    op(rl.drv, on(t, A.controladores.start) * (t >= A.falla.start - 0.2 ? 0.25 : 1));
+    op(rl.svc, on(t, A.servicios.start) * (t >= A.falla.start - 0.2 ? 0.25 : 1));
+    op(rl.hw, on(t, A.hardware.start) * (t >= A.falla.start - 0.2 ? 0.25 : 1));
+    // baton on the track; on failure it drops and tumbles off the track
+    const by = lerp(rowY(0), rowY(3), pos / 3) + 40;
+    const fx = TRX - 45 + 70 * fail, fy = by + 120 * fail;
+    rl.baton.setAttribute("transform", `translate(${fx.toFixed(1)} ${fy.toFixed(1)}) rotate(${(90 + 100 * fail).toFixed(1)})`);
+    op(rl.err, ramp(t, A.falla.start + 0.3, A.falla.start + 0.7));
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "Desde que presionas el botón de encendido hasta que ves tu escritorio, tu computadora hace una carrera de relevos. Primero despierta un programa pequeño guardado en un chip de la tarjeta madre, el firmware. Revisa que la memoria, el teclado y el disco respondan. Luego busca en el disco un programa llamado cargador de arranque, cuya única tarea es encontrar el sistema operativo y subirlo a la memoria. Después arranca el núcleo del sistema, la parte que controla el hardware. Este enciende los controladores, que le enseñan a hablar con cada pieza, y los servicios de fondo. Al final aparece la pantalla de inicio de sesión. Cuatro corredores, cada uno le pasa la estafeta al siguiente. Si uno falla, la compu se queda trabada justo ahí.";
+
+  Mosaic.short({
+    kicker: "Sistema operativo",
+    title: "¿Qué pasa en tu compu desde que la prendes?",
+    script: SCRIPT,
+    anchors: {
+      boton: "boton",
+      escritorio: "escritorio",
+      relevos: "relevos",
+      primero: "primero",
+      firmware: "firmware",
+      memoria: "memoria",
+      teclado: "teclado",
+      disco: "disco",
+      cargador: "cargador",
+      encontrar: "encontrar",
+      subirlo: "subirlo",
+      nucleo: "nucleo",
+      hardware: "hardware",
+      controladores: "controladores",
+      servicios: "servicios",
+      sesion: "sesion",
+      cuatro: ["cuatro corredores", "4 corredores"],
+      estafeta: "estafeta",
+      falla: "falla",
+      trabada: "trabada",
+    },
+    build() { buildIntro(); buildRelay(); },
+    scenes: [
+      { el: "#sc-intro", from: 0, to: "primero-0.4", fadeIn: 0.3, rise: 0, update: drawIntro },
+      { el: "#cap-intro", from: "escritorio-0.2", to: "primero-0.4", fade: 0.3 },
+      { el: "#sc-relay", from: "primero-0.4", to: "end", rise: 0, update: drawRelay },
+      { el: "#cap-fw", from: "primero-0.3", to: "cargador-0.8", fade: 0.3 },
+      { el: "#cap-boot", from: "cargador-0.8", to: "nucleo-0.8", fade: 0.3 },
+      { el: "#cap-kernel", from: "nucleo-0.8", to: "sesion-0.8", fade: 0.3 },
+      { el: "#cap-login", from: "sesion-0.8", to: "cuatro-0.3", fade: 0.3 },
+      { el: "#cap-relay", from: "cuatro-0.3", to: "falla-0.4", fade: 0.3 },
+      { el: "#cap-fail", from: "falla-0.4", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
