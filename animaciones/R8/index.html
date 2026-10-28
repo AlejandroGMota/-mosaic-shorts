@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>R8 · ¿Qué es el ping y por qué arruina tus partidas?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-shot" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-shot" style="top:1300px">Disparas primero… y pierdes<small>tu disparo llega tarde al servidor</small></div>
+
+    <svg class="full scene" id="sc-rt" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-rt" style="top:1300px">Ping: ida y vuelta<small>se mide en milisegundos (ms)</small></div>
+
+    <svg class="full scene" id="sc-map" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-dist" style="top:1300px">Depende sobre todo de la distancia<small>no solo de tu velocidad contratada</small></div>
+    <div class="m-caption scene" id="cap-90" style="top:1300px">90 ms aunque todo fuera perfecto<small>mínimo en línea recta, por pura física</small></div>
+
+    <svg class="full scene" id="sc-bars" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-plus" style="top:1300px">Súmale el wifi, los saltos<small>y el servidor ocupado</small></div>
+    <div class="m-caption scene" id="cap-near" style="top:1300px">Servidor cercano y cable</div>
+    <div class="m-caption scene" id="cap-megas" style="top:1300px">Más megas no bajan el ping</div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script src="../_base/redes.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp, clamp } = Mosaic;
+  const { C, op, place, rack, along, world, thousands } = Redes;
+
+  function consoleIcon(parent, x, y, s, color) {
+    const g = el("g", { transform: `translate(${x} ${y}) scale(${s})` }, parent);
+    const st = { fill: C.card, stroke: color || C.ink, "stroke-width": 5, "stroke-linejoin": "round" };
+    el("path", Object.assign({ d: "M-50 -18 Q-60 -26 -66 0 L-72 30 Q-70 46 -54 38 L-34 18 L34 18 L54 38 Q70 46 72 30 L66 0 Q60 -26 50 -18 Z" }, st), g);
+    el("path", { d: "M-44 2 L-24 2 M-34 -8 L-34 12", stroke: color || C.ink, "stroke-width": 5, "stroke-linecap": "round" }, g);
+    el("circle", { cx: 32, cy: -2, r: 6, fill: color || C.ink }, g);
+    el("circle", { cx: 46, cy: 8, r: 6, fill: color || C.ink }, g);
+    return g;
+  }
+
+  // ---------------------------------------------------------------- who arrives first at the server
+  let sh = {};
+  const YOU = [170, 700], SRV = [700, 920], RIV = [930, 700];
+  function buildShot() {
+    const g = el("g", {}, $("#sc-shot"));
+    el("line", { x1: YOU[0], y1: YOU[1], x2: SRV[0], y2: SRV[1], stroke: C.line, "stroke-width": 5 }, g);
+    el("line", { x1: RIV[0], y1: RIV[1], x2: SRV[0], y2: SRV[1], stroke: C.line, "stroke-width": 5 }, g);
+    consoleIcon(g, YOU[0], YOU[1] - 20, 1, C.blue);
+    el("text", { x: YOU[0], y: YOU[1] - 80, "text-anchor": "middle", class: "m-label", fill: C.blue, text: "tú (lejos)" }, g);
+    consoleIcon(g, RIV[0] - 20, RIV[1] - 20, 0.8, C.fuchsia);
+    el("text", { x: RIV[0] - 20, y: RIV[1] - 80, "text-anchor": "middle", class: "m-label", fill: C.fuchsia, text: "rival (cerca)" }, g);
+    rack(g, SRV[0], SRV[1] + 60, 0.6);
+    el("text", { x: SRV[0] - 60, y: SRV[1] + 100, "text-anchor": "end", class: "m-label", text: "servidor del juego" }, g);
+    sh.pY = el("circle", { r: 16, fill: C.blue }, g);
+    sh.pR = el("circle", { r: 16, fill: C.fuchsia }, g);
+    sh.l1 = el("text", { x: 540, y: 1150, "text-anchor": "middle", class: "m-label", fill: C.fuchsia, text: "1.º llega el disparo del rival" }, g);
+    sh.l2 = el("text", { x: 540, y: 1200, "text-anchor": "middle", class: "m-label", fill: C.blue, text: "2.º el tuyo, aunque saliera antes" }, g);
+    sh.fYou = el("text", { x: YOU[0], y: YOU[1] + 110, "text-anchor": "middle", class: "m-note", text: "disparas aquí" }, g);
+    sh.fRiv = el("text", { x: RIV[0] - 20, y: RIV[1] + 100, "text-anchor": "middle", class: "m-note", text: "dispara después" }, g);
+  }
+  function drawShot(t, s, A) {
+    const t0 = A.disparas.start, tY = t0 + 2.2, t1 = t0 + 0.7, tR = t1 + 0.6;
+    const pY = ramp(t, t0, tY, ease.linear), pR = ramp(t, t1, tR, ease.linear);
+    const a = along([YOU, SRV], pY), b = along([RIV, SRV], pR);
+    sh.pY.setAttribute("cx", a[0]); sh.pY.setAttribute("cy", a[1]);
+    sh.pR.setAttribute("cx", b[0]); sh.pR.setAttribute("cy", b[1]);
+    op(sh.pY, t >= t0 ? 1 : 0); op(sh.pR, t >= t1 ? 1 : 0);
+    op(sh.fYou, ramp(t, t0 - 0.2, t0)); op(sh.fRiv, ramp(t, t1 - 0.2, t1));
+    op(sh.l1, ramp(t, tR, tR + 0.3)); op(sh.l2, ramp(t, tY, tY + 0.3));
+  }
+
+  // ---------------------------------------------------------------- the round trip with a stopwatch
+  let rt = {};
+  const C1 = [200, 760], S1 = [880, 760];
+  function buildRt() {
+    const g = el("g", {}, $("#sc-rt"));
+    el("line", { x1: C1[0] + 90, y1: C1[1], x2: S1[0] - 60, y2: C1[1], stroke: C.line, "stroke-width": 6 }, g);
+    consoleIcon(g, C1[0], C1[1], 1.1, C.ink);
+    el("text", { x: C1[0], y: C1[1] + 100, "text-anchor": "middle", class: "m-label", text: "tu consola" }, g);
+    rack(g, S1[0], S1[1], 0.6);
+    el("text", { x: S1[0], y: S1[1] + 100, "text-anchor": "middle", class: "m-label", text: "servidor" }, g);
+    rt.go = el("text", { x: 540, y: 720, "text-anchor": "middle", class: "m-note", text: "ida →" }, g);
+    rt.back = el("text", { x: 540, y: 830, "text-anchor": "middle", class: "m-note", text: "← vuelta" }, g);
+    rt.dot = el("circle", { r: 18, fill: C.amber }, g);
+    rt.watch = el("g", {}, g);
+    el("rect", { x: 330, y: 960, width: 420, height: 170, rx: 24, fill: C.card, stroke: C.ink2, "stroke-width": 5 }, rt.watch);
+    el("text", { x: 540, y: 1005, "text-anchor": "middle", class: "m-note", text: "ping" }, rt.watch);
+    rt.ms = el("text", { x: 540, y: 1100, "text-anchor": "middle", "font-size": 84, "font-weight": 750, fill: C.ink, class: "m-num", text: "0 ms" }, rt.watch);
+  }
+  function drawRt(t, s, A) {
+    const T = 2.2; // seconds of video per round trip (slowed down)
+    const t0 = A.tiempo.start;
+    const u = t < t0 ? 0 : ((t - t0) % (T + 0.6)) / T;
+    const k = clamp(u);
+    const x = k < 0.5 ? lerp(C1[0] + 90, S1[0] - 60, ease.inOutSine(k * 2)) : lerp(S1[0] - 60, C1[0] + 90, ease.inOutSine(k * 2 - 1));
+    rt.dot.setAttribute("cx", x); rt.dot.setAttribute("cy", C1[1] + (k < 0.5 ? -18 : 18));
+    op(rt.dot, t >= t0 ? 1 : 0);
+    op(rt.go, ramp(t, A.ir.start - 0.2, A.ir.start + 0.2));
+    op(rt.back, ramp(t, A.regresar.start - 0.2, A.regresar.start + 0.2));
+    rt.ms.textContent = Math.round(120 * k) + " ms";
+    op(rt.watch, ramp(t, A.milisegundos.start - 0.6, A.milisegundos.start - 0.1));
+  }
+
+  // ---------------------------------------------------------------- Mexico City -> Madrid: light in fibre
+  let mp = {};
+  const K = 6.5, BOX = { x: 110 - 65 * K, y: 500 - 25 * K, w: 360 * K };
+  const MX = [-99.1, 19.4], MAD = [-3.7, 40.4];
+  function buildMap() {
+    const g = el("g", {}, $("#sc-map"));
+    const defs = el("defs", {}, g);
+    const cp = el("clipPath", { id: "mclip" }, defs);
+    el("rect", { x: 90, y: 480, width: 900, height: 340, rx: 18 }, cp);
+    const inner = el("g", { "clip-path": "url(#mclip)" }, g);
+    const W = world(inner, BOX);
+    const a = W.P(MX[0], MX[1]), b = W.P(MAD[0], MAD[1]);
+    mp.route = [];
+    for (let i = 0; i <= 40; i++) {
+      const u = i / 40;
+      mp.route.push([lerp(a[0], b[0], u), lerp(a[1], b[1], u) - Math.sin(Math.PI * u) * 120]);
+    }
+    el("polyline", { points: mp.route.map((p) => p.map((v) => v.toFixed(1)).join(",")).join(" "), fill: "none", stroke: C.blue, "stroke-width": 5, "stroke-dasharray": "14 10" }, g);
+    for (const [p, txt, anc, dx] of [[a, "Ciudad de México", "start", -20], [b, "Madrid", "end", 20]]) {
+      el("circle", { cx: p[0], cy: p[1], r: 11, fill: C.ink }, g);
+      el("text", { x: p[0] + dx, y: p[1] + 48, "text-anchor": anc, class: "m-label", fill: C.ink, text: txt }, g);
+    }
+    mp.km = el("text", { x: (a[0] + b[0]) / 2, y: (a[1] + b[1]) / 2 - 140, "text-anchor": "middle", class: "m-label", fill: C.blue, text: "≈ 9 000 km" }, g);
+    mp.dot = el("circle", { r: 14, fill: C.amber, stroke: "#fff", "stroke-width": 3 }, g);
+    // the arithmetic
+    mp.l1 = el("g", {}, g);
+    el("text", { x: 110, y: 930, class: "m-label", text: "luz en la fibra" }, mp.l1);
+    el("text", { x: 970, y: 930, "text-anchor": "end", "font-size": 40, "font-weight": 700, fill: C.ink, class: "m-num", text: "≈ 200 000 km/s" }, mp.l1);
+    mp.l2 = el("g", {}, g);
+    el("text", { x: 110, y: 1000, class: "m-label", text: "ida y vuelta" }, mp.l2);
+    el("text", { x: 970, y: 1000, "text-anchor": "end", "font-size": 40, "font-weight": 700, fill: C.ink, class: "m-num", text: "9 000 × 2 = 18 000 km" }, mp.l2);
+    mp.l3 = el("g", {}, g);
+    el("line", { x1: 110, y1: 1035, x2: 970, y2: 1035, stroke: C.ink2, "stroke-width": 3 }, mp.l3);
+    el("text", { x: 970, y: 1100, "text-anchor": "end", "font-size": 40, "font-weight": 700, fill: C.ink2, class: "m-num", text: "18 000 ÷ 200 000 = 0.09 s" }, mp.l3);
+    mp.res = el("text", { x: 970, y: 1210, "text-anchor": "end", "font-size": 96, "font-weight": 750, fill: C.fuchsia, class: "m-num", text: "= 90 ms" }, mp.l3);
+  }
+  function drawMap(t, s, A) {
+    const t0 = A.distancia.start;
+    const u = t < t0 ? 0 : ((t - t0) % 2.4) / 2.0;
+    const k = clamp(u);
+    const P = along(mp.route, k < 0.5 ? ease.inOutSine(k * 2) : ease.inOutSine(2 - k * 2));
+    mp.dot.setAttribute("cx", P[0]); mp.dot.setAttribute("cy", P[1]);
+    op(mp.dot, t >= t0 && u <= 1 ? 1 : 0);
+    op(mp.km, ramp(t, A.nueve.start - 0.3, A.nueve.start + 0.2));
+    op(mp.l1, ramp(t, A.doscientos.start - 0.4, A.doscientos.start + 0.1));
+    op(mp.l2, ramp(t, A.ida.start - 0.3, A.ida.start + 0.2));
+    op(mp.l3, ramp(t, A.noventa.start - 0.6, A.noventa.start - 0.1));
+  }
+
+  // ---------------------------------------------------------------- what adds up, and what helps
+  let br = {};
+  const PX = 3.8, BX = 290; // px per ms
+  const SEG = [[90, "fibra (mínimo)", C.blue], [8, "wifi", C.amber], [17, "saltos", C.fuchsia], [5, "servidor", C.ink2]];
+  function buildBars() {
+    const g = el("g", {}, $("#sc-bars"));
+    el("text", { x: 110, y: 520, class: "m-note", text: "ping a Madrid (valores aproximados, ilustrativos)" }, g);
+    el("text", { x: BX - 20, y: 610, "text-anchor": "end", class: "m-label", text: "Madrid" }, g);
+    br.seg = [];
+    let x = BX;
+    SEG.forEach(([ms, lbl, c], i) => {
+      const sg = el("g", {}, g);
+      el("rect", { x: x + 2, y: 570, width: ms * PX - 4, height: 60, rx: 6, fill: c }, sg);
+      if (i === 0) el("text", { x: x + 20, y: 610, "font-size": 30, "font-weight": 700, fill: "#fff", text: "90 ms" }, sg);
+      const lx = [110, 400, 560, 750][i];
+      el("rect", { x: lx, y: 666, width: 26, height: 26, rx: 4, fill: c }, sg);
+      el("text", { x: lx + 36, y: 689, class: "m-label", "font-size": 28, text: lbl }, sg);
+      br.seg.push(sg);
+      x += ms * PX;
+    });
+    br.total = el("text", { x: x + 16, y: 612, "font-size": 34, "font-weight": 700, fill: C.ink, text: "≈ 120 ms" }, g);
+    br.near = el("g", {}, g);
+    el("text", { x: BX - 20, y: 820, "text-anchor": "end", class: "m-label", text: "cercano" }, br.near);
+    el("rect", { x: BX + 2, y: 780, width: 20 * PX - 4, height: 60, rx: 6, fill: C.mint }, br.near);
+    el("text", { x: BX + 20 * PX + 16, y: 822, "font-size": 34, "font-weight": 700, fill: C.mint, text: "≈ 20 ms" }, br.near);
+    el("text", { x: BX, y: 880, class: "m-note", text: "servidor en tu país, conectado con cable" }, br.near);
+    br.megas = el("g", {}, g);
+    el("text", { x: 110, y: 990, class: "m-label", text: "con más megas:" }, br.megas);
+    [["100 megas", 1040], ["1000 megas", 1120]].forEach(([lbl, y]) => {
+      el("text", { x: BX - 20, y: y + 40, "text-anchor": "end", class: "m-label", "font-size": 30, text: lbl }, br.megas);
+      el("rect", { x: BX + 2, y, width: 120 * PX - 4, height: 56, rx: 6, fill: C.ink2, opacity: 0.55 }, br.megas);
+      el("text", { x: BX + 120 * PX + 16, y: y + 40, "font-size": 32, "font-weight": 700, fill: C.ink2, text: "120 ms" }, br.megas);
+    });
+    el("text", { x: 110, y: 1240, class: "m-note", text: "más megas = más datos a la vez, no más rápido de ida y vuelta" }, br.megas);
+  }
+  function drawBars(t, s, A) {
+    const ks = [s.from - 1, A.wifi.start, A.saltos.start, A.ocupado.start];
+    br.seg.forEach((sg, i) => op(sg, ramp(t, ks[i] - 0.3, ks[i] + 0.2)));
+    op(br.total, ramp(t, A.ocupado.end, A.ocupado.end + 0.3));
+    op(br.near, ramp(t, A.cercano.start - 0.3, A.cercano.start + 0.2));
+    op(br.megas, ramp(t, A.megas.start - 0.3, A.megas.start + 0.2));
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "En un juego en línea, disparas primero y aun así pierdes. Muchas veces el culpable es el ping. El ping es el tiempo que tarda un dato en ir de tu consola al servidor del juego y regresar. Se mide en milisegundos. No depende solo de tu velocidad contratada: depende sobre todo de la distancia. La luz en la fibra óptica viaja a unos doscientos mil kilómetros por segundo. De la Ciudad de México a Madrid hay unos nueve mil kilómetros. Ida y vuelta, aunque todo fuera perfecto, ya son noventa milisegundos. Súmale el wifi, los saltos entre equipos y el servidor ocupado. Por eso conviene elegir un servidor cercano, y si puedes, conectar con cable. Más megas no bajan el ping.";
+
+  Mosaic.short({
+    kicker: "Internet y redes",
+    title: "¿Qué es el ping y por qué arruina tus partidas?",
+    script: SCRIPT,
+    anchors: {
+      disparas: "disparas",
+      pierdes: "pierdes",
+      culpable: "culpable",
+      tiempo: "tiempo",
+      ir: "en ir",
+      regresar: "regresar",
+      milisegundos: "milisegundos",
+      depende: "no depende",
+      distancia: "distancia",
+      doscientos: ["doscientos mil", "200 mil", "200000"],
+      mexico: "mexico",
+      nueve: ["nueve mil", "9 mil", "9000"],
+      ida: "ida y vuelta",
+      noventa: ["noventa", "90"],
+      sumale: "sumale",
+      wifi: "wifi",
+      saltos: "saltos",
+      ocupado: "ocupado",
+      cercano: "cercano",
+      cable: "cable",
+      megas: "mas megas",
+    },
+    build() { buildShot(); buildRt(); buildMap(); buildBars(); },
+    scenes: [
+      { el: "#sc-shot", from: 0, to: "tiempo-0.8", fadeIn: 0.3, rise: 0, update: drawShot },
+      { el: "#cap-shot", from: "pierdes-0.2", to: "tiempo-0.8", fade: 0.3 },
+      { el: "#sc-rt", from: "tiempo-0.8", to: "depende-0.3", rise: 0, update: drawRt },
+      { el: "#cap-rt", from: "tiempo-0.6", to: "depende-0.3", fade: 0.3 },
+      { el: "#sc-map", from: "depende-0.3", to: "sumale-0.3", rise: 0, update: drawMap },
+      { el: "#cap-dist", from: "depende-0.2", to: "noventa-0.6", fade: 0.3 },
+      { el: "#cap-90", from: "noventa-0.6", to: "sumale-0.3", fade: 0.3 },
+      { el: "#sc-bars", from: "sumale-0.3", to: "end", rise: 0, update: drawBars },
+      { el: "#cap-plus", from: "sumale-0.2", to: "cercano-0.4", fade: 0.3 },
+      { el: "#cap-near", from: "cercano-0.4", to: "megas-0.3", fade: 0.3 },
+      { el: "#cap-megas", from: "megas-0.3", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
