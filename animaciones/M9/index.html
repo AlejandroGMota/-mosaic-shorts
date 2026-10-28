@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>M9 · ¿Qué significan los «3 nanómetros» de un chip?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-tag" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-tag" style="top:1300px">«Chip de 3 nm»<small>¿qué mide exactamente ese número?</small></div>
+
+    <svg class="full scene" id="sc-time" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-then" style="top:1300px">Antes sí era una medida<small>la parte que prende y apaga el transistor</small></div>
+    <div class="m-caption scene" id="cap-split" style="top:1300px">Luego se separaron<small>desde finales de los noventa ya no es una medida</small></div>
+
+    <svg class="full scene" id="sc-scale" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-gen" style="top:1300px">«3 nm»: nombre de una generación<small>de fabricación</small></div>
+    <div class="m-caption scene" id="cap-real" style="top:1300px">Lo real: ≈ 45 nm y ≈ 23 nm<small>ninguna mide 3 nm</small></div>
+
+    <svg class="full scene" id="sc-dense" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-dense" style="top:1300px">Más transistores, mismo espacio</div>
+    <div class="m-caption scene" id="cap-end" style="top:1300px">No te dice el tamaño<small>te dice qué tan nueva es la fábrica</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp } = Mosaic;
+  const op = (n, v) => n.setAttribute("opacity", String(v));
+  const on = (t, a, d = 0.3) => ramp(t, a - d, a + 0.15);
+
+  // ---------------------------------------------------------------- the "3 nm" sticker
+  function buildTag() {
+    const g = el("g", {}, $("#sc-tag"));
+    el("rect", { x: 290, y: 600, width: 500, height: 500, rx: 30, fill: "#2b2f36" }, g);
+    for (let i = 0; i < 10; i++) {
+      el("rect", { x: 320 + i * 46, y: 576, width: 14, height: 24, fill: "#c98a1b" }, g);
+      el("rect", { x: 320 + i * 46, y: 1100, width: 14, height: 24, fill: "#c98a1b" }, g);
+    }
+    el("text", { x: 540, y: 890, "text-anchor": "middle", "font-size": 170, "font-weight": 750, fill: "#faf8f3", text: "3 nm" }, g);
+  }
+
+  // ---------------------------------------------------------------- timeline: node name vs physical gate length (approx.)
+  // Node names and approximate printed gate lengths, nm. Sources vary; drawn as "aproximado".
+  const DATA = [[1995, 350, 350], [1997, 250, 200], [1999, 180, 130], [2001, 130, 70], [2004, 90, 50], [2006, 65, 35], [2008, 45, 30], [2010, 32, 30], [2012, 22, 26], [2014, 14, 24], [2017, 10, 20], [2019, 7, 18], [2022, 3, 16]];
+  const X0 = 180, X1 = 900, Y0 = 580, Y1 = 1100;
+  const xOf = (yr) => X0 + ((yr - 1995) / 27) * (X1 - X0);
+  const yOf = (nm) => Y1 - ((Math.log10(nm) - Math.log10(2)) / (Math.log10(500) - Math.log10(2))) * (Y1 - Y0);
+  let tl = {};
+  function buildTime() {
+    const g = el("g", {}, $("#sc-time"));
+    [3, 10, 30, 100, 300].forEach((v) => {
+      el("line", { x1: X0, y1: yOf(v), x2: X1, y2: yOf(v), stroke: "var(--line)", "stroke-width": 2 }, g);
+      el("text", { x: X0 - 14, y: yOf(v) + 9, "text-anchor": "end", "font-size": 26, fill: "var(--ink-2)", text: `${v} nm` }, g);
+    });
+    [1995, 2005, 2015].forEach((y) => el("text", { x: xOf(y), y: Y1 + 44, "text-anchor": "middle", "font-size": 28, fill: "var(--ink-2)", text: String(y) }, g));
+    const path = (k) => DATA.map((d, i) => `${i ? "L" : "M"}${xOf(d[0]).toFixed(1)} ${yOf(d[k]).toFixed(1)}`).join(" ");
+    tl.name = el("path", { d: path(1), fill: "none", stroke: "#b3386b", "stroke-width": 6, pathLength: 100, "stroke-dasharray": "100 100" }, g);
+    tl.real = el("path", { d: path(2), fill: "none", stroke: "#2f5e8e", "stroke-width": 6, pathLength: 100, "stroke-dasharray": "100 100" }, g);
+    tl.nameL = el("text", { x: X0, y: 490, "font-size": 30, "font-weight": 700, fill: "#b3386b", text: "— nombre comercial" }, g);
+    tl.realL = el("text", { x: X0, y: 530, "font-size": 30, "font-weight": 700, fill: "#2f5e8e", text: "— medida real de la compuerta" }, g);
+    el("text", { x: X0, y: Y1 + 90, class: "m-note", text: "valores aproximados · escala logarítmica" }, g);
+  }
+  function drawTime(t, s, A) {
+    // draw up to ~1999 on "decadas", the rest from "noventa"
+    const p1 = ramp(t, A.decadas.start, A.decadas.start + 1.2, ease.inOut) * 0.08;
+    const p2 = ramp(t, A.noventa.start, A.coincidir.end, ease.inOut) * 0.92;
+    const p = p1 + p2;
+    tl.name.setAttribute("stroke-dashoffset", (100 - 100 * p).toFixed(1));
+    tl.real.setAttribute("stroke-dashoffset", (100 - 100 * p).toFixed(1));
+    op(tl.nameL, ramp(t, A.coincidir.start - 0.3, A.coincidir.start + 0.2));
+    op(tl.realL, ramp(t, A.coincidir.start - 0.3, A.coincidir.start + 0.2));
+  }
+
+  // ---------------------------------------------------------------- to scale: 6 px per nm
+  const S = 6, RX = 160;
+  let sc = {};
+  function buildScale() {
+    const g = el("g", {}, $("#sc-scale"));
+    // ruler 0..120 nm
+    el("line", { x1: RX, y1: 520, x2: RX + 120 * S, y2: 520, stroke: "var(--ink)", "stroke-width": 3 }, g);
+    for (let v = 0; v <= 120; v += 10) {
+      el("line", { x1: RX + v * S, y1: 520, x2: RX + v * S, y2: v % 50 === 0 ? 492 : 504, stroke: "var(--ink)", "stroke-width": 3 }, g);
+      if (v % 50 === 0) el("text", { x: RX + v * S, y: 480, "text-anchor": "middle", "font-size": 26, fill: "var(--ink-2)", text: `${v} nm` }, g);
+    }
+    // the "3 nm" label drawn at the same scale: 18 px
+    sc.three = el("g", {}, g);
+    el("rect", { x: RX, y: 540, width: 3 * S, height: 40, fill: "#b3386b" }, sc.three);
+    el("text", { x: RX + 30, y: 572, "font-size": 30, "font-weight": 700, fill: "#b3386b", text: "3 nm a la misma escala" }, sc.three);
+    // gates (vertical) every 45 nm, about 16 nm long
+    sc.gates = el("g", {}, g);
+    el("text", { x: RX, y: 640, class: "m-note", text: "transistores vecinos (compuertas)" }, sc.gates);
+    for (let k = 0; k < 3; k++) el("rect", { x: RX + (10 + k * 45) * S, y: 660, width: 16 * S, height: 190, rx: 4, fill: "#2f5e8e" }, sc.gates);
+    sc.gDim = el("g", {}, g);
+    const gx0 = RX + (10 + 8) * S, gx1 = gx0 + 45 * S;
+    el("line", { x1: gx0, y1: 880, x2: gx1, y2: 880, stroke: "var(--ink)", "stroke-width": 3 }, sc.gDim);
+    el("line", { x1: gx0, y1: 866, x2: gx0, y2: 894, stroke: "var(--ink)", "stroke-width": 3 }, sc.gDim);
+    el("line", { x1: gx1, y1: 866, x2: gx1, y2: 894, stroke: "var(--ink)", "stroke-width": 3 }, sc.gDim);
+    el("text", { x: (gx0 + gx1) / 2, y: 924, "text-anchor": "middle", "font-size": 34, "font-weight": 700, fill: "var(--ink)", text: "≈ 45 nm" }, sc.gDim);
+    // finest wires (horizontal) every 23 nm, about half of that wide
+    sc.wires = el("g", {}, g);
+    el("text", { x: RX, y: 980, class: "m-note", text: "cables más finos" }, sc.wires);
+    for (let k = 0; k < 2; k++) el("rect", { x: RX, y: 1000 + k * 23 * S, width: 560, height: 11.5 * S, rx: 3, fill: "#c98a1b" }, sc.wires);
+    sc.wDim = el("g", {}, g);
+    const wy0 = 1000, wy1 = 1000 + 23 * S, wx = RX + 590;
+    el("line", { x1: wx, y1: wy0, x2: wx, y2: wy1, stroke: "var(--ink)", "stroke-width": 3 }, sc.wDim);
+    el("line", { x1: wx - 14, y1: wy0, x2: wx + 14, y2: wy0, stroke: "var(--ink)", "stroke-width": 3 }, sc.wDim);
+    el("line", { x1: wx - 14, y1: wy1, x2: wx + 14, y2: wy1, stroke: "var(--ink)", "stroke-width": 3 }, sc.wDim);
+    el("text", { x: wx + 24, y: (wy0 + wy1) / 2 + 12, "font-size": 34, "font-weight": 700, fill: "var(--ink)", text: "≈ 23 nm" }, sc.wDim);
+    el("text", { x: RX, y: 1240, class: "m-note", text: "a escala · valores típicos de la generación de 3 nm" }, g);
+  }
+  function drawScale(t, s, A) {
+    op(sc.three, on(t, s.from + 0.4));
+    op(sc.gates, on(t, A.distancia.start));
+    op(sc.gDim, on(t, A.cuarenta.start));
+    op(sc.wires, on(t, A.cables.start));
+    op(sc.wDim, on(t, A.veintitres.start));
+  }
+
+  // ---------------------------------------------------------------- density per generation
+  let dn = {};
+  function buildDense() {
+    const g = el("g", {}, $("#sc-dense"));
+    dn.boxes = [4, 6, 9].map((n, i) => {
+      const gg = el("g", {}, g);
+      const x = 110 + i * 290, y = 560, w = 250;
+      el("rect", { x, y, width: w, height: w, rx: 10, fill: "#faf8f3", stroke: "var(--ink-2)", "stroke-width": 4 }, gg);
+      const c = (w - 20) / n;
+      for (let a = 0; a < n; a++) for (let b = 0; b < n; b++) el("rect", { x: x + 10 + a * c + c * 0.15, y: y + 10 + b * c + c * 0.15, width: c * 0.7, height: c * 0.7, rx: 2, fill: "#2f5e8e" }, gg);
+      el("text", { x: x + w / 2, y: y + w + 50, "text-anchor": "middle", "font-size": 30, "font-weight": 650, fill: "var(--ink)", text: ["generación vieja", "intermedia", "más nueva"][i] }, gg);
+      return gg;
+    });
+    el("text", { x: 110, y: 920, class: "m-note", text: "mismo espacio · ilustrativo" }, g);
+    dn.tag = el("g", {}, g);
+    el("text", { x: 540, y: 1110, "text-anchor": "middle", "font-size": 44, "font-weight": 750, fill: "#b3386b", text: "«3 nm» = nombre de la generación" }, dn.tag);
+  }
+  function drawDense(t, s, A) {
+    dn.boxes.forEach((b, i) => op(b, ramp(t, s.from + 0.3 + i * 0.5, s.from + 0.7 + i * 0.5)));
+    op(dn.tag, on(t, A.tamano.start));
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "Los anuncios presumen chips de tres nanómetros. ¿Qué mide exactamente ese número? Hace décadas, el número sí medía una pieza del transistor: la parte que lo prende y lo apaga. Pero desde finales de los noventa, los fabricantes empezaron a cambiar la forma de los transistores, y el nombre dejó de coincidir con ninguna medida real. Hoy, «tres nanómetros» es el nombre de una generación de fabricación. En esos chips, la distancia entre transistores vecinos ronda los cuarenta y cinco nanómetros, y los cables más finos que los conectan, unos veintitrés. Lo que sí es real es que cada generación acomoda más transistores en el mismo espacio. Así que el número no te dice el tamaño: te dice qué tan nueva es la fábrica.";
+
+  Mosaic.short({
+    kicker: "Memoria y chips",
+    title: "¿Qué significan los «3 nanómetros» de un chip?",
+    script: SCRIPT,
+    anchors: {
+      tres: ["tres nanometros", "3 nanometros", "3 nm"],
+      mide: "mide",
+      decadas: "decadas",
+      pieza: "pieza",
+      noventa: ["noventa", "90", "noventas"],
+      forma: "forma",
+      coincidir: "coincidir",
+      hoy: "hoy",
+      generacion: "generacion",
+      distancia: "distancia",
+      cuarenta: ["cuarenta y cinco", "45"],
+      cables: "cables",
+      veintitres: ["veintitres", "23"],
+      real: "si es real",
+      espacio: "mismo espacio",
+      tamano: "tamano",
+      fabrica: "fabrica",
+    },
+    build() { buildTag(); buildTime(); buildScale(); buildDense(); },
+    scenes: [
+      { el: "#sc-tag", from: 0, to: "decadas-0.4", fadeIn: 0.3, rise: 0 },
+      { el: "#cap-tag", from: 0.2, to: "decadas-0.4", fade: 0.3 },
+      { el: "#sc-time", from: "decadas-0.4", to: "hoy-0.4", rise: 0, update: drawTime },
+      { el: "#cap-then", from: "decadas-0.3", to: "noventa-0.6", fade: 0.3 },
+      { el: "#cap-split", from: "noventa-0.6", to: "hoy-0.4", fade: 0.3 },
+      { el: "#sc-scale", from: "hoy-0.4", to: "real-0.4", rise: 0, update: drawScale },
+      { el: "#cap-gen", from: "hoy-0.3", to: "distancia-0.3", fade: 0.3 },
+      { el: "#cap-real", from: "distancia-0.3", to: "real-0.4", fade: 0.3 },
+      { el: "#sc-dense", from: "real-0.4", to: "end", rise: 0, update: drawDense },
+      { el: "#cap-dense", from: "real-0.3", to: "tamano-0.6", fade: 0.3 },
+      { el: "#cap-end", from: "tamano-0.6", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
