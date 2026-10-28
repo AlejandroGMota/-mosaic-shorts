@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>T5 · ¿Por qué la batería de tu celular dura menos cada año?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-hook" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-hook" style="top:1300px">¿Qué le pasó a la batería?</div>
+
+    <svg class="full scene" id="sc-cell" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-ions" style="top:1300px">Iones de litio que van y vienen<small>al cargar van a un lado, al usarla regresan</small></div>
+    <div class="m-caption scene" id="cap-stuck" style="top:1300px">En cada viaje, algunos se quedan atrapados<small>en una capa que crece y ya no vuelven</small></div>
+    <div class="m-caption scene" id="cap-less" style="top:1300px">Menos iones disponibles<small>= menos capacidad</small></div>
+
+    <svg class="full scene" id="sc-chart" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-heat" style="top:1300px">El calor y el 100 % por mucho tiempo<small>aceleran el desgaste</small></div>
+    <div class="m-caption scene" id="cap-promise" style="top:1300px">La promesa típica: 80 % de capacidad<small>después de 500 o 1000 ciclos completos</small></div>
+
+    <svg class="full scene" id="sc-end" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-end" style="top:1300px">No se descompone<small>se va quedando sin pasajeros</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp, clamp } = Mosaic;
+  const MINT = "#3a9a80", BLUE = "#2f5e8e", AMBER = "#c98a1b", FUCH = "#b3386b", INK = "#1d1d1b", INK2 = "#4a4843", MUTED = "#827e74";
+
+  // ---------------------------------------------------------------- scene 1: new vs two years
+  let hk = {};
+  function battery(g, x, y, cap, label, color) {
+    const gg = el("g", { transform: `translate(${x} ${y})` }, g);
+    el("text", { x: 0, y: -30, class: "m-label", fill: INK, text: label }, gg);
+    el("rect", { x: 0, y: 0, width: 700, height: 200, rx: 26, fill: "none", stroke: INK2, "stroke-width": 9 }, gg);
+    el("rect", { x: 700, y: 64, width: 30, height: 72, rx: 8, fill: INK2 }, gg);
+    const fill = el("rect", { x: 18, y: 18, height: 164, rx: 14, fill: color }, gg);
+    if (cap < 1) {
+      // capacity that no longer exists
+      const lost = el("g", {}, gg);
+      el("rect", { x: 18 + 664 * cap, y: 18, width: 664 * (1 - cap), height: 164, rx: 10, fill: "#e9e5dc" }, lost);
+      for (let i = 0; i < 7; i++) el("line", { x1: 18 + 664 * cap + i * 20, y1: 182, x2: 18 + 664 * cap + i * 20 + 30, y2: 18, stroke: "#bdb7aa", "stroke-width": 4 }, lost);
+      el("text", { x: 18 + 664 * (1 + cap) / 2, y: 240, "text-anchor": "middle", class: "m-note", fill: MUTED, text: "ya no existe" }, gg);
+    }
+    return { g: gg, fill, cap };
+  }
+  function buildHook() {
+    const g = el("g", {}, $("#sc-hook"));
+    hk.a = battery(g, 175, 540, 1, "nuevo: aguanta todo el día", MINT);
+    hk.b = battery(g, 175, 900, 0.8, "dos años después", AMBER);
+    el("text", { x: 905, y: 1190, "text-anchor": "end", class: "m-note", fill: MUTED, text: "ilustrativo" }, g);
+  }
+  function drawHook(t, s, A) {
+    hk.a.fill.setAttribute("width", (664 * hk.a.cap).toFixed(1));
+    hk.b.g.setAttribute("opacity", String(ramp(t, A.dos.start - 0.3, A.dos.start + 0.3)));
+    hk.b.fill.setAttribute("width", (664 * hk.b.cap).toFixed(1));
+  }
+
+  // ---------------------------------------------------------------- cell (used twice)
+  // Negative electrode on the left, positive on the right. Charging moves ions to the left;
+  // using the phone moves them back. Each trip, some ions get trapped in the grey layer (SEI)
+  // that grows on the negative electrode, and stop taking part.
+  const NI = 24, NEG = [170, 370], POS = [710, 910], Y0 = 560, Y1 = 1060;
+  const rnd = (i) => { const x = Math.sin(i * 12.9898 + 78.233) * 43758.5453; return x - Math.floor(x); };
+  function buildCell(svg) {
+    const c = {};
+    const g = el("g", {}, svg);
+    el("rect", { x: NEG[0], y: Y0, width: POS[1] - NEG[0], height: Y1 - Y0, rx: 12, fill: "#faf8f3", stroke: INK2, "stroke-width": 5 }, g);
+    for (let i = 0; i < 7; i++) el("rect", { x: NEG[0] + 10, y: Y0 + 30 + i * 70, width: NEG[1] - NEG[0] - 20, height: 16, rx: 3, fill: "#5d5a54" }, g);
+    for (let i = 0; i < 7; i++) el("rect", { x: POS[0] + 10, y: Y0 + 30 + i * 70, width: POS[1] - POS[0] - 20, height: 16, rx: 3, fill: "#c9a46a" }, g);
+    el("line", { x1: 540, y1: Y0 + 10, x2: 540, y2: Y1 - 10, stroke: "#bdb7aa", "stroke-width": 4, "stroke-dasharray": "12 10" }, g);
+    el("text", { x: (NEG[0] + NEG[1]) / 2, y: Y0 - 24, "text-anchor": "middle", class: "m-label", fill: INK, text: "lado −" }, g);
+    el("text", { x: (POS[0] + POS[1]) / 2, y: Y0 - 24, "text-anchor": "middle", class: "m-label", fill: INK, text: "lado +" }, g);
+    c.sei = el("rect", { x: NEG[1], y: Y0 + 6, height: Y1 - Y0 - 12, fill: "#9a958a" }, g);
+    c.seiLbl = el("text", { x: NEG[1] + 16, y: Y0 - 24, class: "m-note", fill: MUTED, text: "capa que crece" }, g);
+    c.dir = el("text", { x: 540, y: Y1 + 44, "text-anchor": "middle", class: "m-label", fill: BLUE, text: "" }, g);
+    c.ions = [];
+    for (let i = 0; i < NI; i++) c.ions.push(el("circle", { r: 13, fill: MINT }, g));
+    c.count = el("text", { x: 540, y: Y1 + 110, "text-anchor": "middle", class: "m-label m-num", fill: INK, text: "" }, g);
+    return c;
+  }
+  // phase: position along the trip (0 = positive side, 1 = negative side); trips = completed half-trips
+  function drawCell(c, phase, trips, stuckOn) {
+    const stuck = Math.min(10, Math.floor(trips * 1.0)) * stuckOn;
+    c.sei.setAttribute("width", (4 + 4 * stuck).toFixed(1));
+    c.seiLbl.setAttribute("opacity", String(stuckOn));
+    let active = 0;
+    c.ions.forEach((n, i) => {
+      const row = i % 6, colj = Math.floor(i / 6);
+      const y = Y0 + 62 + row * 78 + (rnd(i) - 0.5) * 20;
+      if (i < stuck) {
+        n.setAttribute("cx", (NEG[1] + 4 + 4 * stuck - 14 - (i % 2) * 0).toFixed(1));
+        n.setAttribute("cy", (Y0 + 40 + (i * 43) % (Y1 - Y0 - 80)).toFixed(1));
+        n.setAttribute("fill", "#7d786d");
+        return;
+      }
+      active++;
+      const xp = POS[0] + 30 + colj * 40, xn = NEG[0] + 30 + colj * 40;
+      const lag = rnd(i + 7) * 0.25;
+      const p = clamp((phase - lag) / 0.75);
+      n.setAttribute("cx", lerp(xp, xn, ease.inOut(p)).toFixed(1));
+      n.setAttribute("cy", y.toFixed(1));
+      n.setAttribute("fill", MINT);
+    });
+    c.count.textContent = `iones disponibles: ${active} de ${NI}`;
+  }
+  let ce, cf;
+  function drawMainCell(t, s, A) {
+    // a full trip every 2.4 s, starting at "cargar"
+    const T = 2.4, x = Math.max(0, t - A.cargar.start + 0.4) / T;
+    const tri = x % 2 < 1 ? x % 1 : 1 - (x % 1); // 0 -> 1 -> 0 ...
+    const trips = Math.floor(Math.max(0, t - A.viaje.start + 0.6) / T * 2);
+    drawCell(ce, tri, trips, ramp(t, A.viaje.start - 0.3, A.viaje.start + 0.3));
+    ce.dir.textContent = x % 2 < 1 ? "← cargando" : "usándolo →";
+    ce.count.setAttribute("opacity", String(ramp(t, A.menos.start - 0.4, A.menos.start)));
+  }
+  function drawEndCell(t, s, A) {
+    const T = 2.4, x = Math.max(0, t - s.from) / T + 0.5;
+    const tri = x % 2 < 1 ? x % 1 : 1 - (x % 1);
+    drawCell(cf, tri, 14, 1);
+    cf.dir.textContent = "";
+    cf.count.setAttribute("opacity", "1");
+  }
+
+  // ---------------------------------------------------------------- chart: capacity vs cycles (illustrative)
+  const X0 = 200, X1 = 900, YT = 520, YB = 1120;
+  const cx = (n) => X0 + (X1 - X0) * n / 1200;
+  const cy = (cap) => YB - (YB - YT) * (cap - 0.6) / 0.42;
+  const fade = (n, k) => 1 - 0.2 * Math.pow(n / k, 0.8);
+  let chh = {};
+  function poly(fn, n1) {
+    const pts = [];
+    for (let i = 0; i <= 80; i++) { const n = n1 * i / 80; pts.push(cx(n).toFixed(1) + "," + cy(fn(n)).toFixed(1)); }
+    return pts.join(" ");
+  }
+  function buildChart() {
+    const g = el("g", {}, $("#sc-chart"));
+    el("line", { x1: X0, y1: YT - 20, x2: X0, y2: YB, stroke: INK2, "stroke-width": 3 }, g);
+    el("line", { x1: X0, y1: YB, x2: X1 + 20, y2: YB, stroke: INK2, "stroke-width": 3 }, g);
+    [1, 0.8, 0.6].forEach((v) => el("text", { x: X0 - 14, y: cy(v) + 10, "text-anchor": "end", class: "m-note", fill: MUTED, text: Math.round(v * 100) + " %" }, g));
+    [0, 500, 1000].forEach((n) => el("text", { x: cx(n), y: YB + 44, "text-anchor": "middle", class: "m-note", fill: MUTED, text: String(n) }, g));
+    el("text", { x: X1 + 20, y: YB + 90, "text-anchor": "end", class: "m-note", fill: MUTED, text: "ciclos completos de carga →" }, g);
+    el("text", { x: X0 + 10, y: YT - 40, class: "m-label", fill: INK, text: "capacidad" }, g);
+    el("text", { x: X0, y: YB + 90, class: "m-note", fill: MUTED, text: "ilustrativo" }, g);
+    chh.l80 = el("line", { x1: X0, y1: cy(0.8), x2: X1, y2: cy(0.8), stroke: "#bdb7aa", "stroke-width": 3, "stroke-dasharray": "10 8" }, g);
+    chh.normal = el("polyline", { fill: "none", stroke: MINT, "stroke-width": 8, "stroke-linecap": "round" }, g);
+    chh.hot = el("polyline", { fill: "none", stroke: FUCH, "stroke-width": 8, "stroke-linecap": "round" }, g);
+    chh.hotLbl = el("g", {}, g);
+    el("text", { x: cx(60), y: cy(0.66), class: "m-label", fill: FUCH, text: "con calor y mucho al 100 %" }, chh.hotLbl);
+    // thermometer + "100 %"
+    const th = el("g", { transform: `translate(${cx(1000)} ${cy(0.97)})` }, chh.hotLbl);
+    el("rect", { x: -12, y: -60, width: 24, height: 70, rx: 12, fill: "none", stroke: FUCH, "stroke-width": 5 }, th);
+    el("circle", { cx: 0, cy: 20, r: 20, fill: FUCH }, th);
+    el("rect", { x: -5, y: -30, width: 10, height: 40, fill: FUCH }, th);
+    chh.marks = [500, 1000].map((n) => {
+      const m = el("g", {}, g);
+      el("circle", { cx: cx(n), cy: cy(0.8), r: 16, fill: "#faf8f3", stroke: INK, "stroke-width": 6 }, m);
+      el("text", { x: cx(n), y: cy(0.8) + 64, "text-anchor": "middle", class: "m-label", fill: INK, text: `80 % a ${n}` }, m);
+      return m;
+    });
+  }
+  function drawChart(t, s, A) {
+    const p = ramp(t, s.from + 0.2, A.calor.start + 1.4);
+    chh.normal.setAttribute("points", poly((n) => fade(n, 1000), 1200 * p));
+    const ph = ramp(t, A.calor.start + 0.3, A.fabricantes.start - 0.4);
+    chh.hot.setAttribute("points", poly((n) => fade(n, 450), 1000 * ph));
+    chh.hotLbl.setAttribute("opacity", String(ramp(t, A.calor.start + 0.5, A.calor.start + 1)));
+    chh.hot.setAttribute("opacity", String(1 - 0.75 * ramp(t, A.fabricantes.start - 0.4, A.fabricantes.start)));
+    chh.hotLbl.setAttribute("opacity", String(ramp(t, A.calor.start + 0.5, A.calor.start + 1) * (1 - 0.75 * ramp(t, A.fabricantes.start - 0.4, A.fabricantes.start))));
+    chh.marks[0].setAttribute("opacity", String(ramp(t, A.quinientos.start - 0.3, A.quinientos.start + 0.2)));
+    chh.marks[1].setAttribute("opacity", String(ramp(t, A.mil.start - 0.3, A.mil.start + 0.2)));
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "Tu celular nuevo aguantaba todo el día. Dos años después, no llega a la tarde. ¿Qué le pasó a la batería? Una batería de litio funciona moviendo iones, átomos con carga, de un lado al otro: al cargar van hacia un lado y al usarla regresan. En cada viaje, una pequeña parte de esos iones se queda atrapada en una capa que crece sobre los materiales internos, y ya no vuelve a participar. Menos iones disponibles, menos capacidad. El calor y pasar mucho tiempo al cien por ciento aceleran ese desgaste. Por eso los fabricantes prometen, por ejemplo, conservar el ochenta por ciento de la capacidad después de quinientos o mil ciclos completos de carga. No es que la batería se descomponga: se va quedando sin pasajeros.";
+
+  Mosaic.short({
+    kicker: "El celular por dentro",
+    title: "¿Por qué la batería de tu celular dura menos cada año?",
+    script: SCRIPT,
+    anchors: {
+      nuevo: "nuevo",
+      dos: ["dos anos", "2 anos"],
+      tarde: "tarde",
+      litio: "litio",
+      iones: "iones",
+      cargar: "al cargar",
+      usarla: "usarla",
+      viaje: "cada viaje",
+      atrapada: "atrapada",
+      capa: "capa",
+      menos: "menos iones",
+      calor: "calor",
+      cien: ["cien por ciento", "100 por ciento", "100%"],
+      fabricantes: "fabricantes",
+      ochenta: ["ochenta por ciento", "80 por ciento", "80%"],
+      quinientos: ["quinientos", "500"],
+      mil: ["mil ciclos", "1000 ciclos", "1000"],
+      descomponga: "descomponga",
+      pasajeros: "pasajeros",
+    },
+    build() {
+      buildHook();
+      ce = buildCell($("#sc-cell"));
+      cf = buildCell($("#sc-end"));
+      buildChart();
+    },
+    scenes: [
+      { el: "#sc-hook", from: 0, to: "litio-0.6", fadeIn: 0.3, rise: 0, update: drawHook },
+      { el: "#cap-hook", from: "tarde+0.2", to: "litio-0.6", fade: 0.3 },
+      { el: "#sc-cell", from: "litio-0.6", to: "calor-0.3", rise: 0, update: drawMainCell },
+      { el: "#cap-ions", from: "litio-0.5", to: "viaje-0.3", fade: 0.3 },
+      { el: "#cap-stuck", from: "viaje-0.3", to: "menos-0.3", fade: 0.3 },
+      { el: "#cap-less", from: "menos-0.3", to: "calor-0.3", fade: 0.3 },
+      { el: "#sc-chart", from: "calor-0.3", to: "descomponga-0.6", rise: 0, update: drawChart },
+      { el: "#cap-heat", from: "calor-0.2", to: "fabricantes-0.3", fade: 0.3 },
+      { el: "#cap-promise", from: "fabricantes-0.3", to: "descomponga-0.6", fade: 0.3 },
+      { el: "#sc-end", from: "descomponga-0.6", to: "end", rise: 0, update: drawEndCell },
+      { el: "#cap-end", from: "descomponga-0.5", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
