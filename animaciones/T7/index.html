@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>T7 · ¿Por qué tu celular toma varias fotos con un clic?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+  canvas.img { position: absolute; image-rendering: pixelated; border-radius: 10px; }
+  .lbl { position: absolute; text-align: center; font-size: 34px; font-weight: 560; color: var(--ink-2); }
+  .lbl.note { font-size: 26px; font-weight: 450; color: var(--muted); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <div class="scene" id="sc-hook">
+      <svg class="full" viewBox="0 0 1080 1920" id="svg-hook-back"></svg>
+      <canvas class="img" id="cv-hook" width="96" height="96" style="left:310px;top:480px;width:460px;height:460px"></canvas>
+      <svg class="full" viewBox="0 0 1080 1920" id="svg-hook"></svg>
+    </div>
+    <div class="m-caption scene" id="cap-hook" style="top:1300px">Un clic… y no toma una foto: toma varias</div>
+
+    <div class="scene" id="sc-single">
+      <canvas class="img" id="cv-single" width="96" height="96" style="left:240px;top:480px;width:600px;height:600px"></canvas>
+      <div class="lbl note" style="left:240px;top:1100px;width:600px">1 sola foto de noche (ampliada)</div>
+    </div>
+    <div class="m-caption scene" id="cap-single" style="top:1300px">Sensor diminuto, poca luz<small>una sola foto sale oscura o con ruido: puntitos de colores</small></div>
+
+    <div class="scene" id="sc-burst"><svg class="full" viewBox="0 0 1080 1920" id="svg-burst"></svg></div>
+    <div class="m-caption scene" id="cap-burst" style="top:1300px">Una ráfaga de fotos muy rápidas</div>
+    <div class="m-caption scene" id="cap-align" style="top:1300px">Las alinea<small>para compensar el temblor de tu mano</small></div>
+
+    <div class="scene" id="sc-avg">
+      <canvas class="img" id="cv-avg" width="96" height="96" style="left:240px;top:480px;width:600px;height:600px"></canvas>
+      <div class="lbl" id="avg-n" style="left:240px;top:1110px;width:600px"></div>
+    </div>
+    <div class="m-caption scene" id="cap-avg" style="top:1300px">El ruido cambia de foto en foto; la escena no<small>al promediarlas, el ruido se cancela y los detalles se quedan</small></div>
+
+    <div class="scene" id="sc-cmp">
+      <canvas class="img" id="cv-c1" width="96" height="96" style="left:100px;top:560px;width:420px;height:420px"></canvas>
+      <canvas class="img" id="cv-c15" width="96" height="96" style="left:560px;top:560px;width:420px;height:420px"></canvas>
+      <div class="lbl" style="left:100px;top:1000px;width:420px">1 toma</div>
+      <div class="lbl" style="left:560px;top:1000px;width:420px">15 tomas combinadas</div>
+    </div>
+    <div class="m-caption scene" id="cap-cmp" style="top:1300px">Modo nocturno de Google (2018)<small>hasta 15 tomas en una sola foto</small></div>
+
+    <div class="scene" id="sc-hdr">
+      <canvas class="img" id="cv-bright" width="96" height="96" style="left:150px;top:480px;width:330px;height:330px"></canvas>
+      <canvas class="img" id="cv-dark" width="96" height="96" style="left:600px;top:480px;width:330px;height:330px"></canvas>
+      <div class="lbl note" style="left:150px;top:820px;width:330px">toma clara: cielo quemado</div>
+      <div class="lbl note" style="left:600px;top:820px;width:330px">toma oscura: sombras negras</div>
+      <canvas class="img" id="cv-hdr" width="96" height="96" style="left:365px;top:890px;width:350px;height:350px"></canvas>
+      <svg class="full" viewBox="0 0 1080 1920" id="svg-hdr"></svg>
+    </div>
+    <div class="m-caption scene" id="cap-hdr" style="top:1300px">Con luz fuerte mezcla tomas claras y oscuras<small>para no perder ni el cielo ni las sombras</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp, clamp } = Mosaic;
+  const MINT = "#3a9a80", BLUE = "#2f5e8e", AMBER = "#c98a1b", FUCH = "#b3386b", INK = "#1d1d1b", INK2 = "#4a4843", MUTED = "#827e74";
+
+  // ---------------------------------------------------------------- images (computed, deterministic)
+  const RES = 96;
+  const hash = (a) => { const x = Math.sin(a * 12.9898 + 78.233) * 43758.5453; return x - Math.floor(x); };
+  // night scene: linear light values 0..1
+  function night(u, v) {
+    let c = [lerp(0.04, 0.1, v), lerp(0.06, 0.12, v), lerp(0.16, 0.24, v)];
+    if ((u - 0.76) ** 2 + (v - 0.2) ** 2 < 0.0049) c = [0.92, 0.9, 0.78];
+    if (v > 0.8 - 0.05 * Math.sin(u * 6)) c = [0.08, 0.11, 0.07];
+    const inHouse = u > 0.2 && u < 0.56 && v > 0.52 && v < 0.84;
+    const roof = v > 0.36 && v <= 0.52 && Math.abs(u - 0.38) < (v - 0.36) * 1.25;
+    if (inHouse) c = [0.24, 0.19, 0.15];
+    if (roof) c = [0.35, 0.12, 0.1];
+    if (u > 0.27 && u < 0.37 && v > 0.6 && v < 0.7) c = [0.98, 0.78, 0.36];
+    if (u > 0.42 && u < 0.5 && v > 0.66 && v < 0.84) c = [0.12, 0.08, 0.06];
+    if (Math.abs(u - 0.8) < 0.012 && v > 0.48 && v < 0.82) c = [0.2, 0.2, 0.22];
+    if ((u - 0.8) ** 2 + (v - 0.47) ** 2 < 0.0012) c = [1, 0.85, 0.5];
+    return c;
+  }
+  // per-pixel noise of frame k, channel ch: approx. normal (sum of 3 uniforms), std ≈ 1
+  const noise = (x, y, k, ch) => (hash(x * 7.1 + y * 131.7 + k * 1013.3 + ch * 17.9) + hash(x * 3.3 + y * 57.1 + k * 311.9 + ch * 5.7 + 0.5) + hash(x * 11.9 + y * 19.3 + k * 77.7 + ch * 29.1 + 0.25) - 1.5) * 2;
+  const SIG = 0.11;
+  const shake = (k) => [Math.round((hash(k * 3.7) - 0.5) * 8), Math.round((hash(k * 5.3 + 1) - 0.5) * 8)];
+  function paint(cv, fn) {
+    const ctx = cv.getContext("2d");
+    const im = ctx.createImageData(RES, RES);
+    for (let y = 0; y < RES; y++) for (let x = 0; x < RES; x++) {
+      const c = fn(x, y), i = (y * RES + x) * 4;
+      for (let ch = 0; ch < 3; ch++) im.data[i + ch] = Math.round(255 * Math.pow(clamp(c[ch]), 1 / 2.2));
+      im.data[i + 3] = 255;
+    }
+    ctx.putImageData(im, 0, 0);
+  }
+  // average of frames k0..k0+n-1, each shifted by off(k) (0 when aligned)
+  function nightAvg(n, k0, aligned, sig) {
+    return (x, y) => {
+      const out = [0, 0, 0];
+      for (let k = k0; k < k0 + n; k++) {
+        const [dx, dy] = aligned ? [0, 0] : shake(k);
+        const base = night((x + dx + 0.5) / RES, (y + dy + 0.5) / RES);
+        for (let ch = 0; ch < 3; ch++) out[ch] += base[ch] + sig * noise(x, y, k, ch);
+      }
+      return out.map((v) => v / n);
+    };
+  }
+  // bright day scene, linear radiance (can exceed 1)
+  function day(u, v) {
+    if (v < 0.55) {
+      const cloud = 0.25 * Math.max(0, Math.sin(u * 9 + 1) * Math.sin(v * 14) );
+      return [0.45 + cloud, 0.62 + cloud, 0.95 + cloud * 0.6];
+    }
+    if (u > 0.08 && u < 0.6 && v > 0.3) {
+      // building in shade with brick lines
+      const brick = (Math.floor(v * 40) % 2 === 0) ^ (Math.floor(u * 20 + (Math.floor(v * 40) % 2) * 0.5) % 2 === 0) ? 0.034 : 0.026;
+      const win = u > 0.2 && u < 0.32 && v > 0.62 && v < 0.78 ? 0.012 : brick;
+      return [win * 1.2, win, win * 0.8];
+    }
+    return [0.05, 0.07, 0.04];
+  }
+  const tone = (L) => Math.log(1 + 200 * L) / Math.log(201);
+
+  // ---------------------------------------------------------------- scene: hook
+  let hk = {};
+  function buildHook() {
+    paint($("#cv-hook"), nightAvg(1, 0, true, SIG * 0.4));
+    hk.frames = el("g", {}, $("#svg-hook-back"));
+    for (let i = 5; i >= 1; i--) el("rect", { x: 310 + i * 14, y: 480 - i * 14, width: 460, height: 460, rx: 10, fill: "#faf8f3", stroke: INK2, "stroke-width": 3, opacity: 0.9 }, hk.frames);
+    hk.btn = el("g", { transform: "translate(540 1110)" }, $("#svg-hook"));
+    el("circle", { r: 70, fill: "none", stroke: INK2, "stroke-width": 8 }, hk.btn);
+    hk.inner = el("circle", { r: 54, fill: INK2 }, hk.btn);
+    hk.count = el("text", { x: 860, y: 540, class: "m-label m-num", fill: FUCH, text: "" }, $("#svg-hook"));
+  }
+  function drawHook(t, s, A) {
+    const press = Math.sin(Math.PI * ramp(t, A.tomas.start - 0.2, A.tomas.start + 0.3, ease.inOut));
+    hk.inner.setAttribute("r", (54 - 10 * press).toFixed(1));
+    const f = ramp(t, A.varias.start - 0.2, A.varias.start + 0.5);
+    hk.frames.setAttribute("opacity", String(f));
+    hk.frames.setAttribute("transform", `translate(${(-30 * (1 - f)).toFixed(1)} ${(30 * (1 - f)).toFixed(1)})`);
+    hk.count.textContent = "×" + Math.max(1, Math.round(15 * f));
+    hk.count.setAttribute("opacity", String(f));
+  }
+
+  // ---------------------------------------------------------------- burst: 15 small frames
+  let bu = {};
+  const FW = 140, GAP = 30;
+  const slot = (k) => [150 + (k % 5) * (FW + 15) - 5, 470 + Math.floor(k / 5) * (FW + GAP + 20)];
+  function buildBurst() {
+    const g = el("g", {}, $("#svg-burst"));
+    bu.frames = [];
+    for (let k = 0; k < 15; k++) {
+      const fo = document.createElementNS("http://www.w3.org/2000/svg", "foreignObject");
+      fo.setAttribute("width", FW); fo.setAttribute("height", FW);
+      g.appendChild(fo);
+      const cv = document.createElement("canvas");
+      cv.width = RES; cv.height = RES;
+      cv.style.cssText = `width:${FW}px;height:${FW}px;image-rendering:pixelated;border-radius:6px;display:block`;
+      fo.appendChild(cv);
+      paint(cv, nightAvg(1, k, false, SIG));
+      const border = el("rect", { width: FW, height: FW, rx: 6, fill: "none", stroke: MINT, "stroke-width": 5 }, g);
+      bu.frames.push({ fo, cv, border });
+    }
+    bu.num = el("text", { x: 540, y: 1180, "text-anchor": "middle", class: "m-label m-num", fill: INK2, text: "15 fotos, cada una movida un poquito y con su propio ruido" }, g);
+  }
+  function drawBurst(t, s, A) {
+    const al = ramp(t, A.alinea.start - 0.2, A.alinea.start + 0.8);
+    bu.frames.forEach((f, k) => {
+      const [x, y] = slot(k);
+      const on = ramp(t, s.from + k * 0.12, s.from + k * 0.12 + 0.25);
+      const [dx, dy] = shake(k);
+      // misaligned frames are drawn displaced by their shake; aligning brings them back
+      const sx = (dx * FW / RES) * (1 - al), sy = (dy * FW / RES) * (1 - al);
+      f.fo.setAttribute("x", (x - sx).toFixed(1)); f.fo.setAttribute("y", (y - sy).toFixed(1));
+      f.fo.setAttribute("opacity", String(on));
+      f.border.setAttribute("x", x); f.border.setAttribute("y", y);
+      f.border.setAttribute("opacity", String(al * on));
+    });
+    bu.num.setAttribute("opacity", String(ramp(t, s.from + 1.5, s.from + 2) * (1 - al)));
+  }
+
+  // ---------------------------------------------------------------- average: noise goes away as frames add up
+  let lastN = -1;
+  function drawAvg(t, s, A) {
+    const n = Math.max(1, Math.min(15, 1 + Math.floor(ramp(t, A.promediarlas.start - 0.4, A.detalles.end, ease.linear) * 14.999)));
+    if (n !== lastN) { paint($("#cv-avg"), nightAvg(n, 0, true, SIG)); lastN = n; }
+    $("#avg-n").textContent = n === 1 ? "1 foto" : `promedio de ${n} fotos`;
+  }
+
+  // ---------------------------------------------------------------- comparison + HDR
+  function buildStatic() {
+    paint($("#cv-single"), nightAvg(1, 3, true, SIG));
+    paint($("#cv-c1"), nightAvg(1, 3, true, SIG));
+    paint($("#cv-c15"), nightAvg(15, 0, true, SIG));
+    paint($("#cv-bright"), (x, y) => day((x + 0.5) / RES, (y + 0.5) / RES).map((L) => L * 14));
+    paint($("#cv-dark"), (x, y) => day((x + 0.5) / RES, (y + 0.5) / RES).map((L) => L * 0.9));
+    paint($("#cv-hdr"), (x, y) => day((x + 0.5) / RES, (y + 0.5) / RES).map((L) => Math.pow(tone(L), 2.2)));
+    const g = el("g", {}, $("#svg-hdr"));
+    hdr.plus = el("text", { x: 540, y: 660, "text-anchor": "middle", "font-size": 70, "font-weight": 600, fill: INK2, text: "+" }, g);
+    hdr.arrow = el("path", { d: "M540 860 L540 884 M528 872 L540 886 L552 872", fill: "none", stroke: INK2, "stroke-width": 5 }, g);
+  }
+  const hdr = {};
+  function drawHdr(t, s, A) {
+    $("#cv-bright").style.opacity = String(ramp(t, A.claras.start - 0.3, A.claras.start + 0.2));
+    $("#cv-dark").style.opacity = String(ramp(t, A.oscuras.start - 0.3, A.oscuras.start + 0.2));
+    const m = ramp(t, A.cielo.start - 0.5, A.cielo.start + 0.2);
+    $("#cv-hdr").style.opacity = String(m);
+    hdr.arrow.setAttribute("opacity", String(m));
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "Cuando tomas una foto con el celular, en realidad no toma una: toma varias. ¿Para qué? El sensor de un celular es diminuto y capta poca luz, sobre todo de noche. Una sola foto saldría oscura o llena de ruido, esos puntitos de colores. Así que la cámara toma una ráfaga de fotos muy rápidas, las alinea para compensar el temblor de tu mano y las combina. El ruido cambia de foto en foto, pero la escena no; al promediarlas, el ruido se cancela y los detalles se quedan. En el modo nocturno que presentó Google en dos mil dieciocho, una foto podía combinar hasta quince tomas. Y con luz fuerte, mezcla tomas claras y oscuras para que no se pierdan ni el cielo ni las sombras.";
+
+  Mosaic.short({
+    kicker: "El celular por dentro",
+    title: "¿Por qué tu celular toma varias fotos con un clic?",
+    script: SCRIPT,
+    anchors: {
+      tomas: "tomas una foto",
+      varias: "toma varias",
+      sensor: "sensor",
+      poca: "poca luz",
+      ruido: "ruido",
+      rafaga: "rafaga",
+      alinea: "alinea",
+      temblor: "temblor",
+      combina: "combina",
+      cambia: "ruido cambia",
+      promediarlas: "promediarlas",
+      cancela: "cancela",
+      detalles: "detalles se quedan",
+      nocturno: "nocturno",
+      dosmil: ["dos mil dieciocho", "2018"],
+      quince: ["quince tomas", "15 tomas"],
+      fuerte: "luz fuerte",
+      claras: "claras",
+      oscuras: "oscuras",
+      cielo: "cielo",
+    },
+    build() { buildHook(); buildBurst(); buildStatic(); },
+    scenes: [
+      { el: "#sc-hook", from: 0, to: "sensor-0.4", fadeIn: 0.3, rise: 0, update: drawHook },
+      { el: "#cap-hook", from: "varias-0.3", to: "sensor-0.4", fade: 0.3 },
+      { el: "#sc-single", from: "sensor-0.4", to: "rafaga-0.6", rise: 0 },
+      { el: "#cap-single", from: "sensor-0.3", to: "rafaga-0.6", fade: 0.3 },
+      { el: "#sc-burst", from: "rafaga-0.6", to: "cambia-0.4", rise: 0, update: drawBurst },
+      { el: "#cap-burst", from: "rafaga-0.5", to: "alinea-0.3", fade: 0.3 },
+      { el: "#cap-align", from: "alinea-0.3", to: "cambia-0.4", fade: 0.3 },
+      { el: "#sc-avg", from: "cambia-0.4", to: "nocturno-0.4", rise: 0, update: drawAvg },
+      { el: "#cap-avg", from: "cambia-0.4", to: "nocturno-0.4", fade: 0.3 },
+      { el: "#sc-cmp", from: "nocturno-0.4", to: "fuerte-0.4", rise: 0 },
+      { el: "#cap-cmp", from: "nocturno-0.3", to: "fuerte-0.4", fade: 0.3 },
+      { el: "#sc-hdr", from: "fuerte-0.4", to: "end", rise: 0, update: drawHdr },
+      { el: "#cap-hdr", from: "fuerte-0.3", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
