@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>N4 · ¿Qué significa que la empresa de Claude salga a bolsa?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+  .disclaimer { position: absolute; inset: auto; left: 80px; top: 1480px; width: 860px; text-align: center; font-size: 26px; color: var(--muted); }
+  .sales { position: absolute; inset: auto; left: 480px; top: 760px; width: 460px; }
+  .sales .k { font-size: 30px; font-weight: 600; color: var(--ink-2); line-height: 1.25; }
+  .sales .n { font-size: 130px; font-weight: 720; letter-spacing: -0.03em; color: var(--blue); line-height: 1.05; margin-top: 16px; font-variant-numeric: tabular-nums; }
+  .sales .u { font-size: 34px; font-weight: 600; color: var(--ink); }
+  .sales .s { font-size: 26px; color: var(--muted); margin-top: 18px; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-intro" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-intro" style="top:1300px">Pidió permiso para salir a la bolsa<small>¿qué significa eso?</small></div>
+
+    <svg class="full scene" id="sc-owners" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-owners" style="top:1300px">Hoy tiene pocos dueños</div>
+    <div class="m-caption scene" id="cap-shares" style="top:1300px">Se vende una parte en acciones<small>pedacitos que cualquiera puede comprar</small></div>
+
+    <svg class="full scene" id="sc-steps" viewBox="0 0 1080 1920"></svg>
+    <div class="sales scene" id="sc-sales">
+      <div class="k">Ventas · primera mitad de 2026</div>
+      <div class="n">≈ <span id="sales">0.0</span></div>
+      <div class="u">mil millones de USD</div>
+      <div class="s">según la cobertura del prospecto</div>
+    </div>
+    <div class="m-caption scene" id="cap-pros" style="top:1300px">Prospecto: documento obligatorio<small>con sus cuentas y sus riesgos</small></div>
+    <div class="m-caption scene" id="cap-next" style="top:1300px">Gira, precio y primer día en bolsa</div>
+
+    <svg class="full scene" id="sc-cost" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-cost" style="top:1300px">Por fin se ve cuánto cuesta hacer una IA</div>
+
+    <div class="disclaimer scene" id="disc">Explicación general · no es recomendación de inversión</div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp, clamp } = Mosaic;
+  const op = (n, v) => n.setAttribute("opacity", String(v));
+  const fade = (t, a, d = 0.3) => ramp(t, a - d, a + 0.15);
+  const PAPER = "#faf8f3", BLUE = "#2f5e8e", FUCH = "#b3386b", MINT = "#3a9a80", AMBER = "#c98a1b", INK = "#1d1d1b", MUTED = "#827e74", LINE = "#d6d1c5";
+
+  function person(g, x, y, s, color) {
+    el("circle", { cx: x, cy: y, r: 13 * s, fill: color }, g);
+    el("path", { d: `M${x - 22 * s} ${y + 52 * s} Q${x - 22 * s} ${y + 18 * s} ${x} ${y + 18 * s} Q${x + 22 * s} ${y + 18 * s} ${x + 22 * s} ${y + 52 * s} Z`, fill: color }, g);
+  }
+
+  // ---------------------------------------------------------------- 1. private company -> stock exchange
+  let it = {};
+  function buildIntro() {
+    const g = el("g", {}, $("#sc-intro"));
+    it.co = el("g", {}, g);
+    el("rect", { x: 80, y: 640, width: 360, height: 320, rx: 16, fill: PAPER, stroke: BLUE, "stroke-width": 5 }, it.co);
+    for (let r = 0; r < 3; r++) for (let c = 0; c < 4; c++) el("rect", { x: 120 + c * 75, y: 680 + r * 70, width: 50, height: 44, rx: 4, fill: "#dfe8f1" }, it.co);
+    el("text", { x: 260, y: 1010, "text-anchor": "middle", "font-size": 44, "font-weight": 700, fill: INK, text: "Anthropic" }, it.co);
+    el("text", { x: 260, y: 1052, "text-anchor": "middle", class: "m-note", text: "la empresa que hace a Claude" }, it.co);
+    it.arrow = el("g", {}, g);
+    el("line", { x1: 460, y1: 800, x2: 560, y2: 800, stroke: INK, "stroke-width": 6 }, it.arrow);
+    el("polygon", { points: "584,800 556,784 556,816", fill: INK }, it.arrow);
+    it.ex = el("g", {}, g);
+    el("rect", { x: 600, y: 640, width: 340, height: 320, rx: 16, fill: PAPER, stroke: INK, "stroke-width": 5 }, it.ex);
+    el("polyline", { points: "630,900 690,850 740,875 800,780 860,800 910,720", fill: "none", stroke: MINT, "stroke-width": 7, "stroke-linejoin": "round" }, it.ex);
+    el("line", { x1: 630, y1: 920, x2: 910, y2: 920, stroke: LINE, "stroke-width": 3 }, it.ex);
+    el("text", { x: 770, y: 1010, "text-anchor": "middle", "font-size": 44, "font-weight": 700, fill: INK, text: "Bolsa de valores" }, it.ex);
+    it.ask = el("text", { x: 510, y: 760, "text-anchor": "middle", "font-size": 34, "font-weight": 650, fill: AMBER, text: "permiso" }, g);
+  }
+  function drawIntro(t, s, A) {
+    op(it.co, ramp(t, 0.1, 0.5));
+    op(it.ask, fade(t, A.permiso.start));
+    op(it.arrow, fade(t, A.permiso.start));
+    op(it.ex, fade(t, A.bolsa.start));
+  }
+
+  // ---------------------------------------------------------------- 2. owners -> shares -> anyone
+  let ow = {};
+  const GROUPS = [["fundadores", BLUE], ["empleados", MINT], ["inversionistas", AMBER]];
+  const SHARE = [0.3, 0.25, 0.45]; // illustrative split
+  const N = 10, CELL = 44, GX = 110, GY = 600;
+  function buildOwners() {
+    const g = el("g", {}, $("#sc-owners"));
+    ow.title = el("text", { x: 80, y: 510, class: "m-label", text: "Dueños hoy" }, g);
+    el("text", { x: 80, y: 550, class: "m-note", text: "proporciones ilustrativas" }, g);
+    // pie
+    ow.pie = el("g", {}, g);
+    const cx = 330, cy = 820, r = 210;
+    el("circle", { cx, cy, r, fill: "#e9e5dc" }, ow.pie);
+    let a0 = -Math.PI / 2;
+    ow.slices = SHARE.map((f, i) => {
+      const a1 = a0 + f * 2 * Math.PI;
+      const d = `M${cx} ${cy} L${(cx + r * Math.cos(a0)).toFixed(1)} ${(cy + r * Math.sin(a0)).toFixed(1)} A${r} ${r} 0 ${f > 0.5 ? 1 : 0} 1 ${(cx + r * Math.cos(a1)).toFixed(1)} ${(cy + r * Math.sin(a1)).toFixed(1)} Z`;
+      a0 = a1;
+      return el("path", { d, fill: GROUPS[i][1], stroke: PAPER, "stroke-width": 6 }, ow.pie);
+    });
+    ow.legend = GROUPS.map(([name, c], i) => {
+      const gg = el("g", {}, g);
+      el("rect", { x: 620, y: 680 + i * 90, width: 40, height: 40, rx: 6, fill: c }, gg);
+      el("text", { x: 680, y: 712 + i * 90, "font-size": 38, "font-weight": 600, fill: INK, text: name }, gg);
+      return gg;
+    });
+    // grid of shares (same split), the last 20 % goes to the public
+    ow.grid = el("g", {}, g);
+    ow.cells = [];
+    const cut = [SHARE[0] * 80, (SHARE[0] + SHARE[1]) * 80];
+    for (let i = 0; i < N * N; i++) {
+      const c = i % N, rr = Math.floor(i / N);
+      const pub = i >= 80;
+      const color = pub ? FUCH : i < cut[0] ? BLUE : i < cut[1] ? MINT : AMBER;
+      ow.cells.push({ n: el("rect", { x: GX + c * CELL, y: GY + rr * CELL, width: CELL - 6, height: CELL - 6, rx: 4, fill: color }, ow.grid), pub, c, rr });
+    }
+    ow.crowd = el("g", {}, g);
+    for (let i = 0; i < 12; i++) person(ow.crowd, 640 + (i % 4) * 75, 1010 + Math.floor(i / 4) * 66 - (i % 2) * 8, 0.8, "#827e74");
+    ow.crowdLbl = el("text", { x: 750, y: 1235, "text-anchor": "middle", "font-size": 32, "font-weight": 650, fill: FUCH, text: "cualquiera puede comprar" }, g);
+    ow.sharesLbl = el("text", { x: 110, y: 1095, "font-size": 34, "font-weight": 650, fill: INK, text: "cada cuadrito = una acción" }, g);
+  }
+  function drawOwners(t, s, A) {
+    op(ow.pie, 1 - ramp(t, A.pedacitos.start - 0.6, A.pedacitos.start));
+    const ons = [A.fundadores.start, A.empleados.start, A.inversionistas.start];
+    ow.slices.forEach((sl, i) => op(sl, fade(t, ons[i])));
+    ow.legend.forEach((l, i) => op(l, fade(t, ons[i]) * (1 - ramp(t, A.pedacitos.start - 0.6, A.pedacitos.start))));
+    op(ow.title, 1 - ramp(t, A.pedacitos.start - 0.6, A.pedacitos.start));
+    const gIn = ramp(t, A.pedacitos.start - 0.3, A.pedacitos.start + 0.4);
+    op(ow.grid, gIn);
+    op(ow.sharesLbl, ramp(t, A.acciones.start - 0.3, A.acciones.start + 0.2));
+    const mv = ramp(t, A.cualquiera.start - 0.2, A.cualquiera.start + 0.8);
+    ow.cells.forEach((c) => {
+      if (!c.pub) return;
+      const k = c.c + (c.rr - 8) * N;
+      const p = ramp(mv, k * 0.03, k * 0.03 + 0.4);
+      const tx = lerp(GX + c.c * CELL, 600 + (k % 7) * 46, p), ty = lerp(GY + c.rr * CELL, 840 + Math.floor(k / 7) * 46, p);
+      c.n.setAttribute("x", tx.toFixed(1)); c.n.setAttribute("y", ty.toFixed(1));
+    });
+    op(ow.crowd, mv);
+    op(ow.crowdLbl, mv);
+  }
+
+  // ---------------------------------------------------------------- 3-4. the four steps
+  let sp = {};
+  const STEPS = [["prospecto", "26 oct"], ["gira con", "inversionistas"], ["se fija", "el precio"], ["primer día", "en el Nasdaq"]];
+  function buildSteps() {
+    const g = el("g", {}, $("#sc-steps"));
+    sp.box = STEPS.map(([a, b], i) => {
+      const x = 80 + i * 220;
+      const gg = el("g", {}, g);
+      const r = el("rect", { x, y: 480, width: 200, height: 170, rx: 14, fill: PAPER, stroke: LINE, "stroke-width": 4 }, gg);
+      const n = el("text", { x: x + 22, y: 530, "font-size": 34, "font-weight": 750, fill: MUTED, text: String(i + 1) }, gg);
+      const t1 = el("text", { x: x + 18, y: 585, "font-size": 24, "font-weight": 650, fill: INK, text: a }, gg);
+      const t2 = el("text", { x: x + 18, y: 620, "font-size": 24, "font-weight": 650, fill: INK, text: b }, gg);
+      return { gg, r, n, t1, t2 };
+    });
+    // step 1: the prospectus (a sheet with number columns)
+    sp.doc = el("g", {}, g);
+    el("rect", { x: 80, y: 740, width: 340, height: 440, rx: 8, fill: PAPER, stroke: INK, "stroke-width": 4 }, sp.doc);
+    el("text", { x: 110, y: 795, "font-size": 30, "font-weight": 700, fill: INK, text: "Prospecto" }, sp.doc);
+    el("text", { x: 110, y: 830, "font-size": 24, fill: MUTED, text: "público · 26 oct 2026" }, sp.doc);
+    for (let r = 0; r < 7; r++) {
+      el("rect", { x: 110, y: 865 + r * 40, width: 120, height: 14, rx: 7, fill: LINE }, sp.doc);
+      el("rect", { x: 260 + (r % 3) * 8, y: 865 + r * 40, width: 60 - (r % 3) * 8, height: 14, rx: 7, fill: "#9db3c9" }, sp.doc);
+      el("rect", { x: 340, y: 865 + r * 40, width: 50, height: 14, rx: 7, fill: "#9db3c9" }, sp.doc);
+    }
+    sp.risk = el("g", {}, sp.doc);
+    el("rect", { x: 110, y: 1150 - 14, width: 280, height: 30, rx: 6, fill: "#f4e1e9" }, sp.risk);
+    el("text", { x: 120, y: 1158, "font-size": 22, "font-weight": 650, fill: FUCH, text: "factores de riesgo" }, sp.risk);
+    // step 2: roadshow (meetings in several cities)
+    sp.tour = el("g", {}, g);
+    const pts = [[160, 1080], [340, 860], [560, 1000], [760, 820], [880, 1060]];
+    el("polyline", { points: pts.map((p) => p.join(",")).join(" "), fill: "none", stroke: BLUE, "stroke-width": 5, "stroke-dasharray": "14 10" }, sp.tour);
+    pts.forEach(([x, y]) => { el("circle", { cx: x, cy: y, r: 18, fill: BLUE }, sp.tour); });
+    el("text", { x: 510, y: 1180, "text-anchor": "middle", "font-size": 34, "font-weight": 600, fill: INK, text: "reuniones con fondos de inversión" }, sp.tour);
+    // step 3: price
+    sp.price = el("g", {}, g);
+    el("path", { d: "M330 820 L640 820 L740 940 L640 1060 L330 1060 Z", fill: PAPER, stroke: AMBER, "stroke-width": 6 }, sp.price);
+    el("circle", { cx: 660, cy: 940, r: 18, fill: "none", stroke: AMBER, "stroke-width": 5 }, sp.price);
+    el("text", { x: 480, y: 965, "text-anchor": "middle", "font-size": 70, "font-weight": 720, fill: AMBER, text: "$ ?" }, sp.price);
+    el("text", { x: 540, y: 1150, "text-anchor": "middle", "font-size": 34, "font-weight": 600, fill: INK, text: "precio por acción" }, sp.price);
+    // step 4: trading starts
+    sp.tick = el("g", {}, g);
+    el("rect", { x: 80, y: 820, width: 860, height: 200, rx: 14, fill: "#2b2a27" }, sp.tick);
+    sp.tape = el("g", {}, sp.tick);
+    el("text", { x: 510, y: 950, "text-anchor": "middle", "font-size": 96, "font-weight": 750, fill: "#f3f0e9", "font-family": "var(--mono)", text: "ANT" }, sp.tick);
+    el("text", { x: 510, y: 1080, "text-anchor": "middle", "font-size": 34, "font-weight": 600, fill: INK, text: "las acciones cambian de manos" }, sp.tick);
+    el("text", { x: 510, y: 1125, "text-anchor": "middle", class: "m-note", text: "clave en bolsa ilustrativa" }, sp.tick);
+  }
+  function stepAt(t, A) {
+    if (t < A.gira.start - 0.2) return 0;
+    if (t < A.precio.start - 0.2) return 1;
+    if (t < A.manos.start - 0.2) return 2;
+    return 3;
+  }
+  function drawSteps(t, s, A) {
+    const k = stepAt(t, A);
+    sp.box.forEach((b, i) => {
+      const cur = i === k, done = i < k;
+      b.r.setAttribute("fill", cur ? BLUE : PAPER);
+      b.r.setAttribute("stroke", cur ? BLUE : done ? MINT : LINE);
+      b.r.setAttribute("stroke-dasharray", !cur && !done ? "10 8" : "none");
+      [b.t1, b.t2].forEach((x) => x.setAttribute("fill", cur ? PAPER : done ? MINT : MUTED));
+      b.n.setAttribute("fill", cur ? PAPER : done ? MINT : MUTED);
+    });
+    op(sp.doc, k === 0 ? 1 : 0);
+    op(sp.risk, ramp(t, A.riesgos.start - 0.3, A.riesgos.start));
+    const sw = (i) => { const a = [A.gira, A.precio, A.manos][i - 1].start; return ramp(t, a - 0.2, a + 0.3); };
+    op(sp.tour, k === 1 ? sw(1) : 0);
+    op(sp.price, k === 2 ? sw(2) : 0);
+    op(sp.tick, k === 3 ? sw(3) : 0);
+  }
+  function drawSales(t, s, A) {
+    const p = ramp(t, A.dieciseis.start - 0.2, A.dieciseis.start + 1.2, ease.out);
+    $("#sales").textContent = (16.3 * p).toFixed(1);
+  }
+
+  // ---------------------------------------------------------------- 5. what is valuable: the cost of AI becomes visible
+  let cs = {};
+  function buildCost() {
+    const g = el("g", {}, $("#sc-cost"));
+    el("rect", { x: 230, y: 500, width: 620, height: 680, rx: 10, fill: PAPER, stroke: INK, "stroke-width": 4 }, g);
+    el("text", { x: 270, y: 565, "font-size": 34, "font-weight": 700, fill: INK, text: "Prospecto · estado de resultados" }, g);
+    const rows = [["Ventas", BLUE], ["Cómputo e infraestructura", FUCH], ["Investigación", "#9db3c9"], ["Personal", "#9db3c9"], ["Otros gastos", "#9db3c9"]];
+    cs.rows = rows.map(([name, c], i) => {
+      const gg = el("g", {}, g);
+      const y = 640 + i * 100;
+      const bg = el("rect", { x: 250, y: y - 46, width: 580, height: 76, rx: 8, fill: i === 1 ? "#f4e1e9" : "none" }, gg);
+      el("text", { x: 270, y, "font-size": 32, "font-weight": i < 2 ? 680 : 450, fill: i === 1 ? FUCH : INK, text: name }, gg);
+      el("rect", { x: 700, y: y - 18, width: 110, height: 16, rx: 8, fill: c }, gg);
+      gg.bg = bg;
+      return gg;
+    });
+    cs.lens = el("g", {}, g);
+    el("circle", { cx: 755, cy: 730, r: 66, fill: "none", stroke: INK, "stroke-width": 7 }, cs.lens);
+    el("line", { x1: 803, y1: 778, x2: 860, y2: 835, stroke: INK, "stroke-width": 14, "stroke-linecap": "round" }, cs.lens);
+  }
+  function drawCost(t, s, A) {
+    cs.rows.forEach((r, i) => { op(r.bg, i === 1 ? ramp(t, A.cuesta.start - 0.3, A.cuesta.start + 0.2) : 1); });
+    op(cs.lens, ramp(t, A.cuesta.start - 0.3, A.cuesta.start + 0.2));
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "Anthropic, la empresa que hace a Claude, acaba de pedir permiso para salir a la bolsa de valores. ¿Qué significa eso? Hasta hoy, sus dueños son sus fundadores, sus empleados y unos cuantos inversionistas. Salir a bolsa es vender una parte de la empresa en pedacitos, llamados acciones, que cualquiera puede comprar. El primer paso ya lo dio: el veintiséis de octubre publicó su prospecto, un documento obligatorio donde tiene que enseñar sus cuentas y sus riesgos. Ahí se ve, por ejemplo, que en la primera mitad de dos mil veintiséis vendió unos dieciséis mil millones de dólares. Después viene una gira con inversionistas, se fija el precio y las acciones empiezan a cambiar de manos en el Nasdaq. Para quien no invierte, lo valioso es otra cosa: por fin se ve cuánto cuesta hacer una IA.";
+
+  Mosaic.short({
+    kicker: "Noticias · 26 oct 2026",
+    title: "¿Qué significa que la empresa de Claude salga a bolsa?",
+    script: SCRIPT,
+    anchors: {
+      empresa: "empresa que hace",
+      permiso: "permiso",
+      bolsa: ["bolsa de valores", "bolsa"],
+      significa: "significa",
+      hoy: ["hasta hoy", "hoy"],
+      fundadores: "fundadores",
+      empleados: "empleados",
+      inversionistas: "inversionistas",
+      pedacitos: "pedacitos",
+      acciones: "acciones",
+      cualquiera: "cualquiera",
+      primer: "primer paso",
+      veintiseis: ["veintiseis de octubre", "26 de octubre"],
+      prospecto: "prospecto",
+      obligatorio: "obligatorio",
+      riesgos: "riesgos",
+      mitad: "primera mitad",
+      dieciseis: ["dieciseis mil millones", "16 mil millones", "16000 millones", "16 000 millones", "16,000 millones", "dieciseis", "16"],
+      gira: "gira",
+      precio: "precio",
+      manos: ["cambiar de manos", "manos"],
+      valioso: "valioso",
+      cuesta: ["cuanto cuesta", "cuesta"],
+    },
+    build() { buildIntro(); buildOwners(); buildSteps(); buildCost(); },
+    scenes: [
+      { el: "#sc-intro", from: 0, to: "hoy-0.3", fadeIn: 0.3, rise: 0, update: drawIntro },
+      { el: "#cap-intro", from: "permiso-0.3", to: "hoy-0.3", fade: 0.3 },
+      { el: "#sc-owners", from: "hoy-0.3", to: "primer-0.3", rise: 0, update: drawOwners },
+      { el: "#cap-owners", from: "hoy-0.2", to: "pedacitos-0.5", fade: 0.3 },
+      { el: "#cap-shares", from: "pedacitos-0.3", to: "primer-0.3", fade: 0.3 },
+      { el: "#sc-steps", from: "primer-0.3", to: "valioso-0.3", rise: 0, update: drawSteps },
+      { el: "#sc-sales", from: "mitad-0.3", to: "gira-0.2", fade: 0.3, update: drawSales },
+      { el: "#cap-pros", from: "prospecto-0.3", to: "gira-0.2", fade: 0.3 },
+      { el: "#cap-next", from: "gira-0.2", to: "valioso-0.3", fade: 0.3 },
+      { el: "#sc-cost", from: "valioso-0.3", to: "end", rise: 0, update: drawCost },
+      { el: "#cap-cost", from: "valioso-0.2", to: "end", fade: 0.3 },
+      { el: "#disc", from: 0, to: "end", fadeIn: 0.4, fadeOut: 0.3, rise: 0 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
