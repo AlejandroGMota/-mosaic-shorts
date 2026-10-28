@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>N3 · ¿Tu bot de WhatsApp ya cobra por contestar?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+  .counter { position: absolute; inset: auto; left: 80px; top: 500px; width: 860px; }
+  .counter .k { font-size: 30px; font-weight: 600; color: var(--ink-2); }
+  .counter .n { font-size: 240px; line-height: 1.05; font-weight: 700; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; margin-top: 10px; }
+  .counter .tag { display: inline-block; font-size: 40px; font-weight: 700; padding: 8px 22px; border-radius: 10px; color: #faf8f3; }
+  .scope { position: absolute; inset: auto; left: 80px; top: 500px; width: 860px; }
+  .scope .row { display: flex; align-items: center; gap: 30px; padding: 40px 34px; border-radius: 16px; margin-bottom: 30px; }
+  .scope .row.yes { background: #fbf0db; border: 4px solid var(--amber); }
+  .scope .row.no { border: 4px dashed var(--line); }
+  .scope .ic { flex: 0 0 90px; font-size: 76px; font-weight: 700; text-align: center; line-height: 1; }
+  .scope .h { font-size: 46px; font-weight: 680; line-height: 1.15; }
+  .scope .s { font-size: 32px; color: var(--ink-2); margin-top: 10px; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-chat" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-chat" style="top:1300px">Revisa la factura de octubre</div>
+
+    <svg class="full scene" id="sc-window" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-window" style="top:1300px">Hasta septiembre: gratis<small>responder dentro de las 24 h desde su mensaje</small></div>
+
+    <div class="counter scene" id="sc-count">
+      <div class="k">Desde el 1 de octubre · respuestas al mes, por número</div>
+      <div class="n" id="num">0</div>
+      <div><span class="tag" id="tag">gratis</span></div>
+    </div>
+    <svg class="full scene" id="sc-meter" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-count" style="top:1300px">Mil respuestas gratis al mes<small>de la 1001 en adelante, cada una se cobra</small></div>
+
+    <svg class="full scene" id="sc-notice" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-notice" style="top:1300px">Los avisos automáticos también<small>aunque vayan dentro de las 24 h</small></div>
+
+    <div class="scope scene" id="sc-scope">
+      <div class="row yes"><div class="ic" style="color:var(--amber)">✓</div><div><div class="h">Versión para empresas que se conecta por programa</div><div class="s">la API: bots y plataformas</div></div></div>
+      <div class="row no"><div class="ic" style="color:var(--muted)">✕</div><div><div class="h" style="color:var(--ink-2)">La app normal de WhatsApp Business</div><div class="s">la que usas a mano en el celular</div></div></div>
+    </div>
+    <div class="m-caption scene" id="cap-scope" style="top:1300px">Aplica a la API, no a la app</div>
+
+    <svg class="full scene" id="sc-tips" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-tips" style="top:1300px">Contesta completo en un solo mensaje<small>y mide cuántos mensajes manda tu bot</small></div>
+    <div class="m-caption scene" id="cap-end" style="top:1300px">Pequeños cambios,<br>menos sorpresas en la factura</div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp, clamp } = Mosaic;
+  const op = (n, v) => n.setAttribute("opacity", String(v));
+  const fade = (t, a, d = 0.3) => ramp(t, a - d, a + 0.15);
+  const PAPER = "#faf8f3", BLUE = "#2f5e8e", FUCH = "#b3386b", MINT = "#3a9a80", AMBER = "#c98a1b", INK = "#1d1d1b", MUTED = "#827e74", LINE = "#d6d1c5";
+
+  // chat bubble: side "in" (customer, left) or "out" (business, right)
+  function bubble(g, side, y, text, w, color) {
+    const gg = el("g", {}, g);
+    w = Math.max(w || 0, Math.round(text.length * 18.5 + 60));
+    const x = side === "in" ? 80 : 940 - w;
+    el("rect", { x, y, width: w, height: 84, rx: 22, fill: side === "in" ? PAPER : color || "#dfe8f1", stroke: side === "in" ? LINE : "none", "stroke-width": 3 }, gg);
+    el("text", { x: x + 28, y: y + 54, "font-size": 34, fill: INK, text }, gg);
+    return gg;
+  }
+
+  // ---------------------------------------------------------------- 1. a business answering by bot
+  let ch = {};
+  function buildChat() {
+    const g = el("g", {}, $("#sc-chat"));
+    el("text", { x: 80, y: 500, class: "m-label", text: "Tu negocio · bot de WhatsApp" }, g);
+    ch.b = [
+      bubble(g, "in", 540, "¿Tienen la talla 27?", 360),
+      bubble(g, "out", 650, "¡Hola! Sí, en negro y café.", 480),
+      bubble(g, "in", 760, "¿Cuánto cuesta el envío?", 420),
+      bubble(g, "out", 870, "A todo el país: $99.", 330),
+    ];
+    ch.inv = el("g", {}, g);
+    el("rect", { x: 620, y: 980, width: 320, height: 230, rx: 10, fill: PAPER, stroke: INK, "stroke-width": 4 }, ch.inv);
+    el("text", { x: 650, y: 1035, "font-size": 32, "font-weight": 700, fill: INK, text: "Factura · octubre" }, ch.inv);
+    [0, 1, 2].forEach((i) => el("rect", { x: 650, y: 1065 + i * 40, width: 200 - i * 40, height: 16, rx: 8, fill: LINE }, ch.inv));
+    el("text", { x: 910, y: 1185, "text-anchor": "end", "font-size": 40, "font-weight": 700, fill: AMBER, text: "$ ?" }, ch.inv);
+  }
+  function drawChat(t, s, A) {
+    ch.b.forEach((b, i) => op(b, ramp(t, 0.3 + i * 0.6, 0.6 + i * 0.6)));
+    op(ch.inv, fade(t, A.factura.start));
+  }
+
+  // ---------------------------------------------------------------- 2. before: the 24 h window was free
+  let wd = {};
+  const CX = 260, CY = 860, R = 150;
+  function arcPath(p) {
+    const a = -Math.PI / 2 + p * 2 * Math.PI;
+    const x = CX + R * Math.cos(a), y = CY + R * Math.sin(a);
+    return `M ${CX} ${CY - R} A ${R} ${R} 0 ${p > 0.5 ? 1 : 0} 1 ${x.toFixed(1)} ${y.toFixed(1)}`;
+  }
+  function buildWindow() {
+    const g = el("g", {}, $("#sc-window"));
+    el("text", { x: 80, y: 500, class: "m-label", text: "Hasta septiembre" }, g);
+    wd.msg = bubble(g, "in", 540, "Cliente: «¿Siguen abiertos?»", 500);
+    el("circle", { cx: CX, cy: CY, r: R, fill: "none", stroke: LINE, "stroke-width": 26 }, g);
+    wd.arc = el("path", { d: arcPath(0), fill: "none", stroke: MINT, "stroke-width": 26 }, g);
+    el("text", { x: CX, y: CY + 22, "text-anchor": "middle", "font-size": 64, "font-weight": 720, fill: INK, text: "24 h" }, g);
+    el("text", { x: CX, y: CY + R + 70, "text-anchor": "middle", class: "m-note", text: "desde que te escribió" }, g);
+    wd.r = [0, 1, 2].map((i) => {
+      const gg = el("g", {}, g);
+      el("rect", { x: 500, y: 720 + i * 110, width: 300, height: 80, rx: 20, fill: "#dfe8f1" }, gg);
+      el("text", { x: 526, y: 772 + i * 110, "font-size": 32, fill: INK, text: `respuesta ${i + 1}` }, gg);
+      el("text", { x: 930, y: 774 + i * 110, "text-anchor": "end", "font-size": 44, "font-weight": 720, fill: MINT, text: "$0" }, gg);
+      return gg;
+    });
+  }
+  function drawWindow(t, s, A) {
+    op(wd.msg, ramp(t, s.from, s.from + 0.4));
+    const p = ramp(t, A.cliente.start, A.gratis1.end + 0.3, ease.inOutSine);
+    wd.arc.setAttribute("d", arcPath(Math.max(0.001, p * 0.999)));
+    wd.r.forEach((r, i) => op(r, ramp(t, A.veinticuatro.start + i * 0.5, A.veinticuatro.start + 0.3 + i * 0.5)));
+  }
+
+  // ---------------------------------------------------------------- 3. after: 1000 free per number per month
+  let mt = {};
+  const MX = 80, MW = 860, MY = 1060, MAXN = 1300;
+  const mx = (n) => MX + (n / MAXN) * MW;
+  function buildMeter() {
+    const g = el("g", {}, $("#sc-meter"));
+    el("rect", { x: MX, y: MY, width: MW, height: 50, rx: 8, fill: "none", stroke: LINE, "stroke-width": 3 }, g);
+    mt.free = el("rect", { x: MX, y: MY, height: 50, rx: 8, fill: MINT }, g);
+    mt.paid = el("rect", { x: mx(1000), y: MY, height: 50, fill: AMBER }, g);
+    el("line", { x1: mx(1000), y1: MY - 20, x2: mx(1000), y2: MY + 70, stroke: INK, "stroke-width": 4 }, g);
+    el("text", { x: mx(1000), y: MY + 110, "text-anchor": "middle", "font-size": 30, "font-weight": 650, fill: INK, text: "1000" }, g);
+    el("text", { x: MX, y: MY + 110, "font-size": 30, fill: MUTED, text: "1" }, g);
+  }
+  function countAt(t, A) {
+    if (t < A.milUno.start) return Math.max(1, Math.round(1000 * ramp(t, A.mil.start - 0.2, A.milUno.start - 0.4)));
+    return 1001 + Math.round(179 * ramp(t, A.milUno.start + 0.3, A.avisos.start - 0.3, ease.linear));
+  }
+  function drawCount(t, s, A) {
+    const n = countAt(t, A);
+    const paid = n > 1000;
+    $("#num").textContent = n.toLocaleString("en-US");
+    $("#num").style.color = paid ? "var(--amber)" : "var(--mint)";
+    $("#tag").textContent = paid ? "se cobra" : "gratis";
+    $("#tag").style.background = paid ? "var(--amber)" : "var(--mint)";
+  }
+  function drawMeter(t, s, A) {
+    const n = countAt(t, A);
+    mt.free.setAttribute("width", (mx(Math.min(n, 1000)) - MX).toFixed(1));
+    mt.paid.setAttribute("width", Math.max(0, mx(n) - mx(1000)).toFixed(1));
+  }
+
+  // ---------------------------------------------------------------- 4. automatic notices are charged too
+  let nt = {};
+  function buildNotice() {
+    const g = el("g", {}, $("#sc-notice"));
+    el("text", { x: 80, y: 500, class: "m-label", text: "Aviso automático" }, g);
+    nt.b = el("g", {}, g);
+    el("rect", { x: 200, y: 560, width: 740, height: 230, rx: 26, fill: "#dfe8f1" }, nt.b);
+    el("text", { x: 240, y: 630, "font-size": 30, "font-weight": 650, fill: BLUE, text: "Pedido #4821" }, nt.b);
+    el("text", { x: 240, y: 690, "font-size": 44, "font-weight": 650, fill: INK, text: "Tu pedido va en camino" }, nt.b);
+    el("text", { x: 240, y: 750, "font-size": 30, fill: MUTED, text: "Llega mañana entre 10 y 14 h" }, nt.b);
+    nt.tag = el("g", {}, g);
+    el("rect", { x: 560, y: 820, width: 380, height: 76, rx: 12, fill: AMBER }, nt.tag);
+    el("text", { x: 750, y: 870, "text-anchor": "middle", "font-size": 36, "font-weight": 700, fill: PAPER, text: "también se cobra" }, nt.tag);
+    nt.win = el("g", {}, g);
+    el("rect", { x: 80, y: 960, width: 860, height: 40, rx: 20, fill: "none", stroke: LINE, "stroke-width": 3 }, nt.win);
+    el("rect", { x: 80, y: 960, width: 860, height: 40, rx: 20, fill: "#d9ede7" }, nt.win);
+    el("circle", { cx: 360, cy: 980, r: 16, fill: AMBER }, nt.win);
+    el("text", { x: 80, y: 1050, "font-size": 30, fill: MUTED, text: "dentro de la ventana de 24 h" }, nt.win);
+  }
+  function drawNotice(t, s, A) {
+    op(nt.b, ramp(t, s.from + 0.1, s.from + 0.5));
+    op(nt.tag, fade(t, A.cobrarse.start));
+    op(nt.win, fade(t, A.ventana.start));
+  }
+
+  // ---------------------------------------------------------------- 6. tips: 4 bubbles vs 1, and measure
+  let tp = {};
+  function buildTips() {
+    const g = el("g", {}, $("#sc-tips"));
+    tp.left = el("g", {}, g);
+    el("text", { x: 80, y: 500, "font-size": 34, "font-weight": 700, fill: AMBER, text: "Partido: 4 mensajes" }, tp.left);
+    ["¡Hola!", "Sí tenemos", "en negro y café", "envío $99"].forEach((s, i) => {
+      el("rect", { x: 80, y: 530 + i * 96, width: 300, height: 76, rx: 20, fill: "#dfe8f1" }, tp.left);
+      el("text", { x: 104, y: 580 + i * 96, "font-size": 32, fill: INK, text: s }, tp.left);
+      el("text", { x: 400, y: 580 + i * 96, "font-size": 32, "font-weight": 700, fill: AMBER, text: String(i + 1) }, tp.left);
+    });
+    tp.right = el("g", {}, g);
+    el("text", { x: 520, y: 500, "font-size": 34, "font-weight": 700, fill: MINT, text: "Completo: 1 mensaje" }, tp.right);
+    el("rect", { x: 520, y: 530, width: 420, height: 270, rx: 22, fill: "#dfe8f1" }, tp.right);
+    ["¡Hola! Sí tenemos", "la talla 27 en negro", "y café. Envío a todo", "el país: $99."].forEach((s, i) =>
+      el("text", { x: 546, y: 585 + i * 56, "font-size": 32, fill: INK, text: s }, tp.right));
+    el("text", { x: 915, y: 785, "text-anchor": "end", "font-size": 32, "font-weight": 700, fill: MINT, text: "1" }, tp.right);
+    tp.meas = el("g", {}, g);
+    el("text", { x: 80, y: 1000, class: "m-label", text: "Mensajes de tu bot por mes" }, tp.meas);
+    const H = [0.45, 0.55, 0.5, 0.7, 0.62, 0.8];
+    const M = ["may", "jun", "jul", "ago", "sep", "oct"];
+    tp.bars = H.map((h, i) => {
+      const x = 80 + i * 145;
+      el("text", { x: x + 55, y: 1230, "text-anchor": "middle", "font-size": 28, fill: MUTED, text: M[i] }, tp.meas);
+      return { r: el("rect", { x, width: 110, fill: i === 5 ? AMBER : BLUE }, tp.meas), h };
+    });
+    el("line", { x1: 80, y1: 1196, x2: 940, y2: 1196, stroke: INK, "stroke-width": 3 }, tp.meas);
+  }
+  function drawTips(t, s, A) {
+    op(tp.left, ramp(t, A.burbujas.start - 1.4, A.burbujas.start - 1.0));
+    op(tp.right, ramp(t, A.completo.start - 0.3, A.completo.start + 0.1));
+    op(tp.meas, fade(t, A.medir.start));
+    tp.bars.forEach((b, i) => {
+      const h = 160 * b.h * ramp(t, A.medir.start + i * 0.12, A.medir.start + 0.6 + i * 0.12, ease.out);
+      b.r.setAttribute("y", (1196 - h).toFixed(1));
+      b.r.setAttribute("height", h.toFixed(1));
+    });
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "Si tu negocio contesta por WhatsApp con un bot o una plataforma, revisa la factura de octubre. Hasta septiembre, responderle a un cliente dentro de las veinticuatro horas después de que te escribió era gratis. Desde el uno de octubre, cada número tiene mil respuestas gratis al mes. De la mil uno en adelante, cada respuesta se cobra. Y los avisos automáticos, como «tu pedido va en camino», también volvieron a cobrarse dentro de esa ventana. Esto aplica a la versión para empresas que se conecta por programa, no a la app normal de WhatsApp Business. ¿Qué hacer? Contestar completo en un solo mensaje en vez de partirlo en cuatro burbujas, y medir cuántos mensajes manda tu bot cada mes. Pequeños cambios, menos sorpresas en la factura.";
+
+  Mosaic.short({
+    kicker: "Noticias · 1 oct 2026",
+    title: "¿Tu bot de WhatsApp ya cobra por contestar?",
+    script: SCRIPT,
+    anchors: {
+      negocio: "negocio",
+      plataforma: "plataforma",
+      factura: "factura",
+      septiembre: "septiembre",
+      cliente: "cliente",
+      veinticuatro: ["veinticuatro horas", "24 horas", "24 h", "veinticuatro"],
+      gratis1: "gratis",
+      octubre: ["uno de octubre", "1 de octubre", "primero de octubre", "1o de octubre"],
+      mil: ["mil respuestas", "1000 respuestas", "1 000 respuestas", "1,000 respuestas", "respuestas"],
+      milUno: ["mil uno", "1001", "1 001", "1,001", "adelante"],
+      cobra: "se cobra",
+      avisos: "avisos",
+      camino: "camino",
+      cobrarse: "cobrarse",
+      ventana: "ventana",
+      aplica: "aplica",
+      programa: "programa",
+      normal: "normal",
+      hacer: "que hacer",
+      completo: "completo",
+      burbujas: "burbujas",
+      medir: "medir",
+      cambios: ["pequenos cambios", "cambios"],
+      sorpresas: "sorpresas",
+    },
+    build() { buildChat(); buildWindow(); buildMeter(); buildNotice(); buildTips(); },
+    scenes: [
+      { el: "#sc-chat", from: 0, to: "septiembre-0.3", fadeIn: 0.3, rise: 0, update: drawChat },
+      { el: "#cap-chat", from: "factura-0.3", to: "septiembre-0.3", fade: 0.3 },
+      { el: "#sc-window", from: "septiembre-0.3", to: "octubre-0.3", rise: 0, update: drawWindow },
+      { el: "#cap-window", from: "septiembre-0.2", to: "octubre-0.3", fade: 0.3 },
+      { el: "#sc-count", from: "octubre-0.3", to: "avisos-0.3", rise: 0, update: drawCount },
+      { el: "#sc-meter", from: "octubre-0.3", to: "avisos-0.3", rise: 0, update: drawMeter },
+      { el: "#cap-count", from: "mil-0.2", to: "avisos-0.3", fade: 0.3 },
+      { el: "#sc-notice", from: "avisos-0.3", to: "aplica-0.3", rise: 0, update: drawNotice },
+      { el: "#cap-notice", from: "avisos-0.2", to: "aplica-0.3", fade: 0.3 },
+      { el: "#sc-scope", from: "aplica-0.3", to: "hacer-0.3", rise: 0,
+        update(t, s, A) { $("#sc-scope").lastElementChild.style.opacity = String(ramp(t, A.normal.start - 0.5, A.normal.start)); } },
+      { el: "#cap-scope", from: "aplica-0.2", to: "hacer-0.3", fade: 0.3 },
+      { el: "#sc-tips", from: "hacer-0.3", to: "end", rise: 0, update: drawTips },
+      { el: "#cap-tips", from: "completo-0.3", to: "cambios-0.3", fade: 0.3 },
+      { el: "#cap-end", from: "cambios-0.3", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
