@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>R4 · ¿Cómo encuentra tu celular una página web?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+  .mono { font-family: var(--mono); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-bar" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-num" style="top:1300px">Se encuentran por números<small>no por nombres</small></div>
+    <div class="m-caption scene" id="cap-who" style="top:1300px">¿Quién hace la traducción?</div>
+
+    <svg class="full scene" id="sc-book" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-dns" style="top:1300px">DNS<small>la agenda de contactos de internet</small></div>
+
+    <svg class="full scene" id="sc-flow" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-cache" style="top:1300px">Primero revisa su memoria</div>
+    <div class="m-caption scene" id="cap-isp" style="top:1300px">Si no, le pregunta a tu compañía</div>
+    <div class="m-caption scene" id="cap-levels" style="top:1300px">Que pregunta por niveles<small>raíz → .com → el servidor de la página</small></div>
+    <div class="m-caption scene" id="cap-ms" style="top:1300px">Todo en milisegundos<small>y la respuesta se guarda para la próxima vez</small></div>
+
+    <svg class="full scene" id="sc-roots" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-roots" style="top:1300px">13 nombres, más de 1 900 copias<small>servidores raíz repartidos por el mundo</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script src="../_base/redes.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp, clamp } = Mosaic;
+  const { C, op, place, phone, rack, along, thousands, world, arrow } = Redes;
+  const NAME = "ejemplo.com", IP = "198.51.100.7";
+
+  // ---------------------------------------------------------------- address bar: name -> number
+  let br = {};
+  function buildBar() {
+    const g = el("g", {}, $("#sc-bar"));
+    el("rect", { x: 110, y: 560, width: 860, height: 110, rx: 55, fill: C.card, stroke: C.ink2, "stroke-width": 5 }, g);
+    br.tx = el("text", { x: 170, y: 632, class: "mono", "font-size": 50, "font-weight": 600, fill: C.ink, text: "" }, g);
+    br.caret = el("rect", { y: 588, width: 4, height: 56, fill: C.ink }, g);
+    br.page = el("g", {}, g);
+    el("rect", { x: 110, y: 700, width: 860, height: 330, rx: 18, fill: C.card, stroke: C.line, "stroke-width": 4 }, br.page);
+    el("rect", { x: 160, y: 750, width: 420, height: 40, rx: 6, fill: C.ink2, opacity: 0.8 }, br.page);
+    for (let i = 0; i < 4; i++) el("rect", { x: 160, y: 820 + i * 44, width: [740, 700, 720, 520][i], height: 20, rx: 6, fill: C.line }, br.page);
+    br.trans = el("g", {}, g);
+    el("text", { x: 280, y: 830, "text-anchor": "middle", class: "mono", "font-size": 42, "font-weight": 700, fill: C.ink, text: NAME }, br.trans);
+    el("text", { x: 280, y: 880, "text-anchor": "middle", class: "m-note", text: "nombre" }, br.trans);
+    arrow(br.trans, 490, 815, 570, 815, C.ink2, 6);
+    br.ip = el("g", {}, br.trans);
+    el("text", { x: 770, y: 830, "text-anchor": "middle", class: "mono", "font-size": 42, "font-weight": 700, fill: C.blue, text: IP }, br.ip);
+    el("text", { x: 770, y: 880, "text-anchor": "middle", class: "m-note", text: "número (IP)" }, br.ip);
+    br.q = el("text", { x: 560, y: 1000, "text-anchor": "middle", "font-size": 110, "font-weight": 700, fill: C.fuchsia, text: "?" }, br.trans);
+  }
+  function drawBar(t, s, A) {
+    const n = Math.round(NAME.length * ramp(t, 0.2, A.nombre.end, ease.linear));
+    br.tx.textContent = NAME.slice(0, n);
+    br.caret.setAttribute("x", String(172 + n * 30.1));
+    op(br.caret, Math.floor(t * 2) % 2 === 0 || n < NAME.length ? 1 : 0);
+    const pg = ramp(t, A.instante.start - 0.2, A.instante.start + 0.2) * (1 - ramp(t, A.computadoras.start - 0.4, A.computadoras.start));
+    op(br.page, pg);
+    op(br.trans, ramp(t, A.computadoras.start - 0.2, A.computadoras.start + 0.3));
+    op(br.ip, ramp(t, A.numeros.start - 0.3, A.numeros.start + 0.2));
+    op(br.q, ramp(t, A.traduccion.start - 0.5, A.traduccion.start));
+  }
+
+  // ---------------------------------------------------------------- the address book
+  let bk = {};
+  const ROWS = [[NAME, IP], ["ejemplo.org", "203.0.113.40"], ["ejemplo.net", "192.0.2.15"]];
+  function buildBook() {
+    const g = el("g", {}, $("#sc-book"));
+    el("rect", { x: 150, y: 500, width: 780, height: 620, rx: 22, fill: C.card, stroke: C.ink2, "stroke-width": 6 }, g);
+    el("rect", { x: 150, y: 500, width: 60, height: 620, rx: 22, fill: C.blue }, g);
+    el("text", { x: 250, y: 580, class: "m-label", fill: C.ink, "font-size": 40, text: "Contactos" }, g);
+    el("text", { x: 250, y: 640, class: "m-note", text: "nombre" }, g);
+    el("text", { x: 890, y: 640, "text-anchor": "end", class: "m-note", text: "número" }, g);
+    bk.rows = ROWS.map(([a, b], i) => {
+      const r = el("g", {}, g);
+      const y = 720 + i * 120;
+      el("line", { x1: 250, y1: y + 40, x2: 890, y2: y + 40, stroke: C.line, "stroke-width": 3 }, r);
+      el("text", { x: 250, y, class: "mono", "font-size": 36, "font-weight": 600, fill: C.ink, text: a }, r);
+      el("text", { x: 890, y, "text-anchor": "end", class: "mono", "font-size": 36, "font-weight": 700, fill: C.blue, text: b }, r);
+      return r;
+    });
+    el("text", { x: 540, y: 1180, "text-anchor": "middle", class: "m-note", text: "nombres y números de ejemplo" }, g);
+  }
+  function drawBook(t, s, A) {
+    bk.rows.forEach((r, i) => op(r, ramp(t, A.agenda.start - 0.3 + i * 0.3, A.agenda.start + i * 0.3)));
+  }
+
+  // ---------------------------------------------------------------- the lookup, step by step
+  let fl = {};
+  const PH = [200, 590], RS = [220, 960];
+  const SV = [[800, 580], [800, 830], [800, 1080]];
+  const SVN = ["servidor raíz", "servidor .com", "servidor de ejemplo.com"];
+  function buildFlow() {
+    const g = el("g", {}, $("#sc-flow"));
+    fl.lines = SV.map((p) => el("line", { x1: RS[0] + 70, y1: RS[1], x2: p[0] - 60, y2: p[1], stroke: C.line, "stroke-width": 4 }, g));
+    el("line", { x1: PH[0], y1: PH[1] + 90, x2: RS[0], y2: RS[1] - 80, stroke: C.line, "stroke-width": 4 }, g);
+    phone(g, PH[0], PH[1], 0.8);
+    el("text", { x: PH[0] + 70, y: PH[1] - 50, class: "m-label", text: "tu celular" }, g);
+    fl.cache = el("g", {}, g);
+    el("rect", { x: PH[0] + 70, y: PH[1] - 20, width: 360, height: 60, rx: 10, fill: C.card, stroke: C.ink2, "stroke-width": 3 }, fl.cache);
+    el("text", { x: PH[0] + 90, y: PH[1] + 20, class: "m-note", text: "memoria:" }, fl.cache);
+    fl.cacheX = el("text", { x: PH[0] + 210, y: PH[1] + 22, "font-size": 36, "font-weight": 700, fill: C.fuchsia, text: "✗" }, fl.cache);
+    fl.cacheOk = el("text", { x: PH[0] + 212, y: PH[1] + 19, class: "mono", "font-size": 24, "font-weight": 700, fill: C.mint, text: NAME + " ✓" }, fl.cache);
+    rack(g, RS[0], RS[1], 0.7, C.blue);
+    el("text", { x: RS[0], y: RS[1] + 104, "text-anchor": "middle", class: "m-label", fill: C.blue, text: "DNS de tu compañía" }, g);
+    fl.sv = SV.map((p, i) => {
+      const sg = el("g", {}, g);
+      rack(sg, p[0], p[1], 0.65, C.ink2);
+      el("text", { x: p[0], y: p[1] + 100, "text-anchor": "middle", class: "m-label", "font-size": 28, text: SVN[i] }, sg);
+      return sg;
+    });
+    fl.dot = el("circle", { r: 14, fill: C.amber }, g);
+    fl.tag = el("g", {}, g);
+    fl.tagBg = el("rect", { x: -10, y: -30, height: 44, rx: 8, fill: C.card, stroke: C.amber, "stroke-width": 3 }, fl.tag);
+    fl.tagTx = el("text", { x: 4, y: 2, "font-size": 26, "font-weight": 600, fill: C.ink, text: "" }, fl.tag);
+    fl.num = el("text", { x: 220, y: 1180, "text-anchor": "middle", "font-size": 30, "font-weight": 700, fill: C.amber, text: "" }, g);
+  }
+  function drawFlow(t, s, A) {
+    const R = [RS[0] + 70, RS[1]];
+    const P1 = [PH[0], PH[1] + 90], R1 = [RS[0], RS[1] - 80];
+    const S = SV.map((p) => [p[0] - 50, p[1]]);
+    const steps = [
+      [A.pregunta.start, A.pregunta.end + 0.6, P1, R1, "¿" + NAME + "?"],
+      [A.niveles.start - 0.3, A.raiz.start, R, S[0], "¿" + NAME + "?"],
+      [A.raiz.end, A.puntocom.end + 0.2, S[0], R, "pregunta a .com"],
+      [A.luego.start - 0.2, A.luego.end + 0.5, R, S[1], "¿" + NAME + "?"],
+      [A.pagina.start - 0.6, A.pagina.end + 0.2, S[1], R, "pregunta a ejemplo.com"],
+      [A.pagina.end + 0.3, A.numero.start, R, S[2], "¿" + NAME + "?"],
+      [A.numero.start, A.numero.end + 0.5, S[2], R, IP],
+      [A.milisegundos.start - 0.3, A.milisegundos.end + 0.4, R1, P1, IP],
+    ];
+    let cur = null, idx = -1;
+    steps.forEach((st, i) => { if (t >= st[0] && t <= st[1] + 0.35) { cur = st; idx = i; } });
+    op(fl.dot, cur ? 1 : 0); op(fl.tag, cur ? 1 : 0);
+    if (cur) {
+      const p = ramp(t, cur[0], cur[1], ease.inOutSine);
+      const P = along([cur[2], cur[3]], p);
+      fl.dot.setAttribute("cx", P[0]); fl.dot.setAttribute("cy", P[1]);
+      fl.tagTx.textContent = cur[4];
+      fl.tagTx.setAttribute("class", /^\d/.test(cur[4]) ? "mono" : "");
+      const w = cur[4].length * 15 + 26;
+      fl.tagBg.setAttribute("width", String(w));
+      place(fl.tag, clamp(P[0] - w / 2, 90, 950 - w), P[1] - 34);
+      fl.num.textContent = "paso " + (idx + 1) + " de 8";
+    }
+    op(fl.num, cur ? 1 : 0);
+    // highlight the server being asked
+    const hi = [ -1, 0, 0, 1, 1, 2, 2, -1 ][idx];
+    const shown = ramp(t, A.niveles.start - 0.6, A.niveles.start);
+    fl.sv.forEach((sv, i) => op(sv, shown * (hi === i ? 1 : 0.4)));
+    fl.lines.forEach((l, i) => { l.setAttribute("stroke", hi === i ? C.amber : C.line); op(l, shown); });
+    op(fl.cache, ramp(t, A.revisa.start - 0.2, A.revisa.start + 0.3));
+    op(fl.cacheX, ramp(t, A.sino.start - 0.3, A.sino.start) * (1 - ramp(t, A.guarda.start - 0.2, A.guarda.start + 0.1)));
+    op(fl.cacheOk, ramp(t, A.guarda.start - 0.2, A.guarda.end + 0.2));
+  }
+
+  // ---------------------------------------------------------------- root servers: 13 names, many copies
+  let rt = {};
+  const CITIES = [[-74, 41], [-118, 34], [-88, 42], [-80, 26], [-97, 33], [-122, 47], [-79, 44], [-99, 19], [-74, 5], [-77, -12], [-47, -24], [-58, -35], [-71, -33],
+    [0, 51], [2, 49], [9, 50], [5, 52], [-4, 40], [12, 42], [18, 59], [21, 52], [37, 56], [29, 41], [31, 30], [3, 7], [37, -1], [28, -26], [55, 25], [73, 19], [77, 29],
+    [104, 2], [100, 14], [114, 22], [140, 36], [127, 37], [116, 40], [151, -34], [116, -32], [107, -6], [121, 15], [-105, 40], [-84, 34], [-80, 9], [-9, 39], [11, 60],
+    [25, 60], [30, 50], [51, 36], [67, 25], [80, 13], [121, 25], [135, 35], [145, -38], [-7, 34], [0, 6], [13, -9], [47, 25], [77, 43], [83, 55], [-66, 10], [-38, -12], [-90, 15]];
+  function buildRoots() {
+    const g = el("g", {}, $("#sc-roots"));
+    const W = world(g, { x: 85, y: 480, w: 850 });
+    rt.dots = CITIES.map(([lo, la]) => { const [x, y] = W.P(lo, la); return el("circle", { cx: x, cy: y, r: 7, fill: C.blue, stroke: "#fff", "stroke-width": 2 }, g); });
+    el("text", { x: 935, y: 840, "text-anchor": "end", class: "m-note", text: "cada punto representa varias copias" }, g);
+    rt.letters = [];
+    "ABCDEFGHIJKLM".split("").forEach((L, i) => {
+      const lg = el("g", {}, g);
+      el("rect", { x: 103 + i * 66, y: 890, width: 56, height: 64, rx: 8, fill: C.card, stroke: C.blue, "stroke-width": 3 }, lg);
+      el("text", { x: 131 + i * 66, y: 934, "text-anchor": "middle", class: "mono", "font-size": 32, "font-weight": 700, fill: C.blue, text: L }, lg);
+      rt.letters.push(lg);
+    });
+    rt.lnote = el("text", { x: 540, y: 1000, "text-anchor": "middle", class: "m-note", text: "a.root-servers.net … m.root-servers.net" }, g);
+    rt.count = el("text", { x: 540, y: 1150, "text-anchor": "middle", "font-size": 110, "font-weight": 700, fill: C.ink, class: "m-num", text: "" }, g);
+    rt.cl = el("text", { x: 540, y: 1205, "text-anchor": "middle", class: "m-label", text: "copias en servicio" }, g);
+  }
+  function drawRoots(t, s, A) {
+    rt.letters.forEach((l, i) => op(l, ramp(t, A.trece.start - 0.6 + i * 0.06, A.trece.start - 0.3 + i * 0.06)));
+    op(rt.lnote, ramp(t, A.trece.end, A.trece.end + 0.3));
+    const p = ramp(t, A.mil.start - 0.3, A.mundo.end, ease.out);
+    rt.dots.forEach((d, i) => op(d, ramp(p, (i / rt.dots.length) * 0.8, (i / rt.dots.length) * 0.8 + 0.2)));
+    rt.count.textContent = (p >= 0.999 ? "> " : "") + thousands(Math.round(1900 * p / 10) * 10);
+    op(rt.count, ramp(t, A.mil.start - 0.5, A.mil.start));
+    op(rt.cl, ramp(t, A.mil.start - 0.5, A.mil.start));
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "Escribes el nombre de una página y en un instante aparece. Pero las computadoras no se encuentran por nombre, sino por números. ¿Quién hace la traducción? Un sistema llamado DNS, que funciona como la agenda de contactos de internet. Tu celular primero revisa si ya tiene el número guardado. Si no, le pregunta a un servidor de tu compañía de internet. Ese servidor, si no lo sabe, pregunta por niveles: primero a los servidores raíz, que le dicen quién maneja los «punto com»; luego a esos, que le dicen quién maneja esa página; y ese le da el número. Todo en milisegundos, y la respuesta se guarda para la próxima vez. Los servidores raíz son trece nombres, pero hay más de mil novecientas copias repartidas por el mundo.";
+
+  Mosaic.short({
+    kicker: "Internet y redes",
+    title: "¿Cómo encuentra tu celular una página web?",
+    script: SCRIPT,
+    anchors: {
+      nombre: "nombre de una pagina",
+      instante: "instante",
+      computadoras: "computadoras",
+      numeros: "numeros",
+      traduccion: "traduccion",
+      dns: ["dns", "de ene ese"],
+      agenda: "agenda",
+      revisa: "revisa",
+      guardado: "guardado",
+      sino: "si no",
+      pregunta: "le pregunta",
+      niveles: "niveles",
+      raiz: ["servidores raiz", "raiz"],
+      puntocom: ["punto com", "com"],
+      luego: "luego a esos",
+      pagina: "esa pagina",
+      numero: ["le da el numero", "el numero"],
+      milisegundos: "milisegundos",
+      guarda: "se guarda",
+      raices: { q: ["servidores raiz", "raiz"], after: "guarda" },
+      trece: ["trece nombres", "13 nombres", "trece"],
+      mil: ["mil novecientas", "1900", "mil"],
+      mundo: "mundo",
+    },
+    build() { buildBar(); buildBook(); buildFlow(); buildRoots(); },
+    scenes: [
+      { el: "#sc-bar", from: 0, to: "dns-0.4", fadeIn: 0.3, rise: 0, update: drawBar },
+      { el: "#cap-num", from: "computadoras-0.2", to: "traduccion-0.6", fade: 0.3 },
+      { el: "#cap-who", from: "traduccion-0.6", to: "dns-0.4", fade: 0.3 },
+      { el: "#sc-book", from: "dns-0.4", to: "revisa-0.6", rise: 0, update: drawBook },
+      { el: "#cap-dns", from: "dns-0.3", to: "revisa-0.6", fade: 0.3 },
+      { el: "#sc-flow", from: "revisa-0.6", to: "raices-0.4", rise: 0, update: drawFlow },
+      { el: "#cap-cache", from: "revisa-0.5", to: "pregunta-0.3", fade: 0.3 },
+      { el: "#cap-isp", from: "pregunta-0.3", to: "niveles-0.5", fade: 0.3 },
+      { el: "#cap-levels", from: "niveles-0.5", to: "milisegundos-0.4", fade: 0.3 },
+      { el: "#cap-ms", from: "milisegundos-0.4", to: "raices-0.4", fade: 0.3 },
+      { el: "#sc-roots", from: "raices-0.4", to: "end", rise: 0, update: drawRoots },
+      { el: "#cap-roots", from: "mil-0.3", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
