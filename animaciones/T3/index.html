@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>T3 · ¿Cómo sabe tu celular dónde estás sin internet?</title>
+<link rel="stylesheet" href="../_base/base.css">
+<style>
+  svg.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+  .readout { position: absolute; inset: auto; left: 80px; width: 920px; text-align: center; }
+  .readout .big { font-size: 110px; line-height: 1; }
+  .readout .lbl { font-size: 36px; color: var(--muted); margin-top: 12px; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="content">
+    <svg class="full scene" id="sc-hook" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-hook" style="top:1300px">El GPS funciona aunque no tengas datos</div>
+
+    <svg class="full scene" id="sc-orbit" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-orbit" style="top:1300px">Unos 30 satélites<small>a más de 20 000 km de altura</small></div>
+    <div class="m-caption scene" id="cap-msg" style="top:1300px">«Soy tal satélite y esta es la hora exacta»<small>lo repiten sin parar</small></div>
+
+    <svg class="full scene" id="sc-delay" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-listen" style="top:1300px">Tu celular no manda nada: solo escucha</div>
+    <div class="m-caption scene" id="cap-delay" style="top:1300px">Retraso × velocidad de la luz<small>= qué tan lejos está cada satélite</small></div>
+
+    <svg class="full scene" id="sc-tri" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-tri" style="top:1300px">Con 4 satélites: tu posición<small>y de paso corrige su propio reloj</small></div>
+
+    <svg class="full scene" id="sc-err" viewBox="0 0 1080 1920"></svg>
+    <div class="readout scene" id="ro-err" style="top:1260px"><div class="big m-num">1 µs = 300 m</div><div class="lbl">una millonésima de segundo de error</div></div>
+
+    <svg class="full scene" id="sc-rel" viewBox="0 0 1080 1920"></svg>
+    <div class="m-caption scene" id="cap-rel" style="top:1300px">Hasta corrigen la relatividad de Einstein<small>los relojes de los satélites se adelantan ≈ 38 µs/día</small></div>
+  </div>
+</div>
+
+<script src="../_base/base.js"></script>
+<script>
+(function () {
+  "use strict";
+  const { el, $, lerp, ease, ramp, clamp } = Mosaic;
+  const MINT = "#3a9a80", BLUE = "#2f5e8e", AMBER = "#c98a1b", FUCH = "#b3386b", INK = "#1d1d1b", INK2 = "#4a4843", MUTED = "#827e74";
+
+  function satellite(g, s = 1) {
+    const gg = el("g", {}, g);
+    const inner = el("g", { transform: `scale(${s})` }, gg);
+    el("rect", { x: -44, y: -9, width: 30, height: 18, fill: BLUE }, inner);
+    el("rect", { x: 14, y: -9, width: 30, height: 18, fill: BLUE }, inner);
+    el("rect", { x: -14, y: -14, width: 28, height: 28, rx: 4, fill: INK2 }, inner);
+    return gg;
+  }
+  function phoneIcon(g, s = 1) {
+    const gg = el("g", {}, g);
+    const inner = el("g", { transform: `scale(${s})` }, gg);
+    el("rect", { x: -30, y: -56, width: 60, height: 112, rx: 12, fill: "#2b2d31" }, inner);
+    el("rect", { x: -24, y: -48, width: 48, height: 96, rx: 7, fill: "#faf8f3" }, inner);
+    return gg;
+  }
+  const fmt = (n) => n.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+
+  // ---------------------------------------------------------------- scene 1: works without data
+  let hk = {};
+  function buildHook() {
+    const g = el("g", {}, $("#sc-hook"));
+    el("rect", { x: 380, y: 500, width: 320, height: 640, rx: 46, fill: "#2b2d31" }, g);
+    el("rect", { x: 396, y: 516, width: 288, height: 608, rx: 34, fill: "#e9e5dc" }, g);
+    // a very simple map
+    [[396, 640, 684, 700], [396, 860, 684, 820], [470, 516, 520, 1124], [600, 516, 640, 1124]].forEach(([x1, y1, x2, y2]) =>
+      el("line", { x1, y1, x2, y2, stroke: "#faf8f3", "stroke-width": 22 }, g));
+    hk.pin = el("g", {}, g);
+    el("path", { d: "M0 0 C-10 -20 -36 -38 -36 -64 A36 36 0 0 1 36 -64 C36 -38 10 -20 0 0 Z", fill: FUCH }, hk.pin);
+    el("circle", { cx: 0, cy: -64, r: 13, fill: "#faf8f3" }, hk.pin);
+    // no data: crossed signal bars
+    hk.nodata = el("g", {}, g);
+    [0, 1, 2, 3].forEach((i) => el("rect", { x: 760 + i * 26, y: 560 - i * 22, width: 18, height: 30 + i * 22, rx: 3, fill: "#bdb7aa" }, hk.nodata));
+    el("line", { x1: 750, y1: 470, x2: 860, y2: 600, stroke: FUCH, "stroke-width": 8, "stroke-linecap": "round" }, hk.nodata);
+    el("text", { x: 805, y: 650, "text-anchor": "middle", class: "m-label", fill: FUCH, text: "sin datos" }, hk.nodata);
+  }
+  function drawHook(t, s, A) {
+    const p = ramp(t, 0.6, 1.4, ease.out);
+    hk.pin.setAttribute("transform", `translate(560 ${lerp(700, 790, p).toFixed(1)})`);
+    hk.pin.setAttribute("opacity", String(p));
+    hk.nodata.setAttribute("opacity", String(ramp(t, A.datos.start - 0.4, A.datos.start + 0.1)));
+  }
+
+  // ---------------------------------------------------------------- scene 2: constellation to scale
+  // Earth radius 6371 km; GPS orbit radius 26 560 km (altitude ≈ 20 200 km): ratio 4.17.
+  const EX = 540, EY = 850, ER = 90, OR = ER * 26560 / 6371;
+  let ob = {};
+  function buildOrbit() {
+    const g = el("g", {}, $("#sc-orbit"));
+    ob.planes = [];
+    for (let k = 0; k < 6; k++) {
+      const pg = el("g", { transform: `translate(${EX} ${EY}) rotate(${k * 30})` }, g);
+      el("ellipse", { rx: OR, ry: OR * 0.28, fill: "none", stroke: "#d6d1c5", "stroke-width": 2 }, pg);
+      ob.planes.push(pg);
+    }
+    el("circle", { cx: EX, cy: EY, r: ER, fill: "#cfe0ea", stroke: BLUE, "stroke-width": 4 }, g);
+    el("path", { d: `M${EX - 50} ${EY - 40} q30 -20 50 0 t40 30 q-20 30 -50 20 z M${EX - 20} ${EY + 30} q20 -10 40 10 q-10 30 -30 20 z`, fill: MINT, opacity: 0.8 }, g);
+    ob.sats = [];
+    for (let k = 0; k < 6; k++) for (let j = 0; j < 5; j++) ob.sats.push({ k, j, n: el("circle", { r: 11, fill: INK2 }, g) });
+    // one satellite talking
+    ob.talk = el("g", {}, g);
+    ob.rings = [0, 1, 2].map(() => el("circle", { fill: "none", stroke: AMBER, "stroke-width": 4 }, ob.talk));
+    ob.tag = el("g", {}, ob.talk);
+    el("rect", { x: -10, y: -54, width: 380, height: 92, rx: 12, fill: "#faf8f3", stroke: AMBER, "stroke-width": 4 }, ob.tag);
+    el("text", { x: 10, y: -18, class: "m-label", fill: INK, text: "satélite 12" }, ob.tag);
+    ob.clock = el("text", { x: 10, y: 22, class: "m-label m-num", fill: AMBER, text: "" }, ob.tag);
+    ob.scale = el("g", {}, g);
+    el("line", { x1: EX + ER, y1: 1260, x2: EX + OR, y2: 1260, stroke: INK2, "stroke-width": 3 }, ob.scale);
+    el("text", { x: (EX + ER + EX + OR) / 2, y: 1250, "text-anchor": "middle", class: "m-note", fill: MUTED, text: "≈ 20 200 km" }, ob.scale);
+    el("text", { x: 100, y: 1250, class: "m-note", fill: MUTED, text: "a escala" }, ob.scale);
+  }
+  function satPos(k, j, t) {
+    const a = (j / 5) * Math.PI * 2 + k * 0.7 + t * 0.12;
+    const x = OR * Math.cos(a), y = OR * 0.28 * Math.sin(a), r = (k * 30 * Math.PI) / 180;
+    return [EX + x * Math.cos(r) - y * Math.sin(r), EY + x * Math.sin(r) + y * Math.cos(r)];
+  }
+  function drawOrbit(t, s, A) {
+    const on = ramp(t, A.treinta.start - 0.3, A.treinta.start + 1.2);
+    ob.sats.forEach((o, i) => {
+      const [x, y] = satPos(o.k, o.j, t);
+      o.n.setAttribute("cx", x.toFixed(1)); o.n.setAttribute("cy", y.toFixed(1));
+      o.n.setAttribute("opacity", String(clamp(on * 30 - i)));
+    });
+    ob.scale.setAttribute("opacity", String(ramp(t, A.veinte.start - 0.3, A.veinte.start + 0.3)));
+    const [sx, sy] = satPos(2, 1, t);
+    const talk = ramp(t, A.manda.start - 0.3, A.manda.start + 0.2);
+    ob.talk.setAttribute("opacity", String(talk));
+    ob.rings.forEach((r, i) => {
+      const ph = ((Math.max(0, t - A.manda.start) * 0.8 + i / 3) % 1);
+      r.setAttribute("cx", sx.toFixed(1)); r.setAttribute("cy", sy.toFixed(1));
+      r.setAttribute("r", (20 + ph * 140).toFixed(1)); r.setAttribute("opacity", String(1 - ph));
+    });
+    ob.tag.setAttribute("transform", `translate(${Math.min(sx + 40, 560).toFixed(1)} ${(sy - 70).toFixed(1)})`);
+    const sec = 7 + Math.max(0, t - A.manda.start);
+    ob.clock.textContent = "hora: 10:41:" + String(Math.floor(sec)).padStart(2, "0") + "." + String(Math.floor((sec % 1) * 1e6)).padStart(6, "0");
+  }
+
+  // ---------------------------------------------------------------- scene 3: listening and delay
+  let dl = {};
+  function buildDelay() {
+    const g = el("g", {}, $("#sc-delay"));
+    dl.sat = satellite(g, 1.4); dl.sat.setAttribute("transform", "translate(540 520)");
+    dl.ph = phoneIcon(g, 1.2); dl.ph.setAttribute("transform", "translate(540 1140)");
+    el("line", { x1: 540, y1: 560, x2: 540, y2: 1060, stroke: "#d6d1c5", "stroke-width": 4, "stroke-dasharray": "10 10" }, g);
+    dl.pulse = el("circle", { cx: 540, r: 16, fill: AMBER }, g);
+    dl.sent = el("text", { x: 620, y: 530, class: "m-label m-num", fill: AMBER, text: "salió: 10:41:07.000 000" }, g);
+    dl.got = el("text", { x: 620, y: 1150, class: "m-label m-num", fill: BLUE, text: "llegó: 10:41:07.067 300" }, g);
+    dl.counter = el("text", { x: 300, y: 830, "text-anchor": "middle", "font-size": 64, "font-weight": 650, class: "m-num", fill: INK, text: "" }, g);
+    dl.cl = el("text", { x: 300, y: 880, "text-anchor": "middle", class: "m-note", fill: MUTED, text: "segundos de retraso" }, g);
+    dl.dist = el("g", {}, g);
+    el("text", { x: 790, y: 820, "text-anchor": "middle", class: "m-label", fill: INK2, text: "× 300 000 km/s" }, dl.dist);
+    el("text", { x: 790, y: 880, "text-anchor": "middle", "font-size": 50, "font-weight": 650, fill: MINT, text: "≈ 20 200 km" }, dl.dist);
+  }
+  function drawDelay(t, s, A) {
+    // the pulse travels down repeatedly; the counter freezes at 0.067 s once it arrives
+    const p = ramp(t, A.compara.start - 1.6, A.compara.start, ease.inOut);
+    dl.pulse.setAttribute("cy", lerp(560, 1060, p).toFixed(1));
+    dl.pulse.setAttribute("opacity", String(p > 0 && p < 1 ? 1 : 0));
+    dl.got.setAttribute("opacity", String(ramp(t, A.compara.start, A.compara.start + 0.3)));
+    dl.sent.setAttribute("opacity", String(ramp(t, s.from, s.from + 0.4)));
+    const d = 0.0673 * ramp(t, A.compara.start, A.compara.start + 1.2, ease.out);
+    dl.counter.textContent = d.toFixed(3).replace(".", ".");
+    dl.counter.setAttribute("opacity", String(ramp(t, A.compara.start, A.compara.start + 0.3)));
+    dl.cl.setAttribute("opacity", String(ramp(t, A.compara.start, A.compara.start + 0.3)));
+    dl.dist.setAttribute("opacity", String(ramp(t, A.luz.start - 0.3, A.luz.start + 0.3)));
+  }
+
+  // ---------------------------------------------------------------- scene 4: four ranges meet at one point
+  // 2D cut of the spheres. Each circle is centred on a satellite with radius = true distance + c·(clock error).
+  // The same clock error stretches all four equally, so they only meet once the receiver fixes its clock.
+  const P = [560, 1060];
+  const SATS = [[180, 520], [470, 470], [800, 500], [940, 820]];
+  let tr = {};
+  function buildTri() {
+    const svg = $("#sc-tri");
+    const defs = el("defs", {}, svg);
+    const cp = el("clipPath", { id: "t3clip" }, defs);
+    el("rect", { x: 80, y: 430, width: 920, height: 820 }, cp);
+    const g = el("g", { "clip-path": "url(#t3clip)" }, svg);
+    tr.circles = SATS.map(() => el("circle", { fill: "none", stroke: BLUE, "stroke-width": 4 }, g));
+    const g2 = el("g", {}, svg);
+    tr.sats = SATS.map(([x, y]) => { const s = satellite(g2, 0.9); s.setAttribute("transform", `translate(${x} ${y})`); return s; });
+    tr.dot = el("circle", { cx: P[0], cy: P[1], r: 16, fill: FUCH }, g2);
+    tr.lbl = el("text", { x: P[0], y: P[1] + 70, "text-anchor": "middle", class: "m-label", fill: FUCH, text: "tú" }, g2);
+    tr.err = el("text", { x: 120, y: 1220, class: "m-note", fill: MUTED, text: "reloj del celular sin corregir: no coinciden" }, g2);
+    tr.ok = el("text", { x: 120, y: 1220, class: "m-note", fill: MINT, text: "reloj corregido: un solo punto" }, g2);
+    el("text", { x: 960, y: 1262, "text-anchor": "end", class: "m-note", fill: MUTED, text: "corte en 2D (ilustrativo)" }, g2);
+  }
+  function drawTri(t, s, A) {
+    const bias = 70 * (1 - ramp(t, A.reloj.start - 0.4, A.reloj.start + 0.8));
+    SATS.forEach(([x, y], i) => {
+      const on = ramp(t, s.from + 0.2 + i * 0.35, s.from + 0.6 + i * 0.35);
+      tr.sats[i].setAttribute("opacity", String(on));
+      tr.circles[i].setAttribute("cx", x); tr.circles[i].setAttribute("cy", y);
+      tr.circles[i].setAttribute("r", (Math.hypot(P[0] - x, P[1] - y) + bias).toFixed(1));
+      tr.circles[i].setAttribute("opacity", String(on));
+      tr.circles[i].setAttribute("stroke", bias < 2 ? MINT : BLUE);
+    });
+    const fixed = ramp(t, A.reloj.start + 0.4, A.reloj.start + 0.8);
+    tr.dot.setAttribute("opacity", String(fixed)); tr.lbl.setAttribute("opacity", String(fixed));
+    tr.err.setAttribute("opacity", String(ramp(t, s.from + 1.4, s.from + 1.8) * (1 - ramp(t, A.reloj.start + 0.3, A.reloj.start + 0.7))));
+    tr.ok.setAttribute("opacity", String(ramp(t, A.reloj.start + 0.8, A.reloj.start + 1.1)));
+  }
+
+  // ---------------------------------------------------------------- scene 5: 1 µs = 300 m on a map
+  let er = {};
+  function buildErr() {
+    const g = el("g", {}, $("#sc-err"));
+    el("rect", { x: 120, y: 480, width: 840, height: 700, rx: 20, fill: "#e9e5dc" }, g);
+    for (let i = 0; i < 6; i++) el("line", { x1: 120, y1: 540 + i * 120, x2: 960, y2: 540 + i * 120, stroke: "#faf8f3", "stroke-width": 18 }, g);
+    for (let i = 0; i < 7; i++) el("line", { x1: 180 + i * 130, y1: 480, x2: 180 + i * 130, y2: 1180, stroke: "#faf8f3", "stroke-width": 18 }, g);
+    // scale: 1 block = 100 m (130 px); 300 m = 390 px
+    er.real = el("g", { transform: "translate(310 900)" }, g);
+    el("path", { d: "M0 0 C-10 -20 -36 -38 -36 -64 A36 36 0 0 1 36 -64 C36 -38 10 -20 0 0 Z", fill: MINT }, er.real);
+    er.wrong = el("g", {}, g);
+    el("path", { d: "M0 0 C-10 -20 -36 -38 -36 -64 A36 36 0 0 1 36 -64 C36 -38 10 -20 0 0 Z", fill: FUCH }, er.wrong);
+    er.bar = el("g", {}, g);
+    el("line", { x1: 310, y1: 960, x2: 700, y2: 960, stroke: INK, "stroke-width": 6 }, er.bar);
+    el("line", { x1: 310, y1: 940, x2: 310, y2: 980, stroke: INK, "stroke-width": 6 }, er.bar);
+    el("line", { x1: 700, y1: 940, x2: 700, y2: 980, stroke: INK, "stroke-width": 6 }, er.bar);
+    el("text", { x: 505, y: 1030, "text-anchor": "middle", class: "m-label", fill: INK, text: "300 metros" }, er.bar);
+    el("text", { x: 310, y: 1110, "text-anchor": "middle", class: "m-note", fill: MINT, text: "donde estás" }, g);
+    er.wl = el("text", { x: 700, y: 1110, "text-anchor": "middle", class: "m-note", fill: FUCH, text: "con 1 µs de error" }, g);
+  }
+  function drawErr(t, s, A) {
+    const p = ramp(t, A.trescientos.start - 0.6, A.trescientos.start + 0.4);
+    er.wrong.setAttribute("transform", `translate(${lerp(310, 700, p).toFixed(1)} 900)`);
+    er.wrong.setAttribute("opacity", String(ramp(t, A.millonesima.start - 0.2, A.millonesima.start + 0.2)));
+    er.bar.setAttribute("opacity", String(p));
+    er.wl.setAttribute("opacity", String(p));
+  }
+
+  // ---------------------------------------------------------------- scene 6: relativity
+  let rl = {};
+  function buildRel() {
+    const g = el("g", {}, $("#sc-rel"));
+    const clock = (y, label, color) => {
+      const gg = el("g", { transform: `translate(560 ${y})` }, g);
+      el("rect", { x: -300, y: -62, width: 600, height: 124, rx: 18, fill: "#faf8f3", stroke: color, "stroke-width": 5 }, gg);
+      el("text", { x: -280, y: -80, class: "m-label", fill: color, text: label }, gg);
+      return el("text", { x: 0, y: 18, "text-anchor": "middle", "font-size": 50, "font-weight": 650, class: "m-num", fill: INK, text: "" }, gg);
+    };
+    const s = satellite(g, 1.1); s.setAttribute("transform", "translate(170 600)");
+    rl.sat = clock(600, "reloj del satélite", BLUE);
+    rl.gnd = clock(830, "reloj en la Tierra", MINT);
+    rl.diff = el("text", { x: 540, y: 1010, "text-anchor": "middle", "font-size": 64, "font-weight": 700, class: "m-num", fill: AMBER, text: "" }, g);
+    rl.km = el("text", { x: 540, y: 1070, "text-anchor": "middle", class: "m-label", fill: INK2, text: "sin corregir: ≈ 11 km de error en un día" }, g);
+    rl.ok = el("g", {}, g);
+    el("rect", { x: 330, y: 1110, width: 420, height: 84, rx: 14, fill: "none", stroke: MINT, "stroke-width": 6 }, rl.ok);
+    el("text", { x: 540, y: 1167, "text-anchor": "middle", "font-size": 44, "font-weight": 700, fill: MINT, text: "SE CORRIGE" }, rl.ok);
+  }
+  function hms(sec, us) {
+    const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), ss = Math.floor(sec % 60);
+    const u = String(Math.floor(us)).padStart(6, "0");
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(ss).padStart(2, "0")}.${u.slice(0, 3)} ${u.slice(3)}`;
+  }
+  function drawRel(t, s, A) {
+    // one simulated day passes; the satellite clock gains ≈ 38 µs (net effect of both relativity terms)
+    const day = ramp(t, A.rapido.start, A.relatividad.start + 1.5, ease.inOut);
+    const sec = Math.min(86340, Math.round(day * 86400 / 60) * 60);
+    const us = 38 * day;
+    rl.gnd.textContent = hms(sec, 0);
+    rl.sat.textContent = hms(sec, us);
+    rl.diff.textContent = "+" + us.toFixed(0) + " µs adelantado";
+    rl.km.setAttribute("opacity", String(ramp(t, A.relatividad.start + 0.8, A.relatividad.start + 1.4)));
+    rl.ok.setAttribute("opacity", String(ramp(t, A.einstein.start + 0.3, A.einstein.start + 0.8)));
+  }
+
+  // ---------------------------------------------------------------- timeline
+  const SCRIPT = "El GPS de tu celular funciona aunque no tengas datos. ¿Cómo sabe dónde estás? Hay unos treinta satélites dando vueltas a más de veinte mil kilómetros de altura. Cada uno manda, sin parar, una señal que dice: «soy tal satélite y esta es la hora exacta». Tu celular no manda nada; solo escucha. Compara la hora de la señal con la hora en que llegó. Como viaja a la velocidad de la luz, ese retraso le dice qué tan lejos está cada satélite. Con cuatro satélites calcula tu posición y corrige su propio reloj. La precisión es extrema: un error de una millonésima de segundo te movería trescientos metros. Y como los satélites van tan rápido y tan alto, hasta corrigen los efectos de la relatividad de Einstein.";
+
+  Mosaic.short({
+    kicker: "El celular por dentro",
+    title: "¿Cómo sabe tu celular dónde estás sin internet?",
+    script: SCRIPT,
+    anchors: {
+      datos: "datos",
+      treinta: ["treinta satelites", "30 satelites"],
+      veinte: ["veinte mil", "20 mil", "20000"],
+      manda: "sin parar",
+      hora: "hora exacta",
+      escucha: "escucha",
+      compara: "compara",
+      luz: "velocidad de la luz",
+      retraso: "ese retraso",
+      cuatro: ["cuatro satelites", "4 satelites"],
+      reloj: "propio reloj",
+      precision: "precision",
+      millonesima: "millonesima",
+      trescientos: ["trescientos metros", "300 metros"],
+      rapido: "tan rapido",
+      relatividad: "relatividad",
+      einstein: "einstein",
+    },
+    build() { buildHook(); buildOrbit(); buildDelay(); buildTri(); buildErr(); buildRel(); },
+    scenes: [
+      { el: "#sc-hook", from: 0, to: "treinta-0.3", fadeIn: 0.3, rise: 0, update: drawHook },
+      { el: "#cap-hook", from: "datos-0.3", to: "treinta-0.3", fade: 0.3 },
+      { el: "#sc-orbit", from: "treinta-0.3", to: "escucha-1.2", rise: 0, update: drawOrbit },
+      { el: "#cap-orbit", from: "treinta-0.2", to: "manda-0.2", fade: 0.3 },
+      { el: "#cap-msg", from: "manda-0.2", to: "escucha-1.2", fade: 0.3 },
+      { el: "#sc-delay", from: "escucha-1.2", to: "cuatro-0.3", rise: 0, update: drawDelay },
+      { el: "#cap-listen", from: "escucha-1.2", to: "luz-0.6", fade: 0.3 },
+      { el: "#cap-delay", from: "luz-0.6", to: "cuatro-0.3", fade: 0.3 },
+      { el: "#sc-tri", from: "cuatro-0.3", to: "precision-0.3", rise: 0, update: drawTri },
+      { el: "#cap-tri", from: "cuatro-0.2", to: "precision-0.3", fade: 0.3 },
+      { el: "#sc-err", from: "precision-0.3", to: "rapido-0.6", rise: 0, update: drawErr },
+      { el: "#ro-err", from: "millonesima-0.2", to: "rapido-0.6", fade: 0.3 },
+      { el: "#sc-rel", from: "rapido-0.6", to: "end", rise: 0, update: drawRel },
+      { el: "#cap-rel", from: "rapido-0.4", to: "end", fade: 0.3 },
+    ],
+  });
+})();
+</script>
+</body>
+</html>
